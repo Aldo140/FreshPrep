@@ -116,21 +116,21 @@ All primary text combinations achieve WCAG AA (4.5:1+). White text on `#2b5346` 
 ### Button Variants
 
 **Primary** (Call to action)
-- Background: oklch(60% 0.14 250) blue-400
+- Background: #2b5346
 - Text: white
-- Hover: oklch(50% 0.15 250) blue-500
-- Disabled: oklch(94% 0.03 250) blue-100 + dark gray text
+- Hover: #0d3a2f
+- Disabled: #eef4f1 + dark gray text
 
 **Secondary** (Moderate action)
-- Background: oklch(95% 0 0) neutral-100
-- Text: oklch(12% 0 0) neutral-900
-- Hover: oklch(89% 0 0) neutral-200
+- Background: #f8f7f5
+- Text: #1a1a1a
+- Hover: #e5e5e5
 - Border: none (implied by background)
 
 **Ghost** (Low emphasis)
 - Background: transparent
-- Text: oklch(60% 0.14 250) blue-400
-- Hover: oklch(95% 0 0) neutral-100 background
+- Text: #2b5346
+- Hover: #f8f7f5 background
 - Useful for secondary actions
 
 ### Button Sizes
@@ -147,7 +147,7 @@ All primary text combinations achieve WCAG AA (4.5:1+). White text on `#2b5346` 
 
 ### Card
 - Background: white
-- Border: 1px oklch(84% 0 0) neutral-300
+- Border: 1px #e5e5e5
 - Border-radius: 8px
 - Padding: 16px
 - Shadow: 0 1px 3px rgba(0, 0, 0, 0.1)
@@ -155,12 +155,12 @@ All primary text combinations achieve WCAG AA (4.5:1+). White text on `#2b5346` 
 - Transition: all 200ms ease-out
 
 ### Input / Form Field
-- Border: 1px oklch(84% 0 0) neutral-300
+- Border: 1px #e5e5e5
 - Border-radius: 4px
 - Padding: 8px 12px
-- Focus: border-color oklch(60% 0.14 250) blue-400, box-shadow 0 0 0 3px rgba(59, 130, 246, 0.1)
-- Disabled: background oklch(98% 0 0) neutral-50, text oklch(64% 0 0) neutral-500
-- Error: border-color oklch(58% 0.15 28) red-400
+- Focus: border-color #2b5346, box-shadow 0 0 0 3px rgba(43, 83, 70, 0.1)
+- Disabled: background #f8f7f5, text #a1a1a1
+- Error: border-color #850b0b
 
 ### Badge
 - Padding: 4px 8px
@@ -168,25 +168,25 @@ All primary text combinations achieve WCAG AA (4.5:1+). White text on `#2b5346` 
 - Font-size: 11px
 - Font-weight: 500
 - Example variants:
-  - **Success**: bg green-100, text green-700
-  - **Warning**: bg amber-100, text amber-700
-  - **Error**: bg red-100, text red-700
-  - **Neutral**: bg neutral-200, text neutral-700
+  - **Success**: bg #eef4f1, text #2b5346
+  - **Warning**: bg #fdf8e1, text #8a6f00
+  - **Error**: bg #ffd0d0, text #850b0b
+  - **Neutral**: bg #e5e5e5, text #3d3d3d
 
 ### Tables
 - Row height: 40px
-- Header bg: oklch(98% 0 0) neutral-50
-- Header border: 1px oklch(84% 0 0) neutral-300
-- Row hover: oklch(98% 0 0) neutral-50 background
+- Header bg: #f8f7f5
+- Header border: 1px #e5e5e5
+- Row hover: #f8f7f5 background
 - Cell padding: 12px 16px
-- Text color: oklch(12% 0 0) neutral-900
-- Muted text (secondary columns): oklch(32% 0 0) neutral-700
+- Text color: #1a1a1a
+- Muted text (secondary columns): #3d3d3d
 
 ### Charts / Data Visualization
 - Use semantic colors from palette
-- Chart grid lines: oklch(95% 0 0) neutral-100
+- Chart grid lines: #f8f7f5
 - Legend: position bottom or right
-- Tooltip: dark background neutral-900, white text
+- Tooltip: dark background #1a1a1a, white text
 - Animation: staggered entrance, no auto-rotate
 
 
