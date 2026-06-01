@@ -89,7 +89,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
           <button
             id="tab-leaderboard-btn"
             onClick={() => setActiveTab("leaderboard")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               activeTab === "leaderboard"
                 ? "bg-white text-[#2b5346] shadow-2xs border border-slate-205"
                 : "text-slate-550 hover:text-slate-800"
@@ -101,7 +101,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
           <button
             id="tab-funnel-btn"
             onClick={() => setActiveTab("funnel")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               activeTab === "funnel"
                 ? "bg-white text-[#2b5346] shadow-2xs border border-slate-205"
                 : "text-slate-550 hover:text-slate-800"
@@ -113,7 +113,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
           <button
             id="tab-channels-btn"
             onClick={() => setActiveTab("channels")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               activeTab === "channels"
                 ? "bg-white text-[#2b5346] shadow-2xs border border-slate-205"
                 : "text-slate-550 hover:text-slate-800"
@@ -165,7 +165,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                 {/* Vector Bar */}
                 <div className="h-2 w-full bg-slate-100/80 rounded-full overflow-hidden border border-slate-150/40">
                   <div
-                    className={`h-full rounded-full transition-all duration-700 ${getRatingColor(
+                    className={`h-full rounded-full transition-[width] duration-700 ${getRatingColor(
                       item.performanceRating
                     )}`}
                     style={{ width: `${Math.min(100, item.calculatedConversion)}%` }}
@@ -240,7 +240,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                       <span className="w-12 text-[8.5px] font-bold font-mono uppercase text-slate-450 shrink-0">Signups:</span>
                       <div className="h-2 w-full bg-slate-150 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#3d7060] rounded-full transition-all"
+                          className="h-full bg-[#3d7060] rounded-full transition-[width]"
                           style={{ width: `${pctSignups}%` }}
                         />
                       </div>
@@ -251,7 +251,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                       <span className="w-12 text-[8.5px] font-bold font-mono uppercase text-slate-450 shrink-0">Paying:</span>
                       <div className="h-2 w-full bg-slate-150 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#2b5346] rounded-full transition-all"
+                          className="h-full bg-[#2b5346] rounded-full transition-[width]"
                           style={{ width: `${pctPaying}%` }}
                         />
                       </div>

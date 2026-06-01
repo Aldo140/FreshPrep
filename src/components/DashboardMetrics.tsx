@@ -159,7 +159,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
             <div
               key={kpi.id}
               id={`kpi-card-${kpi.id}`}
-              className={`p-3 sm:p-4 rounded-xl border shadow-2xs hover:shadow-xs transition-all ${kpi.bgClass}`}
+              className={`p-3 sm:p-4 rounded-xl border shadow-2xs hover:shadow-xs transition-[box-shadow,border-color] ${kpi.bgClass}`}
             >
               <div className="flex items-center justify-between gap-1">
                 <div className="min-w-0 flex-1">
@@ -187,7 +187,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-350 rounded-full cursor-pointer shadow-3xs hover:shadow-2xs transition-all"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-350 rounded-full cursor-pointer shadow-3xs hover:shadow-2xs transition-[box-shadow,background-color,border-color]"
         >
           {showAdvanced ? (
             <>
@@ -215,7 +215,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
               <div
                 key={kpi.id}
                 id={`kpi-card-${kpi.id}`}
-                className={`p-3 rounded-lg border shadow-3xs hover:shadow-2xs transition-all ${kpi.bgClass}`}
+                className={`p-3 rounded-lg border shadow-3xs hover:shadow-2xs transition-[box-shadow] ${kpi.bgClass}`}
               >
                 <div className="flex items-center justify-between gap-1">
                   <div className="min-w-0">

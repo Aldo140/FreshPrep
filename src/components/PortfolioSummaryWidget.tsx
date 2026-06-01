@@ -113,7 +113,7 @@ export default function PortfolioSummaryWidget({ summary, reports, channels }: P
             <button
               key={t.id}
               onClick={() => setSelectedTopic(t.id)}
-              className={`flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors cursor-pointer ${
                 isActive
                   ? "bg-white border border-slate-205/55 text-[#2b5346] shadow-2xs"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/50"
