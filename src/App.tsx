@@ -65,6 +65,7 @@ export default function App() {
   const [isPrintPreview, setIsPrintPreview] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasReportGenerated, setHasReportGenerated] = useState(false);
+  const [reportPage, setReportPage] = useState<"overview"|"performance"|"revenue"|"regional"|"data"|"issues">("overview");
 
   // Wizard Selection Logic for Options 1, 2, or 3
   const [selectedFlow, setSelectedFlow] = useState<"paste" | "all" | "compare">("paste");
@@ -1008,209 +1009,280 @@ export default function App() {
           </div>
         ) : (
           
-          /* REPORT COMPILED VIEWPORT */
-          <div className="flex-1 overflow-hidden flex flex-row select-text" id="report-dashboard">
+          /* REPORT COMPILED VIEWPORT — Multi-page architecture */
+          <div className="flex-1 overflow-hidden flex flex-col" id="report-dashboard">
 
-            {/* Sidebar navigation */}
-            <nav
-              id="report-sidebar"
-              className="hidden lg:flex flex-col w-48 shrink-0 border-r border-[#e5e5e5] bg-white overflow-y-auto py-5 px-3 gap-0.5"
-            >
-              {[
-                { id: 'portfolio-health-summary', label: 'Summary' },
-                { id: 'kpi-cards-section', label: 'KPIs' },
-                { id: 'key-findings-section', label: 'Findings' },
-                { id: 'charts-visualizers-section', label: 'Chart' },
-                { id: 'report-province-section', label: 'Provinces' },
-                { id: 'report-details-section', label: 'Data Table' },
-              ].map(item => (
-                <a
-                  key={item.id}
-                  href={`#${item.id}`}
-                  className="px-3 py-2 text-xs text-[#3d3d3d] rounded hover:bg-[#f8f7f5] hover:text-[#2b5346] font-medium"
-                  style={{ transition: 'color 150ms var(--ease-out), background-color 150ms var(--ease-out)' }}
+            {/* Sticky page navigation */}
+            <div className="shrink-0 bg-white border-b border-[#e5e5e5] px-4 flex items-center gap-1 overflow-x-auto no-scrollbar">
+              {([
+                { id: 'overview',     label: 'Overview'     },
+                { id: 'performance',  label: 'Performance'  },
+                { id: 'revenue',      label: 'Revenue'      },
+                { id: 'regional',     label: 'Regional'     },
+                { id: 'data',         label: 'Data'         },
+                ...(missingCodes.length > 0 ? [{ id: 'issues', label: `Issues (${missingCodes.length})` }] : []),
+              ] as { id: typeof reportPage; label: string }[]).map(page => (
+                <button
+                  key={page.id}
+                  onClick={() => setReportPage(page.id)}
+                  className={`shrink-0 px-4 py-3 text-xs font-semibold border-b-2 cursor-pointer ${
+                    reportPage === page.id
+                      ? 'border-[#2b5346] text-[#2b5346]'
+                      : 'border-transparent text-[#3d3d3d] hover:text-[#1a1a1a]'
+                  } ${page.id === 'issues' ? 'text-[#9b4a1c]' : ''}`}
+                  style={{ transition: 'color 150ms var(--ease-out), border-color 150ms var(--ease-out)' }}
                 >
-                  {item.label}
-                </a>
+                  {page.label}
+                </button>
               ))}
-            </nav>
-
-            {/* Main content */}
-            <div className="flex-1 overflow-y-auto p-5 bg-[#f8f7f5] flex flex-col gap-5">
-            
-            {/* Tab switch row */}
-            <div className="flex border-b border-[#e5e5e5] gap-6 shrink-0 select-none pb-2 items-center justify-between lg:hidden" id="workspace-tabs-strip">
-              <div className="flex gap-4">
-                <button
-                  id="report-tab-btn"
-                  onClick={() => setActiveTab2("report")}
-                  className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative cursor-pointer ${
-                    activeTab === "report"
-                      ? "text-[#2b5346] border-b-2 border-[#2b5346] font-semibold"
-                      : "text-slate-400 hover:text-slate-700"
-                  }`}
-                  style={{ transition: 'color 150ms var(--ease-out)' }}
-                >
-                  Report
-                </button>
-                <button
-                  id="explorer-tab-btn"
-                  onClick={() => setActiveTab2("explorer")}
-                  className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative cursor-pointer ${
-                    activeTab === "explorer"
-                      ? "text-[#2b5346] border-b-2 border-[#2b5346] font-semibold"
-                      : "text-slate-400 hover:text-slate-705"
-                  }`}
-                  style={{ transition: 'color 150ms var(--ease-out)' }}
-                >
-                  Raw data
-                </button>
-              </div>
-
-              {/* Reset view linkage */}
+              <div className="flex-1" />
               <button
                 onClick={handleResetWorkspace}
-                className="text-[11px] text-[#2b5346] hover:underline font-medium flex items-center gap-1 cursor-pointer"
+                className="shrink-0 text-[11px] text-[#a1a1a1] hover:text-[#2b5346] font-medium flex items-center gap-1 cursor-pointer ml-2"
+                style={{ transition: 'color 150ms var(--ease-out)' }}
               >
-                <RefreshCw className="w-3 h-3" /> Upload different dataset
+                <RefreshCw className="w-3 h-3" />
+                <span className="hidden sm:inline">New dataset</span>
               </button>
             </div>
 
-            {/* TAB: EXPLORER SOURCE REGISTRY */}
-            {activeTab === "explorer" ? (
-              <div id="dynamic-explorer-dashboard" className="space-y-5 animate-fade-in">
-                <DataExplorer dbRows={dbRows} fileName={fileName} />
-              </div>
-            ) : (
-              
-              /* TAB: GENERATED REPORT DASHBOARD */
-              <div id="dynamic-reporting-dashboard" className="space-y-6">
-                
-                {/* 1. PORTFOLIO HEALTH SUMMARY WIDGET */}
-                <section id="portfolio-health-summary" className="bg-white border border-[#e5e5e5] rounded-2xl p-5 shadow-3xs animate-fade-in font-sans">
-                  <div className="border-b border-slate-100 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                      <h3 className="text-sm font-semibold text-[#1a1a1a]">Code Performance</h3>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        Quick overview of code segments by conversion performance
-                      </p>
-                    </div>
+            {/* Page content — key= triggers fade on page change */}
+            <div
+              key={reportPage}
+              className="flex-1 overflow-y-auto bg-[#f8f7f5]"
+              style={{ animation: 'fadeIn 180ms var(--ease-out)' }}
+            >
 
-                    <div className="flex items-center gap-2">
+              {/* ── PAGE: OVERVIEW ─────────────────────────────── */}
+              {reportPage === 'overview' && (
+                <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+
+                  {/* Hero card with food photo */}
+                  <div className="rounded-2xl overflow-hidden flex min-h-[180px] shadow-sm">
+                    {/* Left: brand panel */}
+                    <div className="flex-1 bg-[#2b5346] p-7 flex flex-col justify-between">
+                      <div>
+                        <p className="text-xs text-white/50 font-mono uppercase tracking-widest mb-2">Campaign Performance Report</p>
+                        <h2 className="text-2xl font-display font-semibold text-white leading-tight">
+                          {foundReports.length} codes analyzed
+                        </h2>
+                        <p className="text-sm text-white/70 mt-1">
+                          {fileName && <span className="font-mono">{fileName} · </span>}
+                          {dbRows.length.toLocaleString()} records
+                        </p>
+                      </div>
+                      <div className="flex gap-6 mt-4">
+                        <div>
+                          <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Blended Conv.</p>
+                          <p className="text-xl font-bold font-mono text-white">{summary.blendedConversionRate.toFixed(1)}%</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Avg LTV 12M</p>
+                          <p className="text-xl font-bold font-mono text-white">${Math.round(summary.averageLTV12).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Total Signups</p>
+                          <p className="text-xl font-bold font-mono text-white">{summary.totalSignups.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Right: food photo */}
+                    <div className="hidden sm:block w-[38%] shrink-0 relative">
+                      <img
+                        src="https://freshprep.imgix.net/landing/carousel/recipe_1.jpg?auto=compress,format&w=600"
+                        alt="FreshPrep meal"
+                        className="w-full h-full object-cover"
+                        style={{ filter: 'brightness(0.92) saturate(1.1)' }}
+                      />
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #2b5346 0%, transparent 30%)' }} />
+                    </div>
+                  </div>
+
+                  {/* Portfolio health tiles */}
+                  <div className="bg-white rounded-xl border border-[#e5e5e5] p-5 shadow-3xs">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-[#1a1a1a]">Code performance</h3>
                       <span className="text-[10px] bg-[#eef4f1] text-[#2b5346] px-2 py-0.5 rounded font-mono font-bold border border-[#2b5346]/20">
-                        {foundReports.length} Codes Audited
+                        {foundReports.length} Codes
                       </span>
                     </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                      <MetricTooltip title="Codes Analyzed" definition="Total unique promo codes matched and analyzed." note="Unmatched codes appear in Issues." position="below">
+                        <div className="p-3 bg-[#f8f7f5] rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '0ms' }}>
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a1a1a1] font-mono">Analyzed</p>
+                          <p className="text-xl font-bold text-[#1a1a1a] font-mono mt-0.5">{portfolioHealth?.total}</p>
+                          <p className="text-[9px] text-[#a1a1a1] mt-0.5">codes</p>
+                        </div>
+                      </MetricTooltip>
+                      <MetricTooltip title="High Converting" definition="Codes achieving ≥40% conversion." note="Strong. Replicate the offer structure." position="below">
+                        <div className="p-3 bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '40ms' }}>
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-[#2b5346] font-mono">High</p>
+                          <p className="text-xl font-bold text-[#2b5346] font-mono mt-0.5">{portfolioHealth?.strong}</p>
+                          <p className="text-[9px] text-[#3d3d3d] mt-0.5">≥ 40%</p>
+                        </div>
+                      </MetricTooltip>
+                      <MetricTooltip title="Average Performers" definition="Codes in the 20–39% conversion range." note="Monitor. Optimize targeting or offer." position="below">
+                        <div className="p-3 bg-[#fdf8e1] border border-[#e7bd27]/30 rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '80ms' }}>
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-[#8a6f00] font-mono">Average</p>
+                          <p className="text-xl font-bold text-[#8a6f00] font-mono mt-0.5">{portfolioHealth?.average}</p>
+                          <p className="text-[9px] text-[#3d3d3d] mt-0.5">20–39%</p>
+                        </div>
+                      </MetricTooltip>
+                      <MetricTooltip title="Weak Performers" definition="Codes below 20% conversion." note="Review for discontinuation or re-targeting." position="below">
+                        <div className="p-3 bg-[#fef3ed] border border-[#e78a58]/30 rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '120ms' }}>
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-[#9b4a1c] font-mono">Weak</p>
+                          <p className="text-xl font-bold text-[#9b4a1c] font-mono mt-0.5">{portfolioHealth?.weak}</p>
+                          <p className="text-[9px] text-[#3d3d3d] mt-0.5">&lt; 20%</p>
+                        </div>
+                      </MetricTooltip>
+                      <MetricTooltip title="Portfolio Conversion" definition="Total paying customers ÷ total signups across all codes." note="Weighted by volume — large codes affect this most." position="below">
+                        <div className="p-3 bg-[#f8f7f5] rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '160ms' }}>
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a1a1a1] font-mono">Conv.</p>
+                          <p className="text-xl font-bold text-[#1a1a1a] font-mono mt-0.5">{summary.blendedConversionRate.toFixed(1)}%</p>
+                          <p className="text-[9px] text-[#a1a1a1] mt-0.5">blended</p>
+                        </div>
+                      </MetricTooltip>
+                      <MetricTooltip title="Portfolio LTV" definition="Mean 12-month lifetime value per acquired customer." note="Higher LTV justifies higher acquisition cost." position="below">
+                        <div className="p-3 bg-[#f8f7f5] rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '200ms' }}>
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a1a1a1] font-mono">LTV 12M</p>
+                          <p className="text-xl font-bold text-[#1a1a1a] font-mono mt-0.5">${Math.round(summary.averageLTV12).toLocaleString()}</p>
+                          <p className="text-[9px] text-[#a1a1a1] mt-0.5">avg / customer</p>
+                        </div>
+                      </MetricTooltip>
+                    </div>
                   </div>
 
-                  {/* Healthy indicators grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-
-                    <MetricTooltip title="Codes Analyzed" definition="Total unique promo codes matched and analyzed in this report." note="Codes not found in your database appear in the Missing Codes section." position="below">
-                      <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left cursor-default"
-                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '0ms' }}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Codes Analyzed</p>
-                        <p className="text-lg font-bold text-[#1a1a1a] font-mono">{portfolioHealth?.total}</p>
-                        <p className="text-[9px] text-[#a1a1a1] font-medium">Mapped codes</p>
-                      </div>
-                    </MetricTooltip>
-
-                    <MetricTooltip title="High Converting" definition="Codes achieving ≥40% signup-to-subscription conversion." note="Strong performance. Consider increasing budget or replicating the offer structure." position="below">
-                      <div className="p-3 bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg space-y-1 text-center sm:text-left cursor-default"
-                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '50ms' }}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#2b5346] font-mono">High Converting</p>
-                        <p className="text-lg font-bold text-[#2b5346] font-mono">{portfolioHealth?.strong}</p>
-                        <p className="text-[9px] text-[#3d3d3d] font-medium">≥ 40% conversion</p>
-                      </div>
-                    </MetricTooltip>
-
-                    <MetricTooltip title="Average Performers" definition="Codes in the 20–39% conversion range." note="Worth monitoring. May improve with better targeting or offer adjustment." position="below">
-                      <div className="p-3 bg-[#fdf8e1] border border-[#e7bd27]/30 rounded-lg space-y-1 text-center sm:text-left cursor-default"
-                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '100ms' }}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8a6f00] font-mono">Average</p>
-                        <p className="text-lg font-bold text-[#8a6f00] font-mono">{portfolioHealth?.average}</p>
-                        <p className="text-[9px] text-[#3d3d3d] font-medium">20-39% conversion</p>
-                      </div>
-                    </MetricTooltip>
-
-                    <MetricTooltip title="Weak Performers" definition="Codes below 20% conversion." note="Review for discontinuation or re-targeting. Low return relative to portfolio average." position="below">
-                      <div className="p-3 bg-[#fef3ed] border border-[#e78a58]/30 rounded-lg space-y-1 text-center sm:text-left cursor-default"
-                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '150ms' }}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9b4a1c] font-mono">Weak</p>
-                        <p className="text-lg font-bold text-[#9b4a1c] font-mono">{portfolioHealth?.weak}</p>
-                        <p className="text-[9px] text-[#3d3d3d] font-medium">&lt; 20% conversion</p>
-                      </div>
-                    </MetricTooltip>
-
-                    <MetricTooltip title="Portfolio Conversion" definition="Weighted blended conversion rate: total paying customers ÷ total signups across all codes." note="High-volume codes pull this metric more than low-volume codes." position="below">
-                      <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left cursor-default"
-                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '200ms' }}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio Conv</p>
-                        <p className="text-lg font-bold text-[#1a1a1a] font-mono">{summary.blendedConversionRate.toFixed(1)}%</p>
-                        <p className="text-[9px] text-[#a1a1a1] font-medium">Blended rate</p>
-                      </div>
-                    </MetricTooltip>
-
-                    <MetricTooltip title="Portfolio LTV" definition="Mean 12-month lifetime value per acquired customer across all codes in this cohort." note="Higher LTV codes justify higher acquisition cost per signup." position="below">
-                      <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left cursor-default"
-                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '250ms' }}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio LTV</p>
-                        <p className="text-lg font-bold text-[#1a1a1a] font-mono">${Math.round(summary.averageLTV12).toLocaleString()}</p>
-                        <p className="text-[9px] text-[#a1a1a1] font-medium">Mean 12M LTV</p>
-                      </div>
-                    </MetricTooltip>
-
+                  {/* Key findings snapshot */}
+                  <div className="bg-white rounded-xl border border-[#e5e5e5] p-5 shadow-3xs">
+                    <h3 className="text-sm font-semibold text-[#1a1a1a] mb-3">Key findings</h3>
+                    <KeyFindingsSection reports={foundReports} summary={summary} />
                   </div>
-                </section>
 
-                {/* 2. PRIMARY KPI metrics cards */}
-                <section id="kpi-cards-section">
+                  {/* Navigation prompt */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      { page: 'performance' as const, label: 'Performance', sub: 'KPIs + conversion chart', color: '#2b5346', bg: '#eef4f1' },
+                      { page: 'revenue' as const,     label: 'Revenue',     sub: 'LTV + portfolio health', color: '#8a6f00', bg: '#fdf8e1' },
+                      { page: 'regional' as const,    label: 'Regional',    sub: 'Province breakdown',     color: '#3d3d3d', bg: '#f8f7f5' },
+                      { page: 'data' as const,        label: 'Data',        sub: 'Full sortable table',    color: '#3d3d3d', bg: '#f8f7f5' },
+                    ].map(item => (
+                      <button
+                        key={item.page}
+                        onClick={() => setReportPage(item.page)}
+                        className="text-left p-4 rounded-xl border cursor-pointer"
+                        style={{ backgroundColor: item.bg, borderColor: `${item.color}20`, transition: 'box-shadow 150ms var(--ease-out), transform 100ms var(--ease-out)' }}
+                        onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
+                        onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
+                      >
+                        <p className="text-xs font-semibold" style={{ color: item.color }}>{item.label}</p>
+                        <p className="text-[10px] text-[#a1a1a1] mt-0.5">{item.sub}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                </div>
+              )}
+
+              {/* ── PAGE: PERFORMANCE ──────────────────────────── */}
+              {reportPage === 'performance' && (
+                <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-base font-semibold text-[#1a1a1a]">Performance</h2>
+                    <span className="text-[10px] text-[#a1a1a1] font-mono">Conversion metrics + code leaderboard</span>
+                  </div>
                   <DashboardMetrics summary={summary} />
-                </section>
-
-                {/* 3. KEY FINDINGS SECTION */}
-                <section id="key-findings-section" className="animate-fade-in bg-white border border-slate-200 rounded-2xl p-4 shadow-3xs">
-                  <KeyFindingsSection reports={foundReports} summary={summary} />
-                </section>
-
-                {/* 4. VISUAL METRICS AND SMART WIDGET PANEL */}
-                <section id="charts-visualizers-section" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  
-                  {/* Performance Chart */}
-                  <div className="lg:col-span-8 flex flex-col justify-between">
-                    <PerformanceChart reports={foundReports} channels={channelSummary} />
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <div className="lg:col-span-8"><PerformanceChart reports={foundReports} channels={channelSummary} /></div>
+                    <div className="lg:col-span-4"><PortfolioSummaryWidget summary={summary} reports={foundReports} channels={channelSummary} /></div>
                   </div>
+                </div>
+              )}
 
-                  {/* Portfolio summary helper replacement */}
-                  <div className="lg:col-span-4 flex flex-col">
-                    <PortfolioSummaryWidget summary={summary} reports={foundReports} channels={channelSummary} />
+              {/* ── PAGE: REVENUE ──────────────────────────────── */}
+              {reportPage === 'revenue' && (
+                <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+                  {/* Revenue hero — warm gold accent */}
+                  <div className="rounded-2xl overflow-hidden flex min-h-[140px] shadow-sm">
+                    <div className="flex-1 p-6 flex flex-col justify-between" style={{ background: 'linear-gradient(135deg, #2b5346 0%, #3a6b58 100%)' }}>
+                      <p className="text-xs text-white/50 font-mono uppercase tracking-widest">Revenue snapshot</p>
+                      <div className="flex gap-8 mt-3">
+                        <div>
+                          <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Total LTV 12M</p>
+                          <p className="text-2xl font-bold font-mono text-white">${summary.totalLTV12.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Avg LTV 12M</p>
+                          <p className="text-2xl font-bold font-mono text-white">${Math.round(summary.averageLTV12).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Paying Cx</p>
+                          <p className="text-2xl font-bold font-mono text-white">{summary.totalPayingCustomers.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="hidden sm:block w-[30%] shrink-0 relative">
+                      <img
+                        src="https://freshprep.imgix.net/landing/carousel/recipe_2.jpg?auto=compress,format&w=400"
+                        alt="FreshPrep meal"
+                        className="w-full h-full object-cover"
+                        style={{ filter: 'brightness(0.88) saturate(1.05)' }}
+                      />
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #2b5346 0%, transparent 35%)' }} />
+                    </div>
                   </div>
+                  <PortfolioSummaryWidget summary={summary} reports={foundReports} channels={channelSummary} />
+                </div>
+              )}
 
-                </section>
-
-                {/* 5. PROVINCE INTELLIGENCE SECTION Automatically embedded in generated reports! */}
-                <section id="report-province-section" className="bg-white border border-slate-205 rounded-2xl p-6 shadow-xs">
-                  <div className="mb-4">
-                    <h2 className="text-xs font-semibold uppercase tracking-wider text-[#3d3d3d]">Regional breakdown</h2>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Performance metrics segmented by province/region
-                    </p>
+              {/* ── PAGE: REGIONAL ─────────────────────────────── */}
+              {reportPage === 'regional' && (
+                <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-base font-semibold text-[#1a1a1a]">Regional breakdown</h2>
+                    <span className="text-[10px] text-[#a1a1a1] font-mono">Performance by province</span>
                   </div>
-                  <ProvinceIntelligence dbRows={dbRows} foundReports={foundReports} />
-                </section>
+                  <div className="bg-white rounded-xl border border-[#e5e5e5] p-5 shadow-3xs">
+                    <ProvinceIntelligence dbRows={dbRows} foundReports={foundReports} />
+                  </div>
+                </div>
+              )}
 
-                {/* 5.5 UNMATCHED VOUCHER NOTIFICATIONS & CORRECTION WORKFLOW */}
-                {missingCodes.length > 0 && (
-                  <section id="report-missing-codes-section">
-                    <MissingCodesSection 
-                      missingCodes={missingCodes} 
-                      allDbCodes={uniqueDbCodes} 
+              {/* ── PAGE: DATA ─────────────────────────────────── */}
+              {reportPage === 'data' && (
+                <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-base font-semibold text-[#1a1a1a]">Data</h2>
+                      <span className="text-[10px] text-[#a1a1a1] font-mono">All {foundReports.length} codes</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setActiveTab2("explorer")} className="text-xs font-medium text-[#2b5346] hover:underline cursor-pointer">
+                        Raw explorer
+                      </button>
+                    </div>
+                  </div>
+                  <DetailedTable reports={foundReports} channels={uniqueChannels} />
+                  <div className="bg-white rounded-xl border border-[#e5e5e5] p-4 shadow-3xs">
+                    <h3 className="text-xs font-semibold text-[#3d3d3d] mb-3 uppercase tracking-wide">Source explorer</h3>
+                    <DataExplorer dbRows={dbRows} fileName={fileName} />
+                  </div>
+                </div>
+              )}
+
+              {/* ── PAGE: ISSUES ───────────────────────────────── */}
+              {reportPage === 'issues' && (
+                <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-base font-semibold text-[#1a1a1a]">Issues</h2>
+                    <span className="px-2 py-0.5 bg-[#fef3ed] text-[#9b4a1c] text-[10px] font-mono font-bold rounded border border-[#e78a58]/30">
+                      {missingCodes.length} unmatched
+                    </span>
+                  </div>
+                  {missingCodes.length > 0 && (
+                    <MissingCodesSection
+                      missingCodes={missingCodes}
+                      allDbCodes={uniqueDbCodes}
                       rawPastedCodes={rawPastedCodes}
                       foundReports={foundReports}
                       onApplyCorrections={(corrections) => {
@@ -1223,22 +1295,15 @@ export default function App() {
                         setInputText(uniqueNewCodes.join("\n"));
                       }}
                     />
-                  </section>
-                )}
+                  )}
+                </div>
+              )}
 
-                {/* 6. DETAILED DATA TABLE breakdown */}
-                <section id="report-details-section">
-                  <DetailedTable reports={foundReports} channels={uniqueChannels} />
-                </section>
-
-              </div>
-            )}
-
-            {/* Base operational footer */}
-            <footer id="saas-footer" className="text-[10px] text-[#a1a1a1] font-mono py-4 border-t border-[#e5e5e5] mt-auto shrink-0 flex items-center justify-between px-1">
-              <span>FreshPrep Campaign Intelligence · {new Date().getFullYear()}</span>
-              <span>All analysis runs client-side. No data leaves your browser.</span>
-            </footer>
+              {/* Footer */}
+              <footer id="saas-footer" className="text-[10px] text-[#a1a1a1] font-mono py-4 border-t border-[#e5e5e5] mt-auto flex items-center justify-between px-6 max-w-6xl mx-auto w-full">
+                <span>FreshPrep Campaign Intelligence · {new Date().getFullYear()}</span>
+                <span>All analysis runs client-side. No data leaves your browser.</span>
+              </footer>
 
             </div>
           </div>
