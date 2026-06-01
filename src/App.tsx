@@ -393,16 +393,6 @@ export default function App() {
                 }}
               />
 
-              {/* Logo top */}
-              <div className="relative z-10">
-                <img
-                  src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
-                  alt="FreshPrep"
-                  className="h-7 w-auto"
-                  style={{ filter: 'brightness(0) invert(1)' }}
-                />
-              </div>
-
               {/* Center content */}
               <div className="relative z-10 max-w-xs">
                 {/* Variety icon accent */}
@@ -520,6 +510,17 @@ export default function App() {
                       </li>
                     </ol>
                   </div>
+                </div>
+
+                {/* FreshPrep logo — below the steps, not duplicating the header */}
+                <div className="pt-4 border-t border-[#e5e5e5] flex items-center gap-2">
+                  <img
+                    src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
+                    alt="FreshPrep"
+                    className="h-5 w-auto opacity-40"
+                    style={{ filter: 'brightness(0)' }}
+                  />
+                  <span className="text-[10px] text-[#a1a1a1] font-mono uppercase tracking-widest">Campaign Intelligence</span>
                 </div>
 
               </div>
