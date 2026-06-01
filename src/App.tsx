@@ -366,98 +366,120 @@ export default function App() {
       {/* Main Container Core Router */}
       <main className="flex-1 overflow-hidden flex flex-col min-w-0" id="analysis-main-viewport">
         
-        {/* LAUNCH STATE: Display Upload Area & Instructions exclusively */}
+        {/* LAUNCH STATE: Asymmetric split layout */}
         {dbRows.length === 0 ? (
-          <div className="flex-1 overflow-y-auto px-4 py-8 sm:px-6 sm:py-12 md:py-20 flex flex-col items-center justify-center" id="launch-screen">
-            <div className="w-full max-w-2xl bg-white border border-slate-300 p-6 sm:p-8 md:p-12 rounded-2xl shadow-lg space-y-6 sm:space-y-8">
-              
-              {/* Premium Research-Grade Header */}
-              <div className="text-center space-y-2 sm:space-y-3">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 border border-blue-200 rounded-2xl flex items-center justify-center mx-auto shadow-md">
-                  <Upload className="w-7 h-7 sm:w-8 sm:h-8" />
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                  Research Data Portal
+          <div className="flex-1 flex flex-col md:flex-row overflow-hidden" id="launch-screen">
+
+            {/* Left brand panel */}
+            <div className="hidden md:flex md:w-[40%] flex-col justify-center px-12 bg-[#2b5346] text-white">
+              <div className="max-w-xs">
+                <h2 className="text-3xl font-display font-semibold leading-tight mb-4 text-white">
+                  Campaign code analysis, without the spreadsheet juggling.
                 </h2>
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg mx-auto">
-                  Upload campaign performance data for intelligent analysis. We'll validate, analyze, and surface insights automatically.
+                <p className="text-sm text-white/70 leading-relaxed">
+                  Upload an export from your database. We match codes, surface performance metrics, and flag what needs attention.
                 </p>
-              </div>
-
-              {/* UPLOAD DRAGZONE - Premium Experience */}
-              <div className="space-y-2">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept=".xlsx,.xls,.csv,.tsv"
-                  className="hidden"
-                  id="excel-file-uploader"
-                />
-
-                <div
-                  id="drag-drop-zone"
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={triggerBrowsingInput}
-                  className={`border-2 border-dashed rounded-xl p-6 sm:p-10 text-center cursor-pointer flex flex-col items-center justify-center min-h-[140px] sm:min-h-[180px] transition-all duration-300 ${
-                    isDragOver
-                      ? "border-blue-500 bg-blue-50 scale-105"
-                      : "border-slate-300 hover:border-blue-400 bg-slate-50 hover:bg-slate-100"
-                  }`}>
-                  <FileSpreadsheet className={`w-8 h-8 sm:w-12 sm:h-12 mb-3 sm:mb-4 transition-colors ${
-                    isDragOver ? "text-blue-600" : "text-slate-400"
-                  }`} />
-                  <p className="text-sm sm:text-base font-semibold text-slate-800">
-                    <span className="block mb-1">Drop your data file here</span>
-                    <span className="text-blue-600 text-xs sm:text-sm">or click to browse your computer</span>
-                  </p>
-                  <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">
-                    CSV, XLSX, XLS, TSV supported
-                  </p>
+                <div className="mt-8 pt-8 border-t border-white/15">
+                  <p className="text-xs text-white/50 font-mono uppercase tracking-wider">FreshPrep Campaign Intelligence</p>
                 </div>
               </div>
+            </div>
 
-              {/* SUPPORTED FORMAT AND GUIDE */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 pt-5 border-t border-slate-200">
-                <div className="space-y-2">
-                  <h4 className="text-xs uppercase tracking-wider font-bold text-slate-600 font-mono">
-                    📊 Accepted Formats
-                  </h4>
-                  <div className="flex flex-wrap gap-2" id="format-tags-list">
-                    {["CSV", "XLSX", "XLS", "TSV"].map(fmt => (
-                      <span key={fmt} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200">
-                        {fmt}
-                      </span>
-                    ))}
+            {/* Right upload panel */}
+            <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-12 bg-[#f8f7f5]">
+              <div className="w-full max-w-lg space-y-6">
+
+                {/* Mobile-only title */}
+                <div className="md:hidden text-center space-y-2">
+                  <h2 className="text-2xl font-display font-semibold text-[#1a1a1a]">
+                    Upload Campaign Data
+                  </h2>
+                  <p className="text-sm text-[#3d3d3d] leading-relaxed">
+                    Upload a CSV or XLSX export. We validate columns and surface performance automatically.
+                  </p>
+                </div>
+
+                {/* Desktop title */}
+                <div className="hidden md:block space-y-1">
+                  <h2 className="text-xl font-semibold text-[#1a1a1a]">Upload Campaign Data</h2>
+                  <p className="text-sm text-[#3d3d3d]">
+                    Upload a CSV or XLSX export. We validate columns and surface performance automatically.
+                  </p>
+                </div>
+
+                {/* Drag zone */}
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".xlsx,.xls,.csv,.tsv"
+                    className="hidden"
+                    id="excel-file-uploader"
+                  />
+                  <div
+                    id="drag-drop-zone"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={triggerBrowsingInput}
+                    className="border-2 border-dashed rounded-lg p-10 text-center cursor-pointer flex flex-col items-center justify-center min-h-[160px]"
+                    style={{
+                      borderColor: isDragOver ? '#2b5346' : '#e5e5e5',
+                      backgroundColor: isDragOver ? '#eef4f1' : '#ffffff',
+                      transition: 'border-color 200ms var(--ease-out), background-color 200ms var(--ease-out)',
+                    }}
+                  >
+                    <FileSpreadsheet
+                      className="w-10 h-10 mb-3"
+                      style={{ color: isDragOver ? '#2b5346' : '#a1a1a1', transition: 'color 200ms var(--ease-out)' }}
+                    />
+                    <p className="text-sm font-medium text-[#1a1a1a]">Drop your data file here</p>
+                    <p className="text-xs mt-1 font-medium" style={{ color: '#2b5346' }}>or click to browse</p>
+                    <p className="text-xs text-[#a1a1a1] mt-2 font-mono">CSV · XLSX · XLS · TSV</p>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-                    We auto-detect columns (promo code, signups, LTV, etc.) so your data format doesn't matter.
-                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <h4 className="text-xs uppercase tracking-wider font-bold text-slate-600 font-mono">
-                    🚀 Getting Started
-                  </h4>
-                  <ol className="space-y-1.5 text-xs sm:text-sm text-slate-600 font-medium leading-relaxed list-none">
-                    <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
-                      <span>Upload campaign data from your database</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
-                      <span>System validates and analyzes automatically</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded bg-blue-50 text-blue-700 font-bold font-mono text-[9px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                      <span>Filter, compare, and analyze data across different dimension instantly.</span>
-                    </li>
-                  </ol>
+                {/* Format + steps */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-5 border-t border-[#e5e5e5]">
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-[#3d3d3d] uppercase tracking-wide">
+                      Accepted formats
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {["CSV", "XLSX", "XLS", "TSV"].map(fmt => (
+                        <span key={fmt} className="px-2.5 py-1 text-xs font-mono font-semibold rounded border" style={{ backgroundColor: '#eef4f1', color: '#2b5346', borderColor: 'rgba(43,83,70,0.2)' }}>
+                          {fmt}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-[#3d3d3d] leading-relaxed">
+                      Column headers are auto-detected. Promo code, signups, LTV, and channel columns are mapped automatically.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-[#3d3d3d] uppercase tracking-wide">
+                      How it works
+                    </h4>
+                    <ol className="space-y-1.5 text-xs text-[#3d3d3d] leading-relaxed list-none">
+                      <li className="flex items-start gap-2">
+                        <span className="w-5 h-5 rounded-full text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#2b5346' }}>1</span>
+                        <span>Upload campaign export from your database</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="w-5 h-5 rounded-full text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#2b5346' }}>2</span>
+                        <span>Columns are validated and mapped automatically</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="w-5 h-5 rounded-full text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#2b5346' }}>3</span>
+                        <span>Filter, compare, and export results instantly</span>
+                      </li>
+                    </ol>
+                  </div>
                 </div>
+
               </div>
-
             </div>
           </div>
         ) : !hasReportGenerated ? (
