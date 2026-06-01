@@ -954,17 +954,44 @@ export default function App() {
         ) : (
           
           /* REPORT COMPILED VIEWPORT */
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 flex flex-col gap-5 select-text" id="report-dashboard">
+          <div className="flex-1 overflow-hidden flex flex-row select-text" id="report-dashboard">
+
+            {/* Sidebar navigation */}
+            <nav
+              id="report-sidebar"
+              className="hidden lg:flex flex-col w-48 shrink-0 border-r border-[#e5e5e5] bg-white overflow-y-auto py-5 px-3 gap-0.5"
+            >
+              {[
+                { id: 'portfolio-health-summary', label: 'Summary' },
+                { id: 'kpi-cards-section', label: 'KPIs' },
+                { id: 'key-findings-section', label: 'Findings' },
+                { id: 'charts-visualizers-section', label: 'Chart' },
+                { id: 'report-province-section', label: 'Provinces' },
+                { id: 'report-details-section', label: 'Data Table' },
+              ].map(item => (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className="px-3 py-2 text-xs text-[#3d3d3d] rounded hover:bg-[#f8f7f5] hover:text-[#2b5346] font-medium"
+                  style={{ transition: 'color 150ms var(--ease-out), background-color 150ms var(--ease-out)' }}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+
+            {/* Main content */}
+            <div className="flex-1 overflow-y-auto p-5 bg-[#f8f7f5] flex flex-col gap-5">
             
             {/* Tab switch row */}
-            <div className="flex border-b border-blue-100 gap-6 shrink-0 select-none pb-2 items-center justify-between" id="workspace-tabs-strip">
+            <div className="flex border-b border-[#e5e5e5] gap-6 shrink-0 select-none pb-2 items-center justify-between lg:hidden" id="workspace-tabs-strip">
               <div className="flex gap-4">
                 <button
                   id="report-tab-btn"
                   onClick={() => setActiveTab2("report")}
                   className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative transition-all cursor-pointer ${
                     activeTab === "report"
-                      ? "text-blue-800 border-b-2 border-blue-700 font-extrabold"
+                      ? "text-[#2b5346] border-b-2 border-[#2b5346] font-semibold"
                       : "text-slate-400 hover:text-slate-700"
                   }`}
                 >
@@ -975,7 +1002,7 @@ export default function App() {
                   onClick={() => setActiveTab2("explorer")}
                   className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative transition-all cursor-pointer ${
                     activeTab === "explorer"
-                      ? "text-blue-800 border-b-2 border-blue-700 font-extrabold"
+                      ? "text-[#2b5346] border-b-2 border-[#2b5346] font-semibold"
                       : "text-slate-400 hover:text-slate-705"
                   }`}
                 >
@@ -986,7 +1013,7 @@ export default function App() {
               {/* Reset view linkage */}
               <button
                 onClick={handleResetWorkspace}
-                className="text-[11px] text-blue-700 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-[#2b5346] hover:underline font-medium flex items-center gap-1 cursor-pointer"
               >
                 <RefreshCw className="w-3 h-3" /> Upload different dataset
               </button>
@@ -1006,10 +1033,7 @@ export default function App() {
                 <section id="portfolio-health-summary" className="bg-white border border-blue-100 rounded-2xl p-5 shadow-3xs animate-fade-in font-sans">
                   <div className="border-b border-slate-100 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                      <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-blue-600" />
-                        Code Performance Summary
-                      </h3>
+                      <h3 className="text-sm font-semibold text-[#1a1a1a]">Code Performance</h3>
                       <p className="text-[11px] text-slate-500 font-medium">
                         Quick overview of code segments by conversion performance
                       </p>
@@ -1025,70 +1049,58 @@ export default function App() {
                   {/* Healthy indicators grid */}
                   <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                     
-                    {/* Stat 1 */}
-                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1 text-center sm:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-450 font-mono">
-                        Codes Analyzed
-                      </p>
-                      <p className="text-lg font-black text-slate-900 font-display">
-                        {portfolioHealth?.total}
-                      </p>
-                      <p className="text-[9px] text-slate-450 font-medium">Mapped coupon targets</p>
+                    {/* Tile 1: Codes Analyzed */}
+                    <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left"
+                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '0ms' }}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Codes Analyzed</p>
+                      <p className="text-lg font-bold text-[#1a1a1a] font-mono">{portfolioHealth?.total}</p>
+                      <p className="text-[9px] text-[#a1a1a1] font-medium">Mapped codes</p>
                     </div>
 
-                    {/* Stat 2 */}
-                    <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl space-y-1 text-center sm:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-blue-850 font-mono">
-                        High Converting
-                      </p>
-                      <p className="text-lg font-black text-blue-700 font-display">
-                        {portfolioHealth?.strong}
-                      </p>
-                      <p className="text-[9px] text-blue-600 font-semibold">≥ 40% conversion</p>
+                    {/* Tile 2: High Converting */}
+                    <div className="p-3 bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg space-y-1 text-center sm:text-left"
+                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '50ms' }}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#2b5346] font-mono">High Converting</p>
+                      <p className="text-lg font-bold text-[#2b5346] font-mono">{portfolioHealth?.strong}</p>
+                      <p className="text-[9px] text-[#3d3d3d] font-medium">≥ 40% conversion</p>
                     </div>
 
-                    {/* Stat 3 */}
-                    <div className="p-3 bg-amber-50/30 border border-amber-100 rounded-xl space-y-1 text-center sm:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-850 font-mono">
-                        Average Codes
-                      </p>
-                      <p className="text-lg font-black text-amber-700 font-display">
-                        {portfolioHealth?.average}
-                      </p>
-                      <p className="text-[9px] text-amber-600 font-semibold">20-39% conversion</p>
+                    {/* Tile 3: Average */}
+                    <div className="p-3 bg-[#fdf8e1] border border-[#e7bd27]/30 rounded-lg space-y-1 text-center sm:text-left"
+                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '100ms' }}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8a6f00] font-mono">Average</p>
+                      <p className="text-lg font-bold text-[#8a6f00] font-mono">{portfolioHealth?.average}</p>
+                      <p className="text-[9px] text-[#3d3d3d] font-medium">20–39% conversion</p>
                     </div>
 
-                    {/* Stat 4 */}
-                    <div className="p-3 bg-rose-50/30 border border-rose-100 rounded-xl space-y-1 text-center sm:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-rose-850 font-mono">
-                        Weak Codes
-                      </p>
-                      <p className="text-lg font-black text-rose-700 font-display">
-                        {portfolioHealth?.weak}
-                      </p>
-                      <p className="text-[9px] text-rose-600 font-semibold">&lt; 20% conversion</p>
+                    {/* Tile 4: Weak */}
+                    <div className="p-3 bg-[#fef3ed] border border-[#e78a58]/30 rounded-lg space-y-1 text-center sm:text-left"
+                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '150ms' }}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9b4a1c] font-mono">Weak</p>
+                      <p className="text-lg font-bold text-[#9b4a1c] font-mono">{portfolioHealth?.weak}</p>
+                      <p className="text-[9px] text-[#3d3d3d] font-medium">&lt; 20% conversion</p>
                     </div>
 
-                    {/* Stat 5 */}
-                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1 text-center sm:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-450 font-mono">
-                        Portfolio Conv
-                      </p>
-                      <p className="text-lg font-black text-indigo-750 font-display">
-                        {summary.blendedConversionRate.toFixed(1)}%
-                      </p>
-                      <p className="text-[9px] text-slate-450 font-medium font-sans">Cohort input blended</p>
+                    {/* Tile 5: Portfolio Conv */}
+                    <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left"
+                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '200ms' }}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio Conv</p>
+                      <p className="text-lg font-bold text-[#1a1a1a] font-mono">{summary.blendedConversionRate.toFixed(1)}%</p>
+                      <p className="text-[9px] text-[#a1a1a1] font-medium">Blended rate</p>
                     </div>
 
-                    {/* Stat 6 */}
-                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1 text-center sm:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-450 font-mono">
-                        Portfolio LTV
-                      </p>
-                      <p className="text-lg font-black text-slate-700 font-display">
-                        ${Math.round(summary.averageLTV12).toLocaleString()}
-                      </p>
-                      <p className="text-[9px] text-slate-450 font-medium font-sans">Mean 12M customer LTV</p>
+                    {/* Tile 6: Portfolio LTV */}
+                    <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left"
+                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '250ms' }}
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio LTV</p>
+                      <p className="text-lg font-bold text-[#1a1a1a] font-mono">${Math.round(summary.averageLTV12).toLocaleString()}</p>
+                      <p className="text-[9px] text-[#a1a1a1] font-medium">Mean 12M LTV</p>
                     </div>
 
                   </div>
@@ -1122,9 +1134,7 @@ export default function App() {
                 {/* 5. PROVINCE INTELLIGENCE SECTION Automatically embedded in generated reports! */}
                 <section id="report-province-section" className="bg-white border border-slate-205 rounded-2xl p-6 shadow-xs">
                   <div className="mb-4">
-                    <h2 className="text-xs font-bold font-mono uppercase tracking-widest text-blue-800">
-                      📍 Regional Breakdown
-                    </h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-[#3d3d3d]">Regional breakdown</h2>
                     <p className="text-[11px] text-slate-500 mt-0.5">
                       Performance metrics segmented by province/region
                     </p>
@@ -1162,11 +1172,12 @@ export default function App() {
             )}
 
             {/* Base operational footer */}
-            <footer id="saas-footer" className="text-center text-[10px] text-slate-400 font-mono py-4 border-t border-slate-200 mt-auto shrink-0 flex items-center justify-between">
-              <span>Fresh Prep Campaign Intelligence &copy; {new Date().getFullYear()}</span>
-              <span>Validated 100% Client-Side inside secure sandboxed event layers.</span>
+            <footer id="saas-footer" className="text-[10px] text-[#a1a1a1] font-mono py-4 border-t border-[#e5e5e5] mt-auto shrink-0 flex items-center justify-between px-1">
+              <span>FreshPrep Campaign Intelligence · {new Date().getFullYear()}</span>
+              <span>All analysis runs client-side. No data leaves your browser.</span>
             </footer>
 
+            </div>
           </div>
         )}
 
