@@ -216,7 +216,7 @@ export default function MissingCodesSection({
             whileTap={{ scale: 0.98 }}
             type="button"
             onClick={handleAcceptAllHighConfidence}
-            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-650 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-2 hover:shadow transition cursor-pointer w-full md:w-auto shrink-0"
+            className="px-4 py-2.5 bg-[#2b5346] hover:bg-[#0d3a2f] text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-2 hover:shadow transition cursor-pointer w-full md:w-auto shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#e7bd27] shrink-0" />
             Accept All ({highConfidenceCount}) High-Confidence Matches
@@ -238,12 +238,12 @@ export default function MissingCodesSection({
         <div className="flex flex-col justify-center py-1 pl-0 lg:pl-5">
           <span className="text-[10px] font-bold text-slate-400 select-none uppercase tracking-widest block">Matched Codes</span>
           <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className="text-lg sm:text-xl font-black text-emerald-600">{matchedCount}</span>
+            <span className="text-lg sm:text-xl font-black text-[#2b5346]">{matchedCount}</span>
             {activeCorrections.length > 0 && (
               <motion.span 
                 initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="text-xs text-emerald-700 font-extrabold"
+                className="text-xs text-[#2b5346] font-extrabold"
               >
                 → {projectedMatched}
               </motion.span>
@@ -254,7 +254,7 @@ export default function MissingCodesSection({
         <div className="flex flex-col justify-center py-1 pl-0 lg:pl-5">
           <span className="text-[10px] font-bold text-slate-400 select-none uppercase tracking-widest block">Unmatched Codes</span>
           <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className="text-lg sm:text-xl font-black text-rose-600">{unmatchedCount}</span>
+            <span className="text-lg sm:text-xl font-black text-[#850b0b]">{unmatchedCount}</span>
             {activeCorrections.length > 0 && (
               <motion.span 
                 initial={{ scale: 0.85, opacity: 0 }}
@@ -270,7 +270,7 @@ export default function MissingCodesSection({
         <div className="flex flex-col justify-center py-1 pl-0 lg:pl-5">
           <span className="text-[10px] font-bold text-slate-400 select-none uppercase tracking-widest block">Current Match Rate</span>
           <div className="flex items-baseline gap-2 mt-0.5">
-            <span className={`text-lg sm:text-xl font-black ${matchRate >= 80 ? "text-emerald-600" : matchRate >= 50 ? "text-[#e78a58]" : "text-rose-500"}`}>
+            <span className={`text-lg sm:text-xl font-black ${matchRate >= 80 ? "text-[#2b5346]" : matchRate >= 50 ? "text-[#e78a58]" : "text-[#850b0b]"}`}>
               {matchRate.toFixed(1)}%
             </span>
             {activeCorrections.length > 0 && (
@@ -280,7 +280,7 @@ export default function MissingCodesSection({
                 className="flex items-center gap-1 shrink-0"
               >
                 <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span className="text-[9.5px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded shrink-0">
+                <span className="text-[9.5px] bg-[#eef4f1] text-[#2b5346] font-extrabold px-1.5 py-0.5 rounded shrink-0">
                   {projectedMatchRate.toFixed(1)}% Projected
                 </span>
               </motion.div>
@@ -326,7 +326,7 @@ export default function MissingCodesSection({
                     id={`unmatched-card-${code}`}
                     className={`p-4 rounded-xl border transition-all ${
                       type !== "none" 
-                        ? "bg-emerald-50/15 border-emerald-400 shadow-3xs" 
+                        ? "bg-[#eef4f1]/40 border-[#2b5346] shadow-3xs"
                         : "bg-white border-slate-200 hover:border-slate-350"
                     }`}
                   >
@@ -343,7 +343,7 @@ export default function MissingCodesSection({
                           title="Copy original code key"
                         >
                           {copiedCode === code ? (
-                            <Check className="w-3 h-3 text-emerald-600" />
+                            <Check className="w-3 h-3 text-[#2b5346]" />
                           ) : (
                             <Copy className="w-3 h-3" />
                           )}
@@ -352,7 +352,7 @@ export default function MissingCodesSection({
 
                       <div className="flex items-center gap-1.5 justify-between sm:justify-start w-full sm:w-auto">
                         {type === "suggest" && (
-                          <span className="text-[10px] bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="text-[10px] bg-[#eef4f1] border border-[#2b5346]/20 text-[#2b5346] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1">
                             <Check className="w-3 h-3 shrink-0" /> Linked to {currentSuggVal}
                           </span>
                         )}
@@ -362,7 +362,7 @@ export default function MissingCodesSection({
                           </span>
                         )}
                         {type === "none" && (
-                          <span className="text-[9.5px] bg-rose-50 text-rose-700/80 font-bold px-2 py-0.5 rounded-lg border border-rose-100/40 uppercase font-mono">
+                          <span className="text-[9.5px] bg-[#ffd0d0] text-[#850b0b]/80 font-bold px-2 py-0.5 rounded-lg border border-[#850b0b]/20 uppercase font-mono">
                             Unresolved
                           </span>
                         )}
@@ -371,7 +371,7 @@ export default function MissingCodesSection({
                           <button
                             type="button"
                             onClick={() => handleResetCode(code)}
-                            className="text-[10px] text-rose-600 hover:text-rose-800 font-bold hover:underline cursor-pointer ml-auto sm:ml-0"
+                            className="text-[10px] text-[#850b0b] hover:text-[#5c0707] font-bold hover:underline cursor-pointer ml-auto sm:ml-0"
                             title="Clear selection"
                           >
                             Remove
@@ -548,7 +548,7 @@ export default function MissingCodesSection({
                               <button
                                 type="button"
                                 onClick={() => handleResetCode(corr.original)}
-                                className="p-1 rounded text-rose-500 hover:text-white hover:bg-rose-500 transition cursor-pointer"
+                                className="p-1 rounded text-[#850b0b] hover:text-white hover:bg-[#850b0b] transition cursor-pointer"
                                 title="Remove from correction queue"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -570,11 +570,11 @@ export default function MissingCodesSection({
               <motion.div 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-[11px] text-emerald-850 leading-relaxed font-sans shadow-3xs flex items-start gap-2"
+                className="bg-[#eef4f1] border border-[#2b5346]/20 rounded-xl p-3 text-[11px] text-[#2b5346] leading-relaxed font-sans shadow-3xs flex items-start gap-2"
               >
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <CheckCircle className="w-4 h-4 text-[#2b5346] shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">Corrective Impact Recalculated:</span> Applying these {activeCorrections.length} correction{activeCorrections.length === 1 ? "" : "s"} will bolster your located records rate from <span className="font-bold underline">{matchRate.toFixed(1)}%</span> to a projected <span className="font-bold underline text-emerald-700 text-xs">{projectedMatchRate.toFixed(1)}%</span> instantly with full KPI alignment.
+                  <span className="font-bold">Corrective Impact Recalculated:</span> Applying these {activeCorrections.length} correction{activeCorrections.length === 1 ? "" : "s"} will bolster your located records rate from <span className="font-bold underline">{matchRate.toFixed(1)}%</span> to a projected <span className="font-bold underline text-[#2b5346] text-xs">{projectedMatchRate.toFixed(1)}%</span> instantly with full KPI alignment.
                 </div>
               </motion.div>
             )}
@@ -587,7 +587,7 @@ export default function MissingCodesSection({
               disabled={activeCorrections.length === 0}
               className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-tight transition shadow-sm flex items-center justify-center gap-2 cursor-pointer ${
                 activeCorrections.length > 0
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 hover:shadow-md"
+                  ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-[#2b5346]/20 hover:shadow-md"
                   : "bg-slate-100 text-slate-400 border border-slate-205 cursor-not-allowed shadow-none"
               }`}
             >

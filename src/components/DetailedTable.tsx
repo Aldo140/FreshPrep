@@ -96,22 +96,22 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
       case "Elite":
         return "bg-purple-50 text-purple-800 border-purple-200";
       case "Strong":
-        return "bg-emerald-50 text-emerald-800 border-emerald-200";
+        return "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
       case "Good":
-        return "bg-blue-50 text-blue-800 border-blue-200";
+        return "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
       case "Average":
         return "bg-amber-50 text-amber-805 border-amber-200";
       case "Weak":
       default:
-        return "bg-rose-50 text-rose-800 border-rose-200";
+        return "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20";
     }
   };
 
   const getPerformanceGradeClass = (grade: string) => {
-    if (grade.startsWith("A")) return "text-emerald-700 font-extrabold";
-    if (grade.startsWith("B")) return "text-emerald-600 font-bold";
+    if (grade.startsWith("A")) return "text-[#2b5346] font-extrabold";
+    if (grade.startsWith("B")) return "text-[#2b5346] font-bold";
     if (grade.startsWith("C")) return "text-amber-700 font-medium";
-    return "text-rose-600 font-medium";
+    return "text-[#850b0b] font-medium";
   };
 
   // Handle columns sorting triggers
@@ -129,9 +129,9 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
     if (sortField !== field) {
       return <ArrowUpDown className="w-3.5 h-3.5 ml-1 text-slate-400 flex-shrink-0" />;
     }
-    return sortOrder === "asc" 
-      ? <ArrowUp className="w-3.5 h-3.5 ml-1 text-emerald-700 flex-shrink-0 font-extrabold" />
-      : <ArrowDown className="w-3.5 h-3.5 ml-1 text-emerald-700 flex-shrink-0 font-extrabold" />;
+    return sortOrder === "asc"
+      ? <ArrowUp className="w-3.5 h-3.5 ml-1 text-[#2b5346] flex-shrink-0 font-extrabold" />
+      : <ArrowDown className="w-3.5 h-3.5 ml-1 text-[#2b5346] flex-shrink-0 font-extrabold" />;
   };
 
   // Filter and sort the dataset based on active inputs
@@ -222,7 +222,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 uppercase tracking-tight">
-              <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
+              <SlidersHorizontal className="w-4 h-4 text-[#2b5346]" />
               Promo Code Ledger & Filter Controls
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -245,7 +245,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-8.5 pr-3 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 font-medium font-sans"
+                className="w-full pl-8.5 pr-3 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] font-medium font-sans"
               />
             </div>
 
@@ -258,7 +258,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                   setBadgeFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer font-medium font-sans"
+                className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#2b5346] cursor-pointer font-medium font-sans"
               >
                 <option value="ALL">All Scores</option>
                 <option value="Elite">Elite (95+)</option>
@@ -278,7 +278,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                   setChannelFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer font-medium font-sans sm:max-w-[140px] truncate"
+                className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#2b5346] cursor-pointer font-medium font-sans sm:max-w-[140px] truncate"
               >
                 <option value="ALL">All Channels</option>
                 {channels.map((chan) => (
@@ -298,7 +298,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                   setRatingFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer font-medium font-sans"
+                className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-250 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#2b5346] cursor-pointer font-medium font-sans"
               >
                 <option value="ALL">All Ratings</option>
                 <option value="Strong">Strong (&ge;40%)</option>
@@ -344,7 +344,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                         >
                           <span>{col.label}</span>
                           {visibleColumns[col.key] && (
-                            <Check className="w-3.5 h-3.5 text-emerald-600 font-extrabold" />
+                            <Check className="w-3.5 h-3.5 text-[#2b5346] font-extrabold" />
                           )}
                         </button>
                       ))}
@@ -386,7 +386,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
             )}
             <button
               onClick={clearAllFilters}
-              className="text-[10px] text-emerald-800 font-bold hover:underline ml-auto cursor-pointer"
+              className="text-[10px] text-[#2b5346] font-bold hover:underline ml-auto cursor-pointer"
             >
               Reset Filters
             </button>
@@ -507,7 +507,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                   className="py-2.5 px-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors"
                   onClick={() => requestSort("efficiencyRatio")}
                 >
-                  <div className="flex items-center justify-end text-emerald-800">
+                  <div className="flex items-center justify-end text-[#2b5346]">
                     Eff. Ratio <SortIcon field="efficiencyRatio" />
                   </div>
                 </th>
@@ -599,7 +599,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                     </td>
                   )}
                   {visibleColumns.efficiency && (
-                    <td className="py-2.5 px-4 text-right font-mono font-extrabold text-emerald-800">
+                    <td className="py-2.5 px-4 text-right font-mono font-extrabold text-[#2b5346]">
                       {row.efficiencyRatio.toFixed(1)}x
                     </td>
                   )}
@@ -666,7 +666,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                 onClick={() => handlePageChange(idx)}
                 className={`w-7 h-7 flex items-center justify-center text-[11px] rounded font-bold cursor-pointer transition ${
                   currentPage === idx
-                    ? "bg-emerald-600 text-white shadow-2xs border border-emerald-500"
+                    ? "bg-[#2b5346] text-white shadow-2xs border border-[#2b5346]"
                     : "text-slate-600 border border-slate-250 hover:bg-slate-100 bg-white"
                 }`}
               >
