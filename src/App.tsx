@@ -294,15 +294,19 @@ export default function App() {
       >
         {/* Wordmark */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 bg-white/15 rounded-md flex items-center justify-center shrink-0">
-            <BarChart3 className="w-4 h-4 text-white" />
-          </div>
+          <img
+            src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
+            alt="FreshPrep"
+            className="h-6 w-auto shrink-0"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
+          <div className="hidden sm:block w-px h-4 bg-white/25 shrink-0" />
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold text-white tracking-tight font-display leading-none">
-              FreshPrep Campaign Intelligence
+            <h1 className="text-xs font-medium text-white/80 tracking-widest uppercase font-mono leading-none">
+              Campaign Intelligence
             </h1>
             {fileName && (
-              <p className="text-xs text-white/60 font-mono leading-none mt-0.5 truncate max-w-[280px]">
+              <p className="text-xs text-white/50 font-mono leading-none mt-0.5 truncate max-w-[280px]">
                 {fileName} · {dbRows.length.toLocaleString()} records
               </p>
             )}
@@ -371,17 +375,52 @@ export default function App() {
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden" id="launch-screen">
 
             {/* Left brand panel */}
-            <div className="hidden md:flex md:w-[40%] flex-col justify-center px-12 bg-[#2b5346] text-white">
-              <div className="max-w-xs">
+            <div
+              className="hidden md:flex md:w-[40%] flex-col justify-between px-12 py-10 text-white relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(160deg, #1a3d2e 0%, #2b5346 45%, #3a6b58 100%)',
+              }}
+            >
+              {/* Subtle food-warm radial accent */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(ellipse at 80% 110%, rgba(231,189,39,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% -10%, rgba(231,138,88,0.10) 0%, transparent 50%)',
+                }}
+              />
+
+              {/* Logo top */}
+              <div className="relative z-10">
+                <img
+                  src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
+                  alt="FreshPrep"
+                  className="h-7 w-auto"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
+              </div>
+
+              {/* Center content */}
+              <div className="relative z-10 max-w-xs">
+                {/* Variety icon accent */}
+                <div className="mb-6 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                  <img
+                    src="https://freshprep.imgix.net/landing/variety.svg?auto=compress,format"
+                    alt=""
+                    className="w-7 h-7"
+                    style={{ filter: 'brightness(0) invert(1) opacity(0.9)' }}
+                  />
+                </div>
                 <h2 className="text-3xl font-display font-semibold leading-tight mb-4 text-white">
                   Campaign code analysis, without the spreadsheet juggling.
                 </h2>
                 <p className="text-sm text-white/70 leading-relaxed">
                   Upload an export from your database. We match codes, surface performance metrics, and flag what needs attention.
                 </p>
-                <div className="mt-8 pt-8 border-t border-white/15">
-                  <p className="text-xs text-white/50 font-mono uppercase tracking-wider">FreshPrep Campaign Intelligence</p>
-                </div>
+              </div>
+
+              {/* Bottom label */}
+              <div className="relative z-10 pt-6 border-t border-white/15">
+                <p className="text-xs text-white/40 font-mono uppercase tracking-widest">Campaign Intelligence</p>
               </div>
             </div>
 
@@ -1252,8 +1291,14 @@ export default function App() {
             <div className="border-b-2 border-zinc-900 pb-5 mb-8">
               <div className="flex justify-between items-start">
                 <div>
-                  <h1 className="text-2xl font-black uppercase tracking-tight text-zinc-900">
-                    EVENT CODE AUDIT EXECUTIVE PERFORMANCE SUMMARY
+                  <img
+                    src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
+                    alt="FreshPrep"
+                    className="h-7 w-auto mb-3"
+                    style={{ filter: 'brightness(0)' }}
+                  />
+                  <h1 className="text-xl font-black uppercase tracking-tight text-zinc-900">
+                    Campaign Performance Report
                   </h1>
                   <p className="text-xs font-mono text-zinc-500 mt-1">
                     Analysis Compiled: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
@@ -1263,7 +1308,7 @@ export default function App() {
                   <span className="px-3 py-1 bg-zinc-900 text-white font-mono font-bold text-[10px] rounded">
                     INTERNAL CONFIDENTIAL
                   </span>
-                  <p className="text-[10px] font-mono mt-2 text-zinc-500">Fresh Prep Event Intelligence Report</p>
+                  <p className="text-[10px] font-mono mt-2 text-zinc-500">FreshPrep Campaign Intelligence</p>
                 </div>
               </div>
             </div>
