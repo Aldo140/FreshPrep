@@ -91,8 +91,8 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
       {/* LEFT COLUMN: Data Loaded successfully & Column checker */}
       <div className="xl:col-span-5 bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between shadow-2xs gap-5">
         <div>
-          <div className="flex items-center gap-2 text-emerald-700 mb-2">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" id="explorer-success-check-icon" />
+          <div className="flex items-center gap-2 text-[#2b5346] mb-2">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-[#2b5346]" id="explorer-success-check-icon" />
             <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">
               Dataset Loaded Successfully
             </h3>
@@ -115,8 +115,8 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5" id="detected-columns-grid">
               {detectedColumns.map((col) => (
                 <div key={col.name} className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <span className={`text-[10.5px] font-bold ${col.detected ? "text-emerald-600" : "text-rose-500"}`}>
-                    {col.detected ? "✓" : "✗"}
+                  <span className={`text-[10.5px] font-bold ${col.detected ? "text-[#2b5346]" : "text-rose-500"}`}>
+                    {col.detected ? "+" : "-"}
                   </span>
                   <span className="font-mono text-[11px] truncate text-slate-650" title={col.name}>{col.name}</span>
                 </div>
@@ -136,7 +136,7 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5 uppercase">
-                <Database className="w-4 h-4 text-emerald-600" />
+                <Database className="w-4 h-4 text-[#2b5346]" />
                 Query Database Registry
               </h3>
               <p className="text-[11px] text-slate-500 font-sans mt-0.5 animate-pulse">
@@ -154,7 +154,7 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
               placeholder="Type to search codes (e.g. 'MODERN', 'SPRUCE', 'EVMODERN26')..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8.5 pr-4 py-2 text-xs rounded-lg border border-slate-250 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 font-medium"
+              className="w-full pl-8.5 pr-4 py-2 text-xs rounded-lg border border-slate-250 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] font-medium"
             />
           </div>
 
@@ -163,9 +163,9 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
             <div className="space-y-3 animate-fade-in" id="dataset-search-outputs">
               {/* Scenario 1: Exact Match Found */}
               {searchResult.exactMatch && (
-                <div className="bg-emerald-50 border border-emerald-150 p-3 rounded-lg">
+                <div className="bg-[#eef4f1] border border-[#2b5346]/20 p-3 rounded-lg">
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/60 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#2b5346] bg-[#eef4f1]/60 px-2 py-0.5 rounded">
                       Exact Match Found
                     </span>
                     <span className="text-[10px] font-sans font-semibold text-slate-500">
@@ -195,7 +195,7 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
                       <button
                         key={`${row.discount_code}-${row.Province || "ON"}-${index}`}
                         onClick={() => setSearchQuery(row.discount_code)}
-                        className="p-2 border border-slate-200 rounded-lg text-left hover:border-emerald-500 hover:bg-emerald-50/10 transition text-xs flex items-center justify-between cursor-pointer"
+                        className="p-2 border border-slate-200 rounded-lg text-left hover:border-[#2b5346] hover:bg-[#eef4f1]/10 transition text-xs flex items-center justify-between cursor-pointer"
                       >
                         <span className="font-mono font-bold text-slate-700 truncate">{row.discount_code}</span>
                         <ArrowRight className="w-3 h-3 text-slate-400" />
@@ -207,8 +207,8 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
 
               {/* Scenario 3: No Match & Fuzzy Suggestions */}
               {!searchResult.exactMatch && searchResult.partials.length === 0 && (
-                <div className="bg-amber-50/50 border border-amber-150 p-3.5 rounded-lg space-y-2">
-                  <div className="flex items-start gap-2 text-amber-800">
+                <div className="bg-[#fef3ed]/50 border border-[#e78a58]/30 p-3.5 rounded-lg space-y-2">
+                  <div className="flex items-start gap-2 text-[#9b4a1c]">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-xs font-bold font-sans">No exact match located for "{searchResult.searched}"</p>
@@ -229,7 +229,7 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
                             key={code}
                             type="button"
                             onClick={() => setSearchQuery(code)}
-                            className="px-2.5 py-1 bg-white hover:bg-amber-100 border border-amber-200 text-xs font-mono font-bold text-amber-800 rounded transition cursor-pointer shadow-3xs"
+                            className="px-2.5 py-1 bg-white hover:bg-[#fef3ed] border border-[#e78a58]/30 text-xs font-mono font-bold text-[#9b4a1c] rounded transition cursor-pointer shadow-3xs"
                           >
                             {code}
                           </button>
@@ -283,12 +283,12 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
         {/* Action Link to help debug inputs */}
         <div className="border-t border-slate-100 pt-2 flex justify-between items-center text-[10px] font-sans">
           <span className="text-slate-450">Use the sidebar list to modify the query list.</span>
-          <button 
+          <button
             type="button"
-            onClick={() => setSearchQuery("MODERN")} 
-            className="text-emerald-800 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+            onClick={() => setSearchQuery("MODERN")}
+            className="text-[#2b5346] font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
           >
-            Try demo search "MODERN" <ArrowRight className="w-3 h-3" />
+            Try demo search MODERN <ArrowRight className="w-3 h-3" />
           </button>
         </div>
       </div>

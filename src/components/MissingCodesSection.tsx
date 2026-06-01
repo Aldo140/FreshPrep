@@ -195,10 +195,10 @@ export default function MissingCodesSection({
     <div id="unmatched-corrections-panel" className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden font-sans space-y-0">
       
       {/* SECTION HEADER */}
-      <div className="p-5 border-b border-rose-100 bg-gradient-to-r from-rose-50/40 via-red-50/10 to-transparent flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 border-b border-[#e78a58]/30 bg-gradient-to-r from-[#fef3ed]/40 via-[#fef3ed]/10 to-transparent flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 shrink-0">
-            <Zap className="w-5 h-5 text-rose-500 animate-pulse" />
+          <div className="p-2.5 rounded-xl bg-[#fef3ed] text-[#e78a58] border border-[#e78a58]/30 shrink-0">
+            <Zap className="w-5 h-5 text-[#e78a58] animate-pulse" />
           </div>
           <div>
             <h3 className="text-sm sm:text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
@@ -291,9 +291,9 @@ export default function MissingCodesSection({
       </div>
 
       {/* AUTO FORMAT CHIP BANNER */}
-      <div className="bg-amber-50/35 border-b border-amber-100/40 px-5 py-2.5 flex items-center justify-between text-[11px] text-amber-850">
+      <div className="bg-[#fef3ed]/35 border-b border-[#e78a58]/40 px-5 py-2.5 flex items-center justify-between text-[11px] text-[#9b4a1c]">
         <p className="flex items-center gap-1.5 leading-relaxed font-medium">
-          <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+          <Sparkles className="w-3.5 h-3.5 text-[#e78a58] shrink-0" />
           <span><strong className="font-bold">Automated Spellcheck Active:</strong> Case mismatches, surrounding spacing, and common separators (dashes/underscores) are pre-aligned and matched silently. Only major typographic differences require verification below.</span>
         </p>
       </div>
@@ -374,7 +374,7 @@ export default function MissingCodesSection({
                             className="text-[10px] text-rose-600 hover:text-rose-800 font-bold hover:underline cursor-pointer ml-auto sm:ml-0"
                             title="Clear selection"
                           >
-                            ✕ Reset
+                            Remove
                           </button>
                         )}
                       </div>
@@ -394,27 +394,27 @@ export default function MissingCodesSection({
                               type="button"
                               onClick={() => handleSelectSuggestion(code, sugg.code)}
                               className={`w-full text-left px-3 py-2 rounded-lg border text-xs font-medium transition flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 cursor-pointer ${
-                                isItemSelected 
-                                  ? "bg-emerald-500/10 border-emerald-500 text-emerald-950 font-bold" 
+                                isItemSelected
+                                  ? "bg-[#2b5346]/10 border-[#2b5346] text-[#2b5346] font-bold"
                                   : "bg-slate-50/50 hover:bg-slate-105 border-slate-150 text-slate-705"
                               }`}
                             >
                               <div className="flex items-center gap-2">
                                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                  isItemSelected ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-350 bg-white"
+                                  isItemSelected ? "border-[#2b5346] bg-[#2b5346] text-white" : "border-slate-350 bg-white"
                                 }`}>
                                   {isItemSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                 </div>
                                 <span className="font-mono text-[11px] font-bold">{sugg.code}</span>
                               </div>
-                              
+
                               <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0 text-[10px]">
                                 <span className="text-slate-400">Confidence:</span>
                                 <span className={`font-black px-1.5 py-0.5 rounded font-mono shrink-0 ${
-                                  sugg.tier === "High" 
-                                    ? "bg-emerald-100 text-emerald-800" 
-                                    : sugg.tier === "Medium" 
-                                      ? "bg-amber-100 text-amber-850" 
+                                  sugg.tier === "High"
+                                    ? "bg-[#eef4f1] text-[#2b5346]"
+                                    : sugg.tier === "Medium"
+                                      ? "bg-[#fef3ed] text-[#9b4a1c]"
                                       : "bg-slate-100 text-slate-600"
                                 }`}>
                                   {sugg.score}% ({sugg.tier})
@@ -436,14 +436,14 @@ export default function MissingCodesSection({
                         type="button"
                         onClick={() => handleSelectNone(code)}
                         className={`w-full text-left px-3 py-2 rounded-lg border text-xs font-medium transition flex items-center justify-between cursor-pointer ${
-                          type === "custom" 
-                            ? "bg-sky-500/10 border-sky-500 text-sky-950 font-bold" 
+                          type === "custom"
+                            ? "bg-[#2b5346]/10 border-[#2b5346] text-[#2b5346] font-bold"
                             : "bg-slate-50/50 hover:bg-slate-105 border-slate-150 text-slate-705"
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                            type === "custom" ? "border-sky-600 bg-sky-600 text-white" : "border-slate-350 bg-white"
+                            type === "custom" ? "border-[#2b5346] bg-[#2b5346] text-white" : "border-slate-350 bg-white"
                           }`}>
                             {type === "custom" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </div>
@@ -456,12 +456,12 @@ export default function MissingCodesSection({
 
                       {/* Manual Input field show only when custom option is checked */}
                       {type === "custom" && (
-                        <motion.div 
+                        <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mt-2 text-slate-800 bg-sky-50/40 p-3 rounded-lg border border-sky-100 space-y-1.5 font-sans"
+                          className="mt-2 text-slate-800 bg-[#eef4f1]/40 p-3 rounded-lg border border-[#2b5346]/20 space-y-1.5 font-sans"
                         >
-                          <label className="text-[9.5px] font-black text-sky-850 uppercase block tracking-wider">
+                          <label className="text-[9.5px] font-black text-[#2b5346] uppercase block tracking-wider">
                             Type Corrected Voucher Name:
                           </label>
                           <div className="relative">
@@ -470,7 +470,7 @@ export default function MissingCodesSection({
                               value={currentCustomVal}
                               onChange={(e) => setCustomValue((prev) => ({ ...prev, [code]: e.target.value }))}
                               placeholder="e.g. EXTRAVOUCHER20"
-                              className="w-full px-3 py-2 bg-white border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/20 text-xs font-mono font-bold uppercase tracking-wider text-slate-850"
+                              className="w-full px-3 py-2 bg-white border border-[#2b5346]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2b5346]/20 text-xs font-mono font-bold uppercase tracking-wider text-slate-850"
                             />
                           </div>
                         </motion.div>
@@ -533,13 +533,13 @@ export default function MissingCodesSection({
                             </td>
                             <td className="p-2.5 text-right font-mono font-semibold shrink-0">
                               <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                corr.tier === "High" 
-                                  ? "text-emerald-700 bg-emerald-50" 
-                                  : corr.tier === "Medium" 
-                                    ? "text-amber-700 bg-amber-50" 
-                                    : corr.tier === "Low" 
-                                      ? "text-slate-600 bg-slate-100" 
-                                      : "text-sky-700 bg-sky-50"
+                                corr.tier === "High"
+                                  ? "text-[#2b5346] bg-[#eef4f1]"
+                                  : corr.tier === "Medium"
+                                    ? "text-[#9b4a1c] bg-[#fef3ed]"
+                                    : corr.tier === "Low"
+                                      ? "text-slate-600 bg-slate-100"
+                                      : "text-[#2b5346] bg-[#eef4f1]"
                               }`}>
                                 {corr.confidence}
                               </span>
