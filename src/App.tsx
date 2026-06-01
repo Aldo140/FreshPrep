@@ -52,6 +52,7 @@ import KeyFindingsSection from "./components/KeyFindingsSection";
 import PortfolioSummaryWidget from "./components/PortfolioSummaryWidget";
 import ProvinceIntelligence from "./components/ProvinceIntelligence";
 import MissingCodesSection from "./components/MissingCodesSection";
+import { MetricTooltip } from "./components/DesignSystem";
 
 export default function App() {
   // Core States
@@ -1104,60 +1105,66 @@ export default function App() {
 
                   {/* Healthy indicators grid */}
                   <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                    
-                    {/* Tile 1: Codes Analyzed */}
-                    <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left"
-                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '0ms' }}
-                    >
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Codes Analyzed</p>
-                      <p className="text-lg font-bold text-[#1a1a1a] font-mono">{portfolioHealth?.total}</p>
-                      <p className="text-[9px] text-[#a1a1a1] font-medium">Mapped codes</p>
-                    </div>
 
-                    {/* Tile 2: High Converting */}
-                    <div className="p-3 bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg space-y-1 text-center sm:text-left"
-                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '50ms' }}
-                    >
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#2b5346] font-mono">High Converting</p>
-                      <p className="text-lg font-bold text-[#2b5346] font-mono">{portfolioHealth?.strong}</p>
-                      <p className="text-[9px] text-[#3d3d3d] font-medium">≥ 40% conversion</p>
-                    </div>
+                    <MetricTooltip title="Codes Analyzed" definition="Total unique promo codes matched and analyzed in this report." note="Codes not found in your database appear in the Missing Codes section." position="below">
+                      <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left cursor-default"
+                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '0ms' }}
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Codes Analyzed</p>
+                        <p className="text-lg font-bold text-[#1a1a1a] font-mono">{portfolioHealth?.total}</p>
+                        <p className="text-[9px] text-[#a1a1a1] font-medium">Mapped codes</p>
+                      </div>
+                    </MetricTooltip>
 
-                    {/* Tile 3: Average */}
-                    <div className="p-3 bg-[#fdf8e1] border border-[#e7bd27]/30 rounded-lg space-y-1 text-center sm:text-left"
-                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '100ms' }}
-                    >
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8a6f00] font-mono">Average</p>
-                      <p className="text-lg font-bold text-[#8a6f00] font-mono">{portfolioHealth?.average}</p>
-                      <p className="text-[9px] text-[#3d3d3d] font-medium">20-39% conversion</p>
-                    </div>
+                    <MetricTooltip title="High Converting" definition="Codes achieving ≥40% signup-to-subscription conversion." note="Strong performance. Consider increasing budget or replicating the offer structure." position="below">
+                      <div className="p-3 bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg space-y-1 text-center sm:text-left cursor-default"
+                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '50ms' }}
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#2b5346] font-mono">High Converting</p>
+                        <p className="text-lg font-bold text-[#2b5346] font-mono">{portfolioHealth?.strong}</p>
+                        <p className="text-[9px] text-[#3d3d3d] font-medium">≥ 40% conversion</p>
+                      </div>
+                    </MetricTooltip>
 
-                    {/* Tile 4: Weak */}
-                    <div className="p-3 bg-[#fef3ed] border border-[#e78a58]/30 rounded-lg space-y-1 text-center sm:text-left"
-                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '150ms' }}
-                    >
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9b4a1c] font-mono">Weak</p>
-                      <p className="text-lg font-bold text-[#9b4a1c] font-mono">{portfolioHealth?.weak}</p>
-                      <p className="text-[9px] text-[#3d3d3d] font-medium">&lt; 20% conversion</p>
-                    </div>
+                    <MetricTooltip title="Average Performers" definition="Codes in the 20–39% conversion range." note="Worth monitoring. May improve with better targeting or offer adjustment." position="below">
+                      <div className="p-3 bg-[#fdf8e1] border border-[#e7bd27]/30 rounded-lg space-y-1 text-center sm:text-left cursor-default"
+                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '100ms' }}
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8a6f00] font-mono">Average</p>
+                        <p className="text-lg font-bold text-[#8a6f00] font-mono">{portfolioHealth?.average}</p>
+                        <p className="text-[9px] text-[#3d3d3d] font-medium">20-39% conversion</p>
+                      </div>
+                    </MetricTooltip>
 
-                    {/* Tile 5: Portfolio Conv */}
-                    <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left"
-                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '200ms' }}
-                    >
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio Conv</p>
-                      <p className="text-lg font-bold text-[#1a1a1a] font-mono">{summary.blendedConversionRate.toFixed(1)}%</p>
-                      <p className="text-[9px] text-[#a1a1a1] font-medium">Blended rate</p>
-                    </div>
+                    <MetricTooltip title="Weak Performers" definition="Codes below 20% conversion." note="Review for discontinuation or re-targeting. Low return relative to portfolio average." position="below">
+                      <div className="p-3 bg-[#fef3ed] border border-[#e78a58]/30 rounded-lg space-y-1 text-center sm:text-left cursor-default"
+                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '150ms' }}
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9b4a1c] font-mono">Weak</p>
+                        <p className="text-lg font-bold text-[#9b4a1c] font-mono">{portfolioHealth?.weak}</p>
+                        <p className="text-[9px] text-[#3d3d3d] font-medium">&lt; 20% conversion</p>
+                      </div>
+                    </MetricTooltip>
 
-                    {/* Tile 6: Portfolio LTV */}
-                    <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left"
-                      style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '250ms' }}
-                    >
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio LTV</p>
-                      <p className="text-lg font-bold text-[#1a1a1a] font-mono">${Math.round(summary.averageLTV12).toLocaleString()}</p>
-                      <p className="text-[9px] text-[#a1a1a1] font-medium">Mean 12M LTV</p>
-                    </div>
+                    <MetricTooltip title="Portfolio Conversion" definition="Weighted blended conversion rate: total paying customers ÷ total signups across all codes." note="High-volume codes pull this metric more than low-volume codes." position="below">
+                      <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left cursor-default"
+                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '200ms' }}
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio Conv</p>
+                        <p className="text-lg font-bold text-[#1a1a1a] font-mono">{summary.blendedConversionRate.toFixed(1)}%</p>
+                        <p className="text-[9px] text-[#a1a1a1] font-medium">Blended rate</p>
+                      </div>
+                    </MetricTooltip>
+
+                    <MetricTooltip title="Portfolio LTV" definition="Mean 12-month lifetime value per acquired customer across all codes in this cohort." note="Higher LTV codes justify higher acquisition cost per signup." position="below">
+                      <div className="p-3 bg-white border border-[#e5e5e5] rounded-lg space-y-1 text-center sm:text-left cursor-default"
+                        style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '250ms' }}
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#3d3d3d] font-mono">Portfolio LTV</p>
+                        <p className="text-lg font-bold text-[#1a1a1a] font-mono">${Math.round(summary.averageLTV12).toLocaleString()}</p>
+                        <p className="text-[9px] text-[#a1a1a1] font-medium">Mean 12M LTV</p>
+                      </div>
+                    </MetricTooltip>
 
                   </div>
                 </section>

@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { KPIReportSummary } from "../types";
+import { MetricTooltip } from "./DesignSystem";
 import { 
   Users, 
   CreditCard, 
@@ -42,6 +43,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: Users,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
+      tooltip: { title: "Total Signups", definition: "Raw registrations captured through all analyzed promo codes.", note: "Includes all sign-ups regardless of whether they converted to paying." },
     },
     {
       id: "paying-customers",
@@ -51,6 +53,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: CreditCard,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
+      tooltip: { title: "Paying Customers", definition: "Signups who converted to an active paying subscription.", note: "Primary acquisition metric. Used to calculate conversion rate and LTV." },
     },
     {
       id: "blended-conv",
@@ -60,6 +63,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: Percent,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
+      tooltip: { title: "Blended Conversion Rate", definition: "Total paying customers ÷ total signups across all codes in this cohort.", note: "Weighted by volume — high-signup codes pull this number more than low-signup codes." },
     },
     {
       id: "ltv-12",
@@ -69,6 +73,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: DollarSign,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
+      tooltip: { title: "Total LTV (12 Month)", definition: "Combined 12-month revenue across all customers acquired via these promo codes.", note: "Derived from Sum LTV 12 column. Higher total = higher overall campaign return." },
     }
   ];
 
@@ -82,6 +87,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: FileCheck,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Vouchers Found", definition: "Promo codes from your input that were matched to records in the uploaded dataset." },
     },
     {
       id: "missing-codes",
@@ -91,6 +97,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: AlertTriangle,
       color: summary.numCodesMissing > 0 ? "text-[#9b4a1c] bg-[#fef3ed] border-[#e78a58]/30" : "text-[#a1a1a1] bg-[#f8f7f5] border-[#e5e5e5]",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Missing Codes", definition: "Codes submitted for analysis that had no matching record in the dataset.", note: "Check the Missing Codes section below for fuzzy-match suggestions." },
     },
     {
       id: "avg-conv",
@@ -100,6 +107,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: TrendingUp,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Average Conversion Rate", definition: "Mean conversion rate per code, unweighted by volume.", note: "Differs from Blended Rate — each code counts equally here regardless of signup volume." },
     },
     {
       id: "avg-ltv-12",
@@ -109,6 +117,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: DollarSign,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Average LTV (12 Month)", definition: "Mean 12-month lifetime value per acquired customer across all codes.", note: "Higher = better quality acquisitions. Use to compare code quality beyond conversion rate." },
     },
     {
       id: "ltv-3",
@@ -118,6 +127,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: DollarSign,
       color: "text-[#3d3d3d] bg-[#f8f7f5] border-[#e5e5e5]",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Total LTV (3 Month)", definition: "Combined 3-month recognized revenue from all customers in this cohort." },
     },
     {
       id: "ltv-6",
@@ -127,6 +137,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: DollarSign,
       color: "text-[#3d3d3d] bg-[#f8f7f5] border-[#e5e5e5]",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Total LTV (6 Month)", definition: "Combined 6-month recognized revenue from all customers in this cohort." },
     },
     {
       id: "top-performer-code",
@@ -136,6 +147,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: TrendingUp,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Highest Conversion Code", definition: "The single promo code with the highest signup-to-subscription conversion rate." },
     },
     {
       id: "best-overall-score",
@@ -145,6 +157,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       icon: FileCheck,
       color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
       bgClass: "bg-white border-[#e5e5e5]",
+      tooltip: { title: "Top Performer (Index Score)", definition: "Code with the highest composite score combining conversion rate, LTV, and efficiency ratio.", note: "Score is out of 100. Balances volume, conversion, and customer quality." },
     }
   ];
 
@@ -156,28 +169,35 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
         {primaryKpis.map((kpi) => {
           const IconComponent = kpi.icon;
           return (
-            <div
+            <MetricTooltip
               key={kpi.id}
-              id={`kpi-card-${kpi.id}`}
-              className={`p-3 sm:p-4 rounded-xl border shadow-2xs hover:shadow-xs transition-[box-shadow,border-color] ${kpi.bgClass}`}
+              title={kpi.tooltip.title}
+              definition={kpi.tooltip.definition}
+              note={kpi.tooltip.note}
+              position="above"
             >
-              <div className="flex items-center justify-between gap-1">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-455 truncate">
-                    {kpi.title}
-                  </p>
-                  <h3 className="text-lg sm:text-xl lg:text-2xl font-black font-display mt-0.5 sm:mt-1 text-slate-900 tracking-tight truncate">
-                    {kpi.value}
-                  </h3>
-                  <p className="text-[8.5px] sm:text-[9px] text-slate-500 leading-tight mt-0.5 sm:mt-1 truncate font-sans">
-                    {kpi.subtitle}
-                  </p>
-                </div>
-                <div className={`p-1.5 sm:p-2 rounded-lg border flex-shrink-0 ${kpi.color}`}>
-                  <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div
+                id={`kpi-card-${kpi.id}`}
+                className={`p-3 sm:p-4 rounded-xl border shadow-2xs hover:shadow-xs transition-[box-shadow,border-color] cursor-default ${kpi.bgClass}`}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-[#3d3d3d] truncate">
+                      {kpi.title}
+                    </p>
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black font-mono mt-0.5 sm:mt-1 text-[#1a1a1a] tracking-tight truncate">
+                      {kpi.value}
+                    </h3>
+                    <p className="text-[8.5px] sm:text-[9px] text-[#a1a1a1] leading-tight mt-0.5 sm:mt-1 truncate font-sans">
+                      {kpi.subtitle}
+                    </p>
+                  </div>
+                  <div className={`p-1.5 sm:p-2 rounded-lg border flex-shrink-0 ${kpi.color}`}>
+                    <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
                 </div>
               </div>
-            </div>
+            </MetricTooltip>
           );
         })}
       </div>
@@ -212,28 +232,35 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
           {advancedKpis.map((kpi) => {
             const IconComponent = kpi.icon;
             return (
-              <div
+              <MetricTooltip
                 key={kpi.id}
-                id={`kpi-card-${kpi.id}`}
-                className={`p-3 rounded-lg border shadow-3xs hover:shadow-2xs transition-[box-shadow] ${kpi.bgClass}`}
+                title={kpi.tooltip.title}
+                definition={kpi.tooltip.definition}
+                note={kpi.tooltip.note}
+                position="above"
               >
-                <div className="flex items-center justify-between gap-1">
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
-                      {kpi.title}
-                    </p>
-                    <h3 className="text-sm font-black font-display mt-0.5 text-slate-800 tracking-tight truncate">
-                      {kpi.value}
-                    </h3>
-                    <p className="text-[8.5px] text-slate-500 leading-tight mt-0.5 truncate font-sans">
-                      {kpi.subtitle}
-                    </p>
-                  </div>
-                  <div className={`p-1.5 rounded-md border flex-shrink-0 ${kpi.color}`}>
-                    <IconComponent className="w-3 h-3" />
+                <div
+                  id={`kpi-card-${kpi.id}`}
+                  className={`p-3 rounded-lg border shadow-3xs hover:shadow-2xs transition-[box-shadow] cursor-default ${kpi.bgClass}`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#a1a1a1] truncate">
+                        {kpi.title}
+                      </p>
+                      <h3 className="text-sm font-bold font-mono mt-0.5 text-[#1a1a1a] tracking-tight truncate">
+                        {kpi.value}
+                      </h3>
+                      <p className="text-[8.5px] text-[#a1a1a1] leading-tight mt-0.5 truncate font-sans">
+                        {kpi.subtitle}
+                      </p>
+                    </div>
+                    <div className={`p-1.5 rounded-md border flex-shrink-0 ${kpi.color}`}>
+                      <IconComponent className="w-3 h-3" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              </MetricTooltip>
             );
           })}
         </div>

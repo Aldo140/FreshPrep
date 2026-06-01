@@ -11,7 +11,7 @@
  * - Animations are performant (transform/opacity only)
  */
 
-import React, { ReactNode, CSSProperties } from 'react';
+import React, { ReactNode, CSSProperties, useRef, useState } from 'react';
 
 // ============================================================================
 // DESIGN TOKENS
@@ -558,6 +558,77 @@ export const RevealOnLoad: React.FC<RevealOnLoadProps> = ({
       }}
     >
       {children}
+    </div>
+  );
+};
+
+// ============================================================================
+// UTILITY: MetricTooltip — hover panel explaining a metric
+// Emil principle: 120ms delay (prevents accidental activation), scale(0.97)
+// entrance, disappears instantly on mouseout. Never animate keyboard actions.
+// ============================================================================
+
+interface MetricTooltipProps {
+  title: string;
+  definition: string;
+  note?: string;
+  position?: 'above' | 'below';
+  children: ReactNode;
+}
+
+export const MetricTooltip: React.FC<MetricTooltipProps> = ({
+  title,
+  definition,
+  note,
+  position = 'above',
+  children,
+}) => {
+  const [visible, setVisible] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  const show = () => {
+    timer.current = window.setTimeout(() => setVisible(true), 120);
+  };
+
+  const hide = () => {
+    window.clearTimeout(timer.current);
+    setVisible(false);
+  };
+
+  const panelStyle: CSSProperties = {
+    position: 'absolute',
+    ...(position === 'above' ? { bottom: 'calc(100% + 8px)' } : { top: 'calc(100% + 8px)' }),
+    left: '50%',
+    transform: visible
+      ? 'translateX(-50%) translateY(0) scale(1)'
+      : `translateX(-50%) translateY(${position === 'above' ? '6px' : '-6px'}) scale(0.97)`,
+    opacity: visible ? 1 : 0,
+    pointerEvents: visible ? 'auto' : 'none',
+    transition: 'opacity 150ms cubic-bezier(0.23,1,0.32,1), transform 150ms cubic-bezier(0.23,1,0.32,1)',
+    zIndex: 50,
+    width: '220px',
+    backgroundColor: '#1a1a1a',
+    borderRadius: '8px',
+    padding: '12px',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+  };
+
+  return (
+    <div style={{ position: 'relative' }} onMouseEnter={show} onMouseLeave={hide}>
+      {children}
+      <div style={panelStyle} role="tooltip">
+        <p style={{ fontWeight: 600, fontSize: '11px', color: '#eef4f1', marginBottom: '4px', lineHeight: 1.3 }}>
+          {title}
+        </p>
+        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+          {definition}
+        </p>
+        {note && (
+          <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', marginTop: '6px', lineHeight: 1.4, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '6px' }}>
+            {note}
+          </p>
+        )}
+      </div>
     </div>
   );
 };
