@@ -272,7 +272,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
       <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white border border-slate-200/90 p-4 gap-4 rounded-2xl shadow-3xs">
         <div>
           <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-450 font-mono flex items-center gap-1.5">
-            <Compass className="w-4 h-4 text-emerald-600 animate-spin-slow" />
+            <Compass className="w-4 h-4 text-[#2b5346] animate-spin-slow" />
             Geography Workspace Settings
           </h3>
           <p className="text-[11px] text-slate-500 mt-1">
@@ -290,11 +290,11 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             id="datasource-audited-toggle-btn"
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
               dataSource === "audited"
-                ? "bg-white text-emerald-800 shadow-2xs border border-emerald-100/50"
+                ? "bg-white text-[#2b5346] shadow-2xs border border-[#2b5346]/20"
                 : "text-slate-550 hover:text-slate-800"
             }`}
           >
-            📋 Audited Event List ({foundReports.length})
+            Audited Event List ({foundReports.length})
           </button>
           <button
             onClick={() => {
@@ -304,11 +304,11 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             id="datasource-file-toggle-btn"
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
               dataSource === "full"
-                ? "bg-white text-emerald-800 shadow-2xs border border-emerald-100/50"
+                ? "bg-white text-[#2b5346] shadow-2xs border border-[#2b5346]/20"
                 : "text-slate-550 hover:text-slate-800"
             }`}
           >
-            🗄️ Full Loaded Catalog ({dbRows.length.toLocaleString()})
+            Full Loaded Catalog ({dbRows.length.toLocaleString()})
           </button>
         </div>
       </div>
@@ -316,17 +316,17 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
       {/* 2. Province Scorecards Grid */}
       <section id="province-scorecards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Best Conversion */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-emerald-500/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Best Conversion</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div>
             <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
               {scorecards.bestConversion.val.toFixed(1)}%
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-850 font-mono border border-emerald-200">
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
                 {scorecards.bestConversion.province}
               </span>
             </h4>
@@ -334,21 +334,21 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               {scorecards.bestConversion.sub}
             </p>
           </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-emerald-500/5 rounded-tl-full pointer-events-none" />
+          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
         </div>
 
         {/* Card 2: Highest Average LTV */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-emerald-500/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Highest Avg LTV12</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
           <div>
             <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
               ${Math.round(scorecards.bestLTV.val).toLocaleString()}
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-850 font-mono border border-emerald-200">
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
                 {scorecards.bestLTV.province}
               </span>
             </h4>
@@ -356,21 +356,21 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               {scorecards.bestLTV.sub}
             </p>
           </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-emerald-500/5 rounded-tl-full pointer-events-none" />
+          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
         </div>
 
         {/* Card 3: Most Signups */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-emerald-500/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Most Regional Signups</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div>
             <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
               {scorecards.mostSignups.val.toLocaleString()}
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-850 font-mono border border-emerald-200">
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
                 {scorecards.mostSignups.province}
               </span>
             </h4>
@@ -378,21 +378,21 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               Aggregate market interest footprint
             </p>
           </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-emerald-500/5 rounded-tl-full pointer-events-none" />
+          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
         </div>
 
         {/* Card 4: Most Paying Customers */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-emerald-500/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Most Paying Customers</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
               <Award className="w-4 h-4" />
             </div>
           </div>
           <div>
             <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
               {scorecards.mostPaying.val.toLocaleString()}
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-850 font-mono border border-emerald-200">
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
                 {scorecards.mostPaying.province}
               </span>
             </h4>
@@ -400,7 +400,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               Net customer lifetime acquisitions
             </p>
           </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-emerald-500/5 rounded-tl-full pointer-events-none" />
+          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
         </div>
       </section>
 
@@ -413,7 +413,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             <div className="flex items-center justify-between border-b pb-3 mb-4">
               <div>
                 <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-850 font-mono flex items-center gap-1.5">
-                  <MapIcon className="w-4.5 h-4.5 text-emerald-700" />
+                  <MapIcon className="w-4.5 h-4.5 text-[#2b5346]" />
                   Regional Performance Heatmap Matrix
                 </h3>
                 <p className="text-[10.5px] text-slate-500 mt-0.5">
@@ -433,8 +433,8 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 let summaryQuote = "Superior market footprint displaying optimal consumer conversion and high LTV values.";
                 
                 if (grade === "Strong") {
-                  titleBg = "bg-emerald-100 text-emerald-900 border-emerald-200";
-                  hoverBorder = "hover:border-emerald-300 hover:bg-emerald-50/15";
+                  titleBg = "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
+                  hoverBorder = "hover:border-[#2b5346]/30 hover:bg-[#eef4f1]/15";
                   summaryQuote = "Healthy responsiveness. High acquisition rate and stable LTV with strong operational leverage.";
                 } else if (grade === "Average") {
                   titleBg = "bg-amber-100 text-amber-950 border-amber-200";
@@ -506,7 +506,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             <div className="flex items-center justify-between border-b pb-3 mb-4">
               <div>
                 <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-850 font-mono flex items-center gap-1.5">
-                  <LineChart className="w-4.5 h-4.5 text-emerald-700" />
+                  <LineChart className="w-4.5 h-4.5 text-[#2b5346]" />
                   Relative Province Market Comparison
                 </h3>
                 <p className="text-[10.5px] text-slate-500 mt-0.5">
@@ -530,7 +530,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                         {row.province} Market Segment
                       </span>
                       <span className="text-[10px] font-bold text-slate-450 uppercase font-mono">
-                        Regional score: <strong className="text-emerald-700">{row.metricScore}/100</strong>
+                        Regional score: <strong className="text-[#2b5346]">{row.metricScore}/100</strong>
                       </span>
                     </div>
 
@@ -557,8 +557,8 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                           <span className="font-mono text-slate-800 font-semibold">{row.conversion.toFixed(1)}%</span>
                         </div>
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-emerald-600 rounded-full transition-all duration-501"
+                          <div
+                            className="h-full bg-[#2b5346] rounded-full transition-all duration-501"
                             style={{ width: `${Math.min(100, relConv)}%` }}
                           />
                         </div>
@@ -571,8 +571,8 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                           <span className="font-mono text-slate-800 font-semibold">${Math.round(row.avgLTV12).toLocaleString()} value</span>
                         </div>
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-blue-500 rounded-full transition-all duration-501"
+                          <div
+                            className="h-full bg-[#e7bd27] rounded-full transition-all duration-501"
                             style={{ width: `${relLtv}%` }}
                           />
                         </div>
@@ -586,8 +586,8 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
 
           <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 border-t pt-2">
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-400 inline-block" /> Signups</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" /> Conversion</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> Avg LTV12</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#2b5346] inline-block" /> Conversion</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#e7bd27] inline-block" /> Avg LTV12</span>
           </div>
         </div>
 
@@ -600,7 +600,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
           <div className="p-4 border-b border-slate-100 bg-slate-50/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-850 font-mono flex items-center gap-1.5">
-                <Award className="w-4.5 h-4.5 text-emerald-705" />
+                <Award className="w-4.5 h-4.5 text-[#2b5346]" />
                 Province Leaderboard Ranking
               </h3>
               <p className="text-[10.5px] text-slate-500 mt-0.5">
@@ -613,31 +613,31 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               <span className="text-[9px] uppercase font-bold text-slate-450 self-center px-1.5 font-mono">Rank by:</span>
               <button
                 onClick={() => setActiveLeaderboardSort("paying")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "paying" ? "bg-white text-emerald-800 shadow-3xs border border-emerald-100" : "text-slate-500 hover:text-slate-800"}`}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "paying" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
               >
                 Acquisitions
               </button>
               <button
                 onClick={() => setActiveLeaderboardSort("conversion")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "conversion" ? "bg-white text-emerald-800 shadow-3xs border border-emerald-100" : "text-slate-500 hover:text-slate-800"}`}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "conversion" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
               >
                 Conversion
               </button>
               <button
                 onClick={() => setActiveLeaderboardSort("ltv")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "ltv" ? "bg-white text-emerald-800 shadow-3xs border border-emerald-100" : "text-slate-500 hover:text-slate-800"}`}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "ltv" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
               >
                 LTV12 Mean
               </button>
               <button
                 onClick={() => setActiveLeaderboardSort("signups")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "signups" ? "bg-white text-emerald-800 shadow-3xs border border-emerald-100" : "text-slate-500 hover:text-slate-800"}`}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "signups" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
               >
                 Signups
               </button>
               <button
                 onClick={() => setActiveLeaderboardSort("score")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "score" ? "bg-white text-emerald-800 shadow-3xs border border-emerald-100" : "text-slate-500 hover:text-slate-800"}`}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "score" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
               >
                 Score index
               </button>
@@ -664,7 +664,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 {sortedLeaderboard.map((row, index) => {
                   let gradeBadge = "bg-rose-50 text-rose-800 border-rose-200";
                   if (row.grade === "Elite") gradeBadge = "bg-purple-100 text-purple-900 border-purple-200";
-                  else if (row.grade === "Strong") gradeBadge = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                  else if (row.grade === "Strong") gradeBadge = "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
                   else if (row.grade === "Average") gradeBadge = "bg-amber-50 text-amber-900 border-amber-200";
 
                   return (
@@ -690,7 +690,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                       <td className="py-2.5 px-4 text-right font-mono text-slate-500">
                         ${Math.round(row.totalDiscount).toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-extrabold text-emerald-800">
+                      <td className="py-2.5 px-4 text-right font-mono font-extrabold text-[#2b5346]">
                         {row.efficiencyRatio.toFixed(1)}x
                       </td>
                       <td className="py-2.5 px-4 text-center font-mono">
@@ -715,7 +715,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
       {recommendations && (
         <section id="expansion-recommendations" className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-md">
           <div className="border-b border-slate-800 pb-3 mb-5">
-            <h3 className="font-extrabold text-xs uppercase tracking-wider text-emerald-400 font-mono flex items-center gap-1.5">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-[#e7bd27] font-mono flex items-center gap-1.5">
               <Compass className="w-5 h-5 flex-shrink-0 animate-spin-slow" />
               Regional Market Expansion Intelligence Advisor
             </h3>
@@ -727,10 +727,10 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* Box 1: Highest Opportunity */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-emerald-500/30 transition">
+            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition">
               <div>
-                <span className="text-[9.5px] font-mono font-bold tracking-widest text-emerald-400 uppercase block mb-1">
-                  ⭐ High Opportunity Segment
+                <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1">
+                  High Opportunity Segment
                 </span>
                 <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100 flex items-center gap-1">
                   Province: {recommendations.highestOpportunity.province}
@@ -740,15 +740,15 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <OpportunityIcon className="w-3.5 h-3.5 text-emerald-500" /> SCALE CAMPAIGN PRESENCE
+                <OpportunityIcon className="w-3.5 h-3.5 text-[#e7bd27]" /> SCALE CAMPAIGN PRESENCE
               </div>
             </div>
 
             {/* Box 2: Highest Efficiency */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-emerald-500/30 transition">
+            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e78a58]/30 transition">
               <div>
-                <span className="text-[9.5px] font-mono font-bold tracking-widest text-emerald-400 uppercase block mb-1">
-                  ⚡ Highest ROI Efficiency
+                <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e78a58] uppercase block mb-1">
+                  Highest ROI Efficiency
                 </span>
                 <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100">
                   Province: {recommendations.highestEfficiency.province}
@@ -758,7 +758,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <EfficiencyIcon className="w-3.5 h-3.5 text-orange-500" /> MAXIMISE BUDGET ALLOCATION
+                <EfficiencyIcon className="w-3.5 h-3.5 text-[#e78a58]" /> MAXIMISE BUDGET ALLOCATION
               </div>
             </div>
 
@@ -766,7 +766,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-slate-800 transition">
               <div>
                 <span className="text-[9.5px] font-mono font-bold tracking-widest text-slate-400 uppercase block mb-1">
-                  ⚠️ Lowest Conversion Yield
+                  Lowest Conversion Yield
                 </span>
                 <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100">
                   Province: {recommendations.lowestPerforming.province}
@@ -776,15 +776,15 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <TrendingDown className="w-3.5 h-3.5 text-rose-500 animate-pulse" /> RE-EVALUATE EVENT REVENUE
+                <TrendingDown className="w-3.5 h-3.5 text-[#850b0b] animate-pulse" /> RE-EVALUATE EVENT REVENUE
               </div>
             </div>
 
             {/* Box 4: Further Investment */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-emerald-500/30 transition">
+            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition">
               <div>
-                <span className="text-[9.5px] font-mono font-bold tracking-widest text-emerald-400 uppercase block mb-1">
-                  📈 Investment Target
+                <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1">
+                  Investment Target
                 </span>
                 <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100">
                   Province: {recommendations.extraInvestment.province}
@@ -794,7 +794,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 animate-bounce" /> RETUNE CHECKOUT FUNNELS
+                <AlertTriangle className="w-3.5 h-3.5 text-[#e78a58] animate-bounce" /> RETUNE CHECKOUT FUNNELS
               </div>
             </div>
 

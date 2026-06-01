@@ -41,15 +41,15 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
   const getRatingColor = (rating: string) => {
     switch (rating) {
       case "Strong":
-        return "bg-emerald-600";
+        return "bg-[#2b5346]";
       case "Good":
-        return "bg-emerald-500";
+        return "bg-[#3d7060]";
       case "Average":
-        return "bg-emerald-400";
+        return "bg-[#e7bd27]";
       case "Weak":
-        return "bg-amber-500";
+        return "bg-[#e78a58]";
       case "Poor":
-        return "bg-rose-550";
+        return "bg-[#850b0b]";
       default:
         return "bg-slate-450";
     }
@@ -57,11 +57,11 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
 
   const getRatingTextColor = (rating: string) => {
     switch (rating) {
-      case "Strong": return "text-emerald-800 font-bold";
-      case "Good": return "text-emerald-700 font-bold";
-      case "Average": return "text-emerald-600 font-bold";
-      case "Weak": return "text-amber-700 font-bold";
-      case "Poor": return "text-rose-700 font-bold";
+      case "Strong": return "text-[#2b5346] font-bold";
+      case "Good": return "text-[#3d7060] font-semibold";
+      case "Average": return "text-[#8a6f00] font-medium";
+      case "Weak": return "text-[#9b4a1c]";
+      case "Poor": return "text-[#850b0b]";
       default: return "text-slate-700 font-bold";
     }
   };
@@ -76,7 +76,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-slate-100 pb-4 mb-5 gap-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 bg-emerald-600 rounded-full shrink-0" />
+            <span className="w-2.5 h-2.5 bg-[#2b5346] rounded-full shrink-0" />
             Performance Analytics
           </h3>
           <p className="text-[11px] text-slate-500 font-sans">
@@ -91,11 +91,11 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
             onClick={() => setActiveTab("leaderboard")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === "leaderboard"
-                ? "bg-white text-emerald-800 shadow-2xs border border-slate-205"
+                ? "bg-white text-[#2b5346] shadow-2xs border border-slate-205"
                 : "text-slate-550 hover:text-slate-800"
             }`}
           >
-            <Trophy className="w-3.5 h-3.5 text-emerald-600" />
+            <Trophy className="w-3.5 h-3.5 text-[#2b5346]" />
             Conversion Leaderboard
           </button>
           <button
@@ -103,11 +103,11 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
             onClick={() => setActiveTab("funnel")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === "funnel"
-                ? "bg-white text-emerald-800 shadow-2xs border border-slate-205"
+                ? "bg-white text-[#2b5346] shadow-2xs border border-slate-205"
                 : "text-slate-550 hover:text-slate-800"
             }`}
           >
-            <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
+            <BarChart3 className="w-3.5 h-3.5 text-[#2b5346]" />
             Volume Funnel
           </button>
           <button
@@ -115,11 +115,11 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
             onClick={() => setActiveTab("channels")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === "channels"
-                ? "bg-white text-emerald-800 shadow-2xs border border-slate-205"
+                ? "bg-white text-[#2b5346] shadow-2xs border border-slate-205"
                 : "text-slate-550 hover:text-slate-800"
             }`}
           >
-            <PieChart className="w-3.5 h-3.5 text-emerald-600" />
+            <PieChart className="w-3.5 h-3.5 text-[#2b5346]" />
             Channel Breakdown
           </button>
         </div>
@@ -145,7 +145,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                     <span className="w-4.5 h-4.5 flex items-center justify-center font-mono rounded bg-slate-100 text-slate-700 text-[10px] font-bold">
                       {idx + 1}
                     </span>
-                    <span className="font-mono font-bold text-slate-850 group-hover:text-emerald-700 transition-colors">
+                    <span className="font-mono font-bold text-slate-850 group-hover:text-[#2b5346] transition-colors">
                       {item.discount_code}
                     </span>
                     <span className="text-[10px] text-slate-450 px-1.5 py-0.2 rounded border border-slate-150 font-normal">
@@ -178,23 +178,23 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
           {/* Leaderboard Rating Legend */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-1 border-t border-slate-100 pt-3.5 mt-2 text-[9px] font-bold text-slate-400 text-center font-mono uppercase tracking-wider">
             <div className="flex flex-col items-center gap-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-600" />
+              <span className="w-2 h-2 rounded-full bg-[#2b5346]" />
               <span>Strong (&ge;40%)</span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="w-2 h-2 rounded-full bg-[#3d7060]" />
               <span>Good (30-40%)</span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="w-2 h-2 rounded-full bg-[#e7bd27]" />
               <span>Average (20-30%)</span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="w-2 h-2 rounded-full bg-[#e78a58]" />
               <span>Weak (10-20%)</span>
             </div>
             <div className="flex flex-col items-center gap-0.5 col-span-2 sm:col-span-1">
-              <span className="w-2 h-2 rounded-full bg-rose-500 mx-auto" />
+              <span className="w-2 h-2 rounded-full bg-[#850b0b] mx-auto" />
               <span>Poor (&lt;10%)</span>
             </div>
           </div>
@@ -230,7 +230,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                       </span>
                     </div>
                     <span className="font-mono text-slate-500 font-medium">
-                      <strong className="text-emerald-700 font-bold">{item["Paying cx"]}</strong> paying customer{item["Paying cx"] === 1 ? "" : "s"} / {item.Signups} leads
+                      <strong className="text-[#2b5346] font-bold">{item["Paying cx"]}</strong> paying customer{item["Paying cx"] === 1 ? "" : "s"} / {item.Signups} leads
                     </span>
                   </div>
 
@@ -240,7 +240,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                       <span className="w-12 text-[8.5px] font-bold font-mono uppercase text-slate-450 shrink-0">Signups:</span>
                       <div className="h-2 w-full bg-slate-150 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-emerald-500 rounded-full transition-all"
+                          className="h-full bg-[#3d7060] rounded-full transition-all"
                           style={{ width: `${pctSignups}%` }}
                         />
                       </div>
@@ -251,11 +251,11 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                       <span className="w-12 text-[8.5px] font-bold font-mono uppercase text-slate-450 shrink-0">Paying:</span>
                       <div className="h-2 w-full bg-slate-150 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-emerald-700 rounded-full transition-all"
+                          className="h-full bg-[#2b5346] rounded-full transition-all"
                           style={{ width: `${pctPaying}%` }}
                         />
                       </div>
-                      <span className="w-8 text-right font-mono text-[10px] text-emerald-800 font-bold">{item["Paying cx"]}</span>
+                      <span className="w-8 text-right font-mono text-[10px] text-[#2b5346] font-bold">{item["Paying cx"]}</span>
                     </div>
                   </div>
                 </div>
@@ -293,14 +293,14 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                     {/* Share visual meter bar */}
                     <div className="h-2 w-full bg-slate-100 border border-slate-150 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-emerald-600 rounded-full"
+                        className="h-full bg-[#2b5346] rounded-full"
                         style={{ width: `${signupShare}%` }}
                       />
                     </div>
                     <div className="flex gap-4 text-[9.5px] text-slate-450 font-sans font-medium">
                       <span>Mapped Codes: {chan.codeCount}</span>
                       <span>Paying Subscribers: {chan.totalPayingCustomers}</span>
-                      <span className="text-emerald-700 font-bold">Avg Conversion: {chan.averageConversion.toFixed(1)}%</span>
+                      <span className="text-[#2b5346] font-bold">Avg Conversion: {chan.averageConversion.toFixed(1)}%</span>
                     </div>
                   </div>
                 );
@@ -328,14 +328,14 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                 </div>
                 <div className="flex justify-between items-center text-xs pb-1">
                   <span className="text-slate-500">Top-Performing Channel:</span>
-                  <span className="font-bold text-emerald-800">
+                  <span className="font-bold text-[#2b5346]">
                     {[...channels].sort((a,b) => b.averageConversion - a.averageConversion)[0]?.channel || "N/A"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex gap-2 items-center p-3 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100">
-                <Award className="w-5 h-5 flex-shrink-0 text-emerald-600" />
+              <div className="flex gap-2 items-center p-3 rounded-lg bg-[#eef4f1]/40 text-[#2b5346] border border-[#2b5346]/20">
+                <Award className="w-5 h-5 flex-shrink-0 text-[#2b5346]" />
                 <p className="text-[10px] leading-relaxed">
                   Campaign avenues with conversion values **&ge; 30%** represent high conversion channels. Focus future budget allocations toward these segments.
                 </p>
