@@ -40,8 +40,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: summary.totalSignups.toLocaleString(),
       subtitle: "Raw venue registrations",
       icon: Users,
-      color: "text-emerald-700 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200/80 hover:border-emerald-300",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
     },
     {
       id: "paying-customers",
@@ -49,8 +49,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: summary.totalPayingCustomers.toLocaleString(),
       subtitle: "Acquired subscriptions",
       icon: CreditCard,
-      color: "text-emerald-700 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200/80 hover:border-emerald-300",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
     },
     {
       id: "blended-conv",
@@ -58,8 +58,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: `${summary.blendedConversionRate.toFixed(1)}%`,
       subtitle: "Blended cohort output",
       icon: Percent,
-      color: "text-emerald-700 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200/80 hover:border-emerald-300",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
     },
     {
       id: "ltv-12",
@@ -67,8 +67,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: formatCurrency(summary.totalLTV12),
       subtitle: "Total lifetime valuation",
       icon: DollarSign,
-      color: "text-emerald-700 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200/80 hover:border-emerald-300",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5] hover:border-[#2b5346]/40",
     }
   ];
 
@@ -80,8 +80,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: summary.numCodesFound,
       subtitle: "Successfully matched",
       icon: FileCheck,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5]",
     },
     {
       id: "missing-codes",
@@ -89,8 +89,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: summary.numCodesMissing,
       subtitle: "Vouchers not matched",
       icon: AlertTriangle,
-      color: summary.numCodesMissing > 0 ? "text-amber-700 bg-amber-50 border-amber-100" : "text-slate-400 bg-slate-50 border-slate-100",
-      bgClass: "bg-white border-slate-200",
+      color: summary.numCodesMissing > 0 ? "text-[#9b4a1c] bg-[#fef3ed] border-[#e78a58]/30" : "text-[#a1a1a1] bg-[#f8f7f5] border-[#e5e5e5]",
+      bgClass: "bg-white border-[#e5e5e5]",
     },
     {
       id: "avg-conv",
@@ -98,8 +98,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: `${summary.averageConversionRate.toFixed(1)}%`,
       subtitle: "Mean average rate",
       icon: TrendingUp,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5]",
     },
     {
       id: "avg-ltv-12",
@@ -107,8 +107,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: formatCurrency(summary.averageLTV12),
       subtitle: "Mean customer value",
       icon: DollarSign,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5]",
     },
     {
       id: "ltv-3",
@@ -116,8 +116,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: formatCurrency(summary.totalLTV3),
       subtitle: "Recognized cohort LTV",
       icon: DollarSign,
-      color: "text-slate-600 bg-slate-50 border-slate-150",
-      bgClass: "bg-white border-slate-200",
+      color: "text-[#3d3d3d] bg-[#f8f7f5] border-[#e5e5e5]",
+      bgClass: "bg-white border-[#e5e5e5]",
     },
     {
       id: "ltv-6",
@@ -125,8 +125,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: formatCurrency(summary.totalLTV6),
       subtitle: "Recognized cohort LTV",
       icon: DollarSign,
-      color: "text-slate-600 bg-slate-50 border-slate-150",
-      bgClass: "bg-white border-slate-200",
+      color: "text-[#3d3d3d] bg-[#f8f7f5] border-[#e5e5e5]",
+      bgClass: "bg-white border-[#e5e5e5]",
     },
     {
       id: "top-performer-code",
@@ -134,8 +134,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: summary.topPerformingCodeCode || "N/A",
       subtitle: summary.topPerformingCodeVal > 0 ? `Conv: ${summary.topPerformingCodeVal.toFixed(1)}%` : "No matches",
       icon: TrendingUp,
-      color: "text-emerald-700 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5]",
     },
     {
       id: "best-overall-score",
@@ -143,8 +143,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       value: summary.bestOverallScoreCode || "N/A",
       subtitle: summary.bestOverallScoreVal > 0 ? `Index Rating: ${summary.bestOverallScoreVal}/100` : "No matches",
       icon: FileCheck,
-      color: "text-emerald-700 bg-emerald-50 border-emerald-100",
-      bgClass: "bg-white border-slate-200",
+      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
+      bgClass: "bg-white border-[#e5e5e5]",
     }
   ];
 
@@ -191,8 +191,8 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
         >
           {showAdvanced ? (
             <>
-              <span className="text-emerald-750">Hide Advanced Metrics</span>
-              <ChevronUp className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-[#2b5346]">Hide advanced metrics</span>
+              <ChevronUp className="w-3.5 h-3.5 text-[#2b5346]" />
             </>
           ) : (
             <>
