@@ -115,7 +115,7 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5" id="detected-columns-grid">
               {detectedColumns.map((col) => (
                 <div key={col.name} className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <span className={`text-[10.5px] font-bold ${col.detected ? "text-[#2b5346]" : "text-rose-500"}`}>
+                  <span className={`text-[10.5px] font-bold ${col.detected ? "text-[#2b5346]" : "text-[#850b0b]"}`}>
                     {col.detected ? "+" : "-"}
                   </span>
                   <span className="font-mono text-[11px] truncate text-slate-650" title={col.name}>{col.name}</span>

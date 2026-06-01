@@ -437,12 +437,12 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                   hoverBorder = "hover:border-[#2b5346]/30 hover:bg-[#eef4f1]/15";
                   summaryQuote = "Healthy responsiveness. High acquisition rate and stable LTV with strong operational leverage.";
                 } else if (grade === "Average") {
-                  titleBg = "bg-amber-100 text-amber-950 border-amber-200";
-                  hoverBorder = "hover:border-amber-300 hover:bg-amber-50/15";
+                  titleBg = "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30";
+                  hoverBorder = "hover:border-[#e7bd27]/50 hover:bg-[#fdf8e1]/40";
                   summaryQuote = "Baseline results. Displays average checkout rates, requiring progressive event refinement.";
                 } else if (grade === "Weak") {
-                  titleBg = "bg-rose-100 text-rose-950 border-rose-200";
-                  hoverBorder = "hover:border-rose-300 hover:bg-rose-50/15";
+                  titleBg = "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20";
+                  hoverBorder = "hover:border-[#850b0b]/30 hover:bg-[#ffd0d0]/40";
                   summaryQuote = "Underpenetrated segment. Poor signup engagement or lower average customer lifetimes.";
                 }
 
@@ -662,10 +662,10 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
                 {sortedLeaderboard.map((row, index) => {
-                  let gradeBadge = "bg-rose-50 text-rose-800 border-rose-200";
+                  let gradeBadge = "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20";
                   if (row.grade === "Elite") gradeBadge = "bg-purple-100 text-purple-900 border-purple-200";
                   else if (row.grade === "Strong") gradeBadge = "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
-                  else if (row.grade === "Average") gradeBadge = "bg-amber-50 text-amber-900 border-amber-200";
+                  else if (row.grade === "Average") gradeBadge = "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30";
 
                   return (
                     <tr key={row.province} className="hover:bg-slate-50/40 font-medium">
