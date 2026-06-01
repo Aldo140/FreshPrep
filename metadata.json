@@ -1,0 +1,6 @@
+{
+  "name": "Event Code Performance Analyzer",
+  "description": "A modern SaaS dashboard for event marketing teams to analyze, filter, and export performance reports of promotional discount codes from exported Excel or CSV files.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

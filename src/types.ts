@@ -1,0 +1,75 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export interface DiscountCodeData {
+  discount_code: string;
+  channel: string;
+  Province?: string; // added to support regional operations
+  Signups: number;
+  "Paying cx": number;
+  Conversion?: number; // optional, can be computed as (Paying cx / Signups)
+  total_discount_used: number;
+  "Sum LTV 3": number;
+  "Sum LTV 6": number;
+  "Sum LTV 12": number;
+  "Avg LTV 3": number;
+  "Avg LTV 6": number;
+  "Avg LTV 12": number;
+}
+
+export type PerformanceRating = "Strong" | "Good" | "Average" | "Weak" | "Poor" | "Too Early";
+
+export interface AnalyzedCodeReport extends DiscountCodeData {
+  calculatedConversion: number; // 0 to 100 percentage
+  performanceRating: PerformanceRating;
+  efficiencyRatio: number;      // Sum LTV 12 / ABS(total_discount_used)
+  overallScore: number;        // formula-calculated out of 100
+  performanceGrade: string;    // A+, A, B, C, D, F based on Conversion
+  overallScoreBadge: string;   // Elite, Strong, Good, Average, Weak based on overallScore
+}
+
+export interface KPIReportSummary {
+  totalSignups: number;
+  totalPayingCustomers: number;
+  blendedConversionRate: number; // overall paying cx / overall signups as percentage
+  totalLTV3: number;
+  totalLTV6: number;
+  totalLTV12: number;
+  averageLTV12: number;          // average LTV12 across found codes
+  averageConversionRate: number; // average of individual conversion rates
+  numCodesFound: number;
+  numCodesMissing: number;
+  topPerformingCodeCode: string; // code with top conversion
+  topPerformingCodeVal: number;  // top conversion rate
+  bestOverallScoreCode: string;  // code with best overall score
+  bestOverallScoreVal: number;   // best overall score rate
+}
+
+export interface ChannelSummary {
+  channel: string;
+  codeCount: number;
+  totalSignups: number;
+  totalPayingCustomers: number;
+  averageConversion: number;
+  totalDiscount: number;
+  totalLTV12: number;
+}
+
+export type SortField = 
+  | "discount_code"
+  | "channel"
+  | "Province"
+  | "Signups"
+  | "Paying cx"
+  | "Conversion"
+  | "total_discount_used"
+  | "Avg LTV 3"
+  | "Avg LTV 6"
+  | "Avg LTV 12"
+  | "efficiencyRatio"
+  | "overallScore"
+  | "performanceGrade";
+
+export type SortOrder = "asc" | "desc";
