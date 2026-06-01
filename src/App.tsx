@@ -399,37 +399,36 @@ export default function App() {
               {/* Content */}
               <div className="relative z-10 flex flex-col justify-between h-full">
 
-                {/* Top: badge */}
+                {/* Top: eyebrow */}
+                <p className="text-[11px] font-mono text-white/40 uppercase tracking-[0.18em]">
+                  Campaign Intelligence
+                </p>
+
+                {/* Middle: headline + feature lines */}
                 <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[11px] font-mono text-white/70 uppercase tracking-wider">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#e7bd27]" />
-                    FreshPrep internal
-                  </span>
-                </div>
-
-                {/* Middle: headline + features */}
-                <div className="space-y-6">
-                  <h2 className="text-[2rem] font-display font-semibold leading-tight text-white">
-                    Campaign code analysis, without the spreadsheet juggling.
+                  <h2 className="text-[2.4rem] font-display font-semibold leading-[1.15] text-white mb-8">
+                    Campaign code analysis, without the juggling.
                   </h2>
-                  <ul className="space-y-3">
+
+                  <div className="space-y-4">
                     {[
-                      'Match promo codes to signups and LTV in seconds',
-                      'Province-level breakdowns automatically',
-                      'Export to Excel, CSV, or print-ready PDF',
-                    ].map(f => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-white/75">
-                        <CheckCircle2 className="w-4 h-4 text-[#e7bd27] shrink-0 mt-0.5" />
-                        {f}
-                      </li>
+                      ['Match codes to LTV', 'Upload a CSV or XLSX — we do the rest.'],
+                      ['Province breakdowns', 'BC, AB, ON, QC segmented automatically.'],
+                      ['Export-ready reports', 'Excel, CSV, or print-ready PDF.'],
+                    ].map(([title, sub]) => (
+                      <div key={title} className="flex gap-3 items-start">
+                        <span className="mt-[7px] w-5 h-px bg-[#e7bd27] shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-white leading-snug">{title}</p>
+                          <p className="text-xs text-white/50 mt-0.5 leading-relaxed">{sub}</p>
+                        </div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
 
-                {/* Bottom: wordmark area */}
-                <div className="pt-5 border-t border-white/15">
-                  <p className="text-[10px] text-white/35 font-mono uppercase tracking-widest">Campaign Intelligence</p>
-                </div>
+                {/* Bottom: subtle line */}
+                <div className="h-px w-12 bg-white/20" />
 
               </div>
             </div>
