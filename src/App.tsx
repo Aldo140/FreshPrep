@@ -380,41 +380,57 @@ export default function App() {
 
             {/* Left brand panel */}
             <div
-              className="hidden md:flex md:w-[40%] flex-col justify-between px-12 py-10 text-white relative overflow-hidden"
-              style={{
-                background: 'linear-gradient(160deg, #1a3d2e 0%, #2b5346 45%, #3a6b58 100%)',
-              }}
+              className="hidden md:flex md:w-[40%] flex-col justify-between px-10 py-10 text-white relative overflow-hidden"
             >
-              {/* Subtle food-warm radial accent */}
+              {/* Food photo background */}
+              <img
+                src="https://freshprep.imgix.net/landing/carousel/recipe_3.jpg?auto=compress,format&w=700"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: 'saturate(0.9) brightness(0.55)' }}
+              />
+              {/* Dark green tint overlay */}
               <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at 80% 110%, rgba(231,189,39,0.18) 0%, transparent 60%), radial-gradient(ellipse at 10% -10%, rgba(231,138,88,0.10) 0%, transparent 50%)',
-                }}
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(160deg, rgba(26,61,46,0.82) 0%, rgba(43,83,70,0.70) 60%, rgba(26,61,46,0.60) 100%)' }}
               />
 
-              {/* Center content */}
-              <div className="relative z-10 max-w-xs">
-                {/* Variety icon accent */}
-                <div className="mb-6 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <img
-                    src="https://freshprep.imgix.net/landing/variety.svg?auto=compress,format"
-                    alt=""
-                    className="w-7 h-7"
-                    style={{ filter: 'brightness(0) invert(1) opacity(0.9)' }}
-                  />
-                </div>
-                <h2 className="text-3xl font-display font-semibold leading-tight mb-4 text-white">
-                  Campaign code analysis, without the spreadsheet juggling.
-                </h2>
-                <p className="text-sm text-white/70 leading-relaxed">
-                  Upload an export from your database. We match codes, surface performance metrics, and flag what needs attention.
-                </p>
-              </div>
+              {/* Content */}
+              <div className="relative z-10 flex flex-col justify-between h-full">
 
-              {/* Bottom label */}
-              <div className="relative z-10 pt-6 border-t border-white/15">
-                <p className="text-xs text-white/40 font-mono uppercase tracking-widest">Campaign Intelligence</p>
+                {/* Top: badge */}
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[11px] font-mono text-white/70 uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#e7bd27]" />
+                    FreshPrep internal
+                  </span>
+                </div>
+
+                {/* Middle: headline + features */}
+                <div className="space-y-6">
+                  <h2 className="text-[2rem] font-display font-semibold leading-tight text-white">
+                    Campaign code analysis, without the spreadsheet juggling.
+                  </h2>
+                  <ul className="space-y-3">
+                    {[
+                      'Match promo codes to signups and LTV in seconds',
+                      'Province-level breakdowns automatically',
+                      'Export to Excel, CSV, or print-ready PDF',
+                    ].map(f => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-white/75">
+                        <CheckCircle2 className="w-4 h-4 text-[#e7bd27] shrink-0 mt-0.5" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Bottom: wordmark area */}
+                <div className="pt-5 border-t border-white/15">
+                  <p className="text-[10px] text-white/35 font-mono uppercase tracking-widest">Campaign Intelligence</p>
+                </div>
+
               </div>
             </div>
 
