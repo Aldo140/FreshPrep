@@ -285,7 +285,7 @@ export default function App() {
   }, [foundReports, hasReportGenerated]);
 
   return (
-    <div id="saas-applet-root" className="flex flex-col h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800 overflow-hidden font-sans selection:bg-blue-200 selection:text-blue-950">
+    <div id="saas-applet-root" className="flex flex-col h-screen w-full bg-[#f8f7f5] text-[#1a1a1a] overflow-hidden font-sans selection:bg-[#eef4f1] selection:text-[#2b5346]">
       
       {/* Premium Research-Grade Header */}
       <header
@@ -562,7 +562,7 @@ export default function App() {
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-rose-800 font-mono bg-rose-50 px-2 py-0.5 rounded border border-rose-100 shrink-0">
-                              ✗ Missing
+                              Missing
                             </span>
                           )}
                         </li>
@@ -1011,7 +1011,7 @@ export default function App() {
                   }`}
                   style={{ transition: 'color 150ms var(--ease-out)' }}
                 >
-                  📊 Analysis Report
+                  Report
                 </button>
                 <button
                   id="explorer-tab-btn"
@@ -1023,7 +1023,7 @@ export default function App() {
                   }`}
                   style={{ transition: 'color 150ms var(--ease-out)' }}
                 >
-                  🔍 Raw Data
+                  Raw data
                 </button>
               </div>
 
@@ -1090,7 +1090,7 @@ export default function App() {
                     >
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8a6f00] font-mono">Average</p>
                       <p className="text-lg font-bold text-[#8a6f00] font-mono">{portfolioHealth?.average}</p>
-                      <p className="text-[9px] text-[#3d3d3d] font-medium">20–39% conversion</p>
+                      <p className="text-[9px] text-[#3d3d3d] font-medium">20-39% conversion</p>
                     </div>
 
                     {/* Tile 4: Weak */}
