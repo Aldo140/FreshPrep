@@ -45,13 +45,19 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
   const [activeLeaderboardSort, setActiveLeaderboardSort] = useState<"paying" | "conversion" | "ltv" | "signups" | "score">("paying");
 
   const activeDataset = useMemo(() => {
+    // Always use dbRows as the source — individual rows have clean single-province
+    // values (BC, AB, ON, QC). foundReports contains merged Province strings like
+    // "BC + AB" from mergeRows() and must not be used for geographic grouping.
     if (dataSource === "audited") {
-      // Normalise based on located codes
-      return foundReports;
-    } else {
-      // Normalise based on all database elements
-      return dbRows;
+      // Filter raw rows to only those whose code appears in the analyzed set.
+      const analyzedCodes = new Set(
+        foundReports.map(r => r.discount_code.trim().toUpperCase())
+      );
+      return dbRows.filter(row =>
+        analyzedCodes.has(row.discount_code.trim().toUpperCase())
+      );
     }
+    return dbRows;
   }, [dataSource, foundReports, dbRows]);
 
   // Aggregate regional data by Province
@@ -81,14 +87,8 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
       existing.codeCount += 1;
       existing.signups += row.Signups || 0;
       existing.paying += row["Paying cx"] || 0;
-      
-      // Accumulate LTV12. Supporting both AnalyzedCodeReport and raw DiscountCodeData
-      if ("Sum LTV 12" in row) {
-        existing.ltv12 += (row as any)["Sum LTV 12"] || 0;
-      } else {
-        // Average LTV12 * paying cx as reasonable fallback if sum not directly there
-        existing.ltv12 += ((row as any)["Avg LTV 12"] || 0) * (row["Paying cx"] || 0);
-      }
+      // activeDataset is always dbRows (DiscountCodeData), which has "Sum LTV 12"
+      existing.ltv12 += row["Sum LTV 12"] || 0;
 
       existing.discount += Math.abs(row.total_discount_used || 0);
 
