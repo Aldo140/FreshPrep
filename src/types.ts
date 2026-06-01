@@ -73,3 +73,19 @@ export type SortField =
   | "performanceGrade";
 
 export type SortOrder = "asc" | "desc";
+
+/**
+ * Represents a discount code that maps to multiple rows in the dataset
+ * (typically one row per province). The user must choose which to use.
+ */
+export interface DuplicateCodeInfo {
+  code: string;
+  rows: DiscountCodeData[];
+}
+
+/**
+ * Resolution decision for a duplicate code:
+ * - number (0, 1, ...): use only the row at that index
+ * - 'combine': merge all rows into one aggregated result
+ */
+export type DuplicateResolution = number | 'combine';

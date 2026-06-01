@@ -4,12 +4,14 @@
  */
 
 import * as XLSX from "xlsx";
-import { 
-  DiscountCodeData, 
-  AnalyzedCodeReport, 
-  KPIReportSummary, 
-  ChannelSummary, 
-  PerformanceRating 
+import {
+  DiscountCodeData,
+  AnalyzedCodeReport,
+  KPIReportSummary,
+  ChannelSummary,
+  PerformanceRating,
+  DuplicateCodeInfo,
+  DuplicateResolution
 } from "../types";
 
 // Helper to normalize the column headings to identify key fields
@@ -334,43 +336,97 @@ export function toCanonicalCode(code: string): string {
 }
 
 /**
+ * Merges multiple rows for the same discount code (e.g. different provinces)
+ * into a single aggregated row. Additive fields are summed; averages are
+ * recomputed from the combined totals.
+ */
+export function mergeRows(rows: DiscountCodeData[]): DiscountCodeData {
+  if (rows.length === 1) return rows[0];
+  const base = { ...rows[0] };
+  base.Signups             = rows.reduce((s, r) => s + r.Signups, 0);
+  base["Paying cx"]        = rows.reduce((s, r) => s + r["Paying cx"], 0);
+  base.total_discount_used = rows.reduce((s, r) => s + r.total_discount_used, 0);
+  base["Sum LTV 3"]        = rows.reduce((s, r) => s + r["Sum LTV 3"], 0);
+  base["Sum LTV 6"]        = rows.reduce((s, r) => s + r["Sum LTV 6"], 0);
+  base["Sum LTV 12"]       = rows.reduce((s, r) => s + r["Sum LTV 12"], 0);
+  const paying = base["Paying cx"];
+  base["Avg LTV 3"]  = paying > 0 ? base["Sum LTV 3"]  / paying : 0;
+  base["Avg LTV 6"]  = paying > 0 ? base["Sum LTV 6"]  / paying : 0;
+  base["Avg LTV 12"] = paying > 0 ? base["Sum LTV 12"] / paying : 0;
+  const provinces = [...new Set(rows.map(r => r.Province || "?"))];
+  base.Province = provinces.join(" + ");
+  const channels = [...new Set(rows.map(r => r.channel))];
+  base.channel = channels.length === 1 ? channels[0] : channels.join(" / ");
+  return base;
+}
+
+/**
  * Core engine. Searches uploaded data for matching discount codes and returns analysis reports.
+ *
+ * @param duplicateResolutions - optional map of code → resolution for codes that appear in
+ *   multiple rows (different provinces). Defaults to 'combine' for any unresolved duplicate.
  */
 export function generateAnalysisReport(
   uploadedData: DiscountCodeData[],
-  targetCodes: string[]
+  targetCodes: string[],
+  duplicateResolutions: Record<string, DuplicateResolution> = {}
 ): {
   foundReports: AnalyzedCodeReport[];
   missingCodes: string[];
   summary: KPIReportSummary;
   channelSummary: ChannelSummary[];
+  duplicateCodes: DuplicateCodeInfo[];
 } {
   const foundReports: AnalyzedCodeReport[] = [];
   const missingCodes: string[] = [];
 
-  // Index uploaded records by discount code for speedy O(1) matching (case-insensitive)
-  const index = new Map<string, DiscountCodeData>();
-  const canonicalIndex = new Map<string, DiscountCodeData>();
+  // Build a multi-index: code → ALL rows for that code (preserves every province)
+  const multiIndex = new Map<string, DiscountCodeData[]>();
+  const canonicalMultiIndex = new Map<string, DiscountCodeData[]>();
 
   uploadedData.forEach((row) => {
     const mainKey = row.discount_code.trim().toUpperCase();
-    index.set(mainKey, row);
-    
+    const existing = multiIndex.get(mainKey) ?? [];
+    existing.push(row);
+    multiIndex.set(mainKey, existing);
+
     const canKey = toCanonicalCode(row.discount_code);
-    if (canKey && !canonicalIndex.has(canKey)) {
-      canonicalIndex.set(canKey, row);
+    if (canKey) {
+      const canExisting = canonicalMultiIndex.get(canKey) ?? [];
+      canExisting.push(row);
+      canonicalMultiIndex.set(canKey, canExisting);
     }
   });
 
+  // Detect all codes that have more than one row (cross-province duplicates)
+  const duplicateCodes: DuplicateCodeInfo[] = [];
+  multiIndex.forEach((rows, code) => {
+    if (rows.length > 1) {
+      duplicateCodes.push({ code, rows });
+    }
+  });
+
+  // Helper: resolve which row(s) to use for a given code
+  const resolveRows = (code: string, rows: DiscountCodeData[]): DiscountCodeData => {
+    if (rows.length === 1) return rows[0];
+    const resolution = duplicateResolutions[code] ?? 'combine';
+    if (resolution === 'combine') return mergeRows(rows);
+    // Numeric index: use specific province row
+    const idx = typeof resolution === 'number' ? resolution : 0;
+    return rows[Math.min(idx, rows.length - 1)];
+  };
+
   // Perform search matching
   targetCodes.forEach((code) => {
-    let matched = index.get(code);
-    
-    if (!matched) {
-      // Try to fall back to formatting-only matching canonicalized key
+    let rows = multiIndex.get(code);
+
+    if (!rows || rows.length === 0) {
+      // Fall back to canonical (formatting-only) matching
       const canCode = toCanonicalCode(code);
-      matched = canonicalIndex.get(canCode);
+      rows = canonicalMultiIndex.get(canCode);
     }
+
+    const matched = rows && rows.length > 0 ? resolveRows(code, rows) : undefined;
 
     if (matched) {
       const signups = matched.Signups;
@@ -511,7 +567,8 @@ export function generateAnalysisReport(
     foundReports,
     missingCodes,
     summary,
-    channelSummary
+    channelSummary,
+    duplicateCodes,
   };
 }
 
