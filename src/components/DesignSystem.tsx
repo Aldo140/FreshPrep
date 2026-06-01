@@ -91,7 +91,7 @@ export const designTokens = {
 // ============================================================================
 
 const baseStyles = {
-  button: (variant: 'primary' | 'secondary' | 'ghost' = 'primary'): CSSProperties => {
+  button: (variant: 'primary' | 'secondary' | 'ghost' | undefined = 'primary'): CSSProperties => {
     const variants = {
       primary: {
         backgroundColor: designTokens.colors.brand,
@@ -199,7 +199,7 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       disabled={disabled || loading}
       style={{
-        ...baseStyles.button(variant),
+        ...baseStyles.button(variant as 'primary' | 'secondary' | 'ghost'),
         ...sizeMap[size],
       }}
       {...props}
