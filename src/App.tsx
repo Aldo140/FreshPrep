@@ -507,7 +507,7 @@ export default function App() {
 
               {/* SUCCESS / ERROR INDICATOR CARD */}
               {fileValidation?.isValid ? (
-                <div className="bg-[#eef4f1] border border-[#2b5346]/20 p-3.5 rounded-lg flex items-start gap-3">
+                <div className="bg-[#eef4f1] border border-[#2b5346]/20 p-3.5 rounded-lg flex items-start gap-3" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards' }}>
                   <div className="p-1.5 rounded-md bg-[#2b5346]/10 flex-shrink-0 mt-0.5">
                     <CheckCircle2 className="w-4 h-4 text-[#2b5346]" />
                   </div>
@@ -519,7 +519,7 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-[#ffd0d0] border border-[#850b0b]/20 p-3.5 rounded-lg flex items-start gap-3">
+                <div className="bg-[#ffd0d0] border border-[#850b0b]/20 p-3.5 rounded-lg flex items-start gap-3" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards' }}>
                   <div className="p-1.5 rounded-md bg-[#850b0b]/10 flex-shrink-0 mt-0.5">
                     <XCircle className="w-4 h-4 text-[#850b0b]" />
                   </div>
@@ -625,18 +625,19 @@ export default function App() {
                   {/* OPTION 1: Specific Codes */}
                   <div
                     onClick={() => setSelectedFlow("paste")}
-                    className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer transition-all ${
+                    className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer ${
                       selectedFlow === "paste"
                         ? "bg-white border-[#2b5346] shadow-lg ring-2 ring-[#2b5346] ring-opacity-30"
                         : "bg-white border-slate-300 hover:border-[#2b5346] shadow hover:shadow-md"
                     }`}
+                    style={{ transition: 'box-shadow 150ms var(--ease-out), border-color 150ms var(--ease-out)' }}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2.5 rounded-lg border transition-all ${
+                      <div className={`p-2.5 rounded-lg border ${
                         selectedFlow === "paste"
                           ? "bg-[#2b5346] text-white border-[#0d3a2f]"
                           : "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
-                      }`}>
+                      }`} style={{ transition: 'background-color 150ms var(--ease-out), color 150ms var(--ease-out), border-color 150ms var(--ease-out)' }}>
                         <Clipboard className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-slate-900 text-sm">
@@ -653,18 +654,19 @@ export default function App() {
                     onClick={() => {
                       setSelectedFlow("all");
                     }}
-                    className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer transition-all ${
+                    className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer ${
                       selectedFlow === "all"
                         ? "bg-white border-[#2b5346] shadow-lg ring-2 ring-[#2b5346] ring-opacity-30"
                         : "bg-white border-slate-300 hover:border-[#2b5346] shadow hover:shadow-md"
                     }`}
+                    style={{ transition: 'box-shadow 150ms var(--ease-out), border-color 150ms var(--ease-out)' }}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2.5 rounded-lg border transition-all ${
+                      <div className={`p-2.5 rounded-lg border ${
                         selectedFlow === "all"
                           ? "bg-[#2b5346] text-white border-[#0d3a2f]"
                           : "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
-                      }`}>
+                      }`} style={{ transition: 'background-color 150ms var(--ease-out), color 150ms var(--ease-out), border-color 150ms var(--ease-out)' }}>
                         <Database className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-slate-900 text-sm">
@@ -679,18 +681,19 @@ export default function App() {
                   {/* OPTION 3: Compare */}
                   <div
                     onClick={() => setSelectedFlow("compare")}
-                    className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer transition-all ${
+                    className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer ${
                       selectedFlow === "compare"
                         ? "bg-white border-[#2b5346] shadow-lg ring-2 ring-[#2b5346] ring-opacity-30"
                         : "bg-white border-slate-300 hover:border-[#2b5346] shadow hover:shadow-md"
                     }`}
+                    style={{ transition: 'box-shadow 150ms var(--ease-out), border-color 150ms var(--ease-out)' }}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2.5 rounded-lg border transition-all ${
+                      <div className={`p-2.5 rounded-lg border ${
                         selectedFlow === "compare"
                           ? "bg-[#2b5346] text-white border-[#0d3a2f]"
                           : "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
-                      }`}>
+                      }`} style={{ transition: 'background-color 150ms var(--ease-out), color 150ms var(--ease-out), border-color 150ms var(--ease-out)' }}>
                         <Scale className="w-5 h-5" />
                       </div>
                       <h4 className="font-bold text-slate-900 text-sm">
@@ -821,11 +824,15 @@ export default function App() {
                           <button
                             onClick={handleCompileSpecificCodes}
                             disabled={normalizedPastedCodes.length === 0}
-                            className={`px-4 sm:px-5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer inline-flex items-center gap-2 ${
+                            className={`px-4 sm:px-5 py-2 rounded-lg font-semibold text-xs cursor-pointer inline-flex items-center gap-2 ${
                               normalizedPastedCodes.length > 0
                                 ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-md hover:shadow-lg"
                                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
                             }`}
+                            style={{ transition: 'background-color 150ms var(--ease-out), transform 100ms var(--ease-out)' }}
+                            onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
+                            onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
                           >
                             <FileText className="w-4 h-4" />
                             Analyze Codes
@@ -852,7 +859,11 @@ export default function App() {
                       <div className="pt-4 max-w-xs mx-auto">
                         <button
                           onClick={handleCompilePortfolio}
-                          className="w-full py-2.5 rounded-lg bg-[#2b5346] hover:bg-[#0d3a2f] text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full py-2.5 rounded-lg bg-[#2b5346] hover:bg-[#0d3a2f] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                          style={{ transition: 'background-color 150ms var(--ease-out), transform 100ms var(--ease-out)' }}
+                          onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
+                          onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
                         >
                           <BarChart3 className="w-4 h-4" />
                           Analyze All Codes
@@ -933,11 +944,15 @@ export default function App() {
                         <button
                           onClick={handleCompileComparison}
                           disabled={selectedCompareCodes.length < 2}
-                          className={`w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-xs shadow-3xs transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                          className={`w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-xs shadow-3xs cursor-pointer flex items-center justify-center gap-1.5 ${
                             selectedCompareCodes.length >= 2
                               ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white"
                               : "bg-slate-100 text-slate-400 cursor-not-allowed"
                           }`}
+                          style={{ transition: 'background-color 150ms var(--ease-out), transform 100ms var(--ease-out)' }}
+                          onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
+                          onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
                         >
                           <Scale className="w-3.5 h-3.5" />
                           Compare Codes
@@ -989,22 +1004,24 @@ export default function App() {
                 <button
                   id="report-tab-btn"
                   onClick={() => setActiveTab2("report")}
-                  className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative transition-all cursor-pointer ${
+                  className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative cursor-pointer ${
                     activeTab === "report"
                       ? "text-[#2b5346] border-b-2 border-[#2b5346] font-semibold"
                       : "text-slate-400 hover:text-slate-700"
                   }`}
+                  style={{ transition: 'color 150ms var(--ease-out)' }}
                 >
                   📊 Analysis Report
                 </button>
                 <button
                   id="explorer-tab-btn"
                   onClick={() => setActiveTab2("explorer")}
-                  className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative transition-all cursor-pointer ${
+                  className={`pb-2.5 text-xs font-bold uppercase tracking-wider relative cursor-pointer ${
                     activeTab === "explorer"
                       ? "text-[#2b5346] border-b-2 border-[#2b5346] font-semibold"
                       : "text-slate-400 hover:text-slate-705"
                   }`}
+                  style={{ transition: 'color 150ms var(--ease-out)' }}
                 >
                   🔍 Raw Data
                 </button>
