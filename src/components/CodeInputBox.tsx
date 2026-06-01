@@ -114,16 +114,16 @@ export default function CodeInputBox({
           onClick={handleAreaClick}
           className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer flex flex-col items-center justify-center min-h-[105px] transition-all duration-200 ${
             isDragOver
-              ? "border-emerald-600 bg-emerald-50/30"
+              ? "border-[#2b5346] bg-[#eef4f1]/30"
               : loadedFileName
-              ? "border-emerald-500 bg-emerald-50/15"
-              : "border-slate-200 hover:border-emerald-600 bg-slate-50/40"
+              ? "border-[#2b5346] bg-[#eef4f1]/15"
+              : "border-slate-200 hover:border-[#2b5346] bg-slate-50/40"
           }`}
         >
           {loadedFileName ? (
             <div className="space-y-1 animate-fade-in" id="file-loaded-view">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto shadow-2xs border border-emerald-200/40">
-                <FileSpreadsheet className="w-4.5 h-4.5 text-emerald-700" />
+              <div className="w-8 h-8 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center mx-auto shadow-2xs border border-[#2b5346]/20">
+                <FileSpreadsheet className="w-4.5 h-4.5 text-[#2b5346]" />
               </div>
               <div>
                 <p className="text-[10.5px] font-bold text-slate-800 truncate max-w-[170px] mx-auto">
@@ -133,7 +133,7 @@ export default function CodeInputBox({
                   {loadedDataCount.toLocaleString()} catalog rows active
                 </p>
                 {loadedFileName === "Corporate_Default_FY26.xlsx" && (
-                  <p className="text-[8.5px] text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded font-black border border-emerald-100 inline-block mt-1 font-sans leading-none">
+                  <p className="text-[8.5px] text-[#2b5346] bg-[#eef4f1] px-1.5 py-0.5 rounded font-black border border-[#2b5346]/20 inline-block mt-1 font-sans leading-none">
                     Target Range: Jun 25 - Jun 26
                   </p>
                 )}
@@ -145,7 +145,7 @@ export default function CodeInputBox({
                 <Upload className="w-4 h-4" />
               </div>
               <p className="text-[11px] font-medium text-slate-600">
-                Drop file here or <span className="text-emerald-800 underline font-extrabold hover:text-emerald-700">browse</span>
+                Drop file here or <span className="text-[#2b5346] underline font-extrabold hover:text-[#0d3a2f]">browse</span>
               </p>
               <p className="text-[8.5px] text-slate-400 font-medium">
                 Accepts XLSX, XLS, and CSV exports
@@ -159,7 +159,7 @@ export default function CodeInputBox({
           {loadedFileName ? (
             <button
               onClick={() => onResetToSample()}
-              className="text-emerald-800 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-[#2b5346] font-bold hover:underline flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className="w-2.5 h-2.5" /> Reload Demo Dataset
             </button>
@@ -175,7 +175,7 @@ export default function CodeInputBox({
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block font-sans">
             2. Enter Target Codes
           </label>
-          <span className="text-[9.5px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded font-mono font-bold border border-emerald-100">
+          <span className="text-[9.5px] bg-[#eef4f1] text-[#2b5346] px-2 py-0.5 rounded font-mono font-bold border border-[#2b5346]/20">
             {normalizedCodes.length} code{normalizedCodes.length === 1 ? "" : "s"} detected
           </span>
         </div>
@@ -186,7 +186,7 @@ export default function CodeInputBox({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Paste multiple codes here (separated by spaces, commas, or carriage returns)..."
-            className="w-full h-[110px] font-mono text-[11px] p-2.5 rounded-lg border border-slate-205 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 resize-none leading-normal"
+            className="w-full h-[110px] font-mono text-[11px] p-2.5 rounded-lg border border-slate-205 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] resize-none leading-normal"
           />
           {inputText && (
             <div className="absolute right-2 bottom-2 flex gap-1.5">
@@ -202,7 +202,7 @@ export default function CodeInputBox({
                 id="clear-codes-btn"
                 onClick={handleClearCodes}
                 title="Clear contents"
-                className="p-1 rounded bg-white hover:bg-slate-50 text-rose-600 border border-slate-205 shadow-2xs transition-all cursor-pointer font-bold"
+                className="p-1 rounded bg-white hover:bg-slate-50 text-[#850b0b] border border-slate-205 shadow-2xs transition-all cursor-pointer font-bold"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -219,7 +219,7 @@ export default function CodeInputBox({
           disabled={normalizedCodes.length === 0}
           className={`w-full py-2 rounded-lg font-bold text-xs tracking-wide shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             normalizedCodes.length > 0
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-100/30"
+              ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-[#2b5346]/20"
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >

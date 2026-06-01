@@ -561,7 +561,7 @@ export default function App() {
                               Found
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-rose-800 font-mono bg-rose-50 px-2 py-0.5 rounded border border-rose-100 shrink-0">
+                            <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-[#850b0b] font-mono bg-[#ffd0d0] px-2 py-0.5 rounded border border-[#850b0b]/20 shrink-0">
                               Missing
                             </span>
                           )}
@@ -797,7 +797,7 @@ export default function App() {
                               disabled={!eraseKeyword.trim()}
                               className={`px-3 py-1.5 rounded-lg text-[10.5px] font-bold tracking-tight transition cursor-pointer shrink-0 ${
                                 eraseKeyword.trim()
-                                  ? "bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100/50"
+                                  ? "bg-[#ffd0d0] border border-[#850b0b]/20 text-[#850b0b] hover:bg-[#ffd0d0]/70"
                                   : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
                               }`}
                             >

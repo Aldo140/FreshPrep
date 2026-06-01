@@ -100,7 +100,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
       case "Good":
         return "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
       case "Average":
-        return "bg-amber-50 text-amber-805 border-amber-200";
+        return "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30";
       case "Weak":
       default:
         return "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20";
@@ -110,7 +110,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
   const getPerformanceGradeClass = (grade: string) => {
     if (grade.startsWith("A")) return "text-[#2b5346] font-extrabold";
     if (grade.startsWith("B")) return "text-[#2b5346] font-bold";
-    if (grade.startsWith("C")) return "text-amber-700 font-medium";
+    if (grade.startsWith("C")) return "text-[#8a6f00] font-medium";
     return "text-[#850b0b] font-medium";
   };
 
