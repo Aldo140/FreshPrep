@@ -218,7 +218,7 @@ export default function MissingCodesSection({
             onClick={handleAcceptAllHighConfidence}
             className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-650 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-2 hover:shadow transition cursor-pointer w-full md:w-auto shrink-0"
           >
-            <Sparkles className="w-3.5 h-3.5 text-yellow-200 shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-[#e7bd27] shrink-0" />
             Accept All ({highConfidenceCount}) High-Confidence Matches
           </motion.button>
         )}
@@ -270,7 +270,7 @@ export default function MissingCodesSection({
         <div className="flex flex-col justify-center py-1 pl-0 lg:pl-5">
           <span className="text-[10px] font-bold text-slate-400 select-none uppercase tracking-widest block">Current Match Rate</span>
           <div className="flex items-baseline gap-2 mt-0.5">
-            <span className={`text-lg sm:text-xl font-black ${matchRate >= 80 ? "text-emerald-600" : matchRate >= 50 ? "text-amber-500" : "text-rose-500"}`}>
+            <span className={`text-lg sm:text-xl font-black ${matchRate >= 80 ? "text-emerald-600" : matchRate >= 50 ? "text-[#e78a58]" : "text-rose-500"}`}>
               {matchRate.toFixed(1)}%
             </span>
             {activeCorrections.length > 0 && (
