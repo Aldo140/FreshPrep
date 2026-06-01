@@ -1030,7 +1030,7 @@ export default function App() {
               <div id="dynamic-reporting-dashboard" className="space-y-6">
                 
                 {/* 1. PORTFOLIO HEALTH SUMMARY WIDGET */}
-                <section id="portfolio-health-summary" className="bg-white border border-blue-100 rounded-2xl p-5 shadow-3xs animate-fade-in font-sans">
+                <section id="portfolio-health-summary" className="bg-white border border-[#e5e5e5] rounded-2xl p-5 shadow-3xs animate-fade-in font-sans">
                   <div className="border-b border-slate-100 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                       <h3 className="text-sm font-semibold text-[#1a1a1a]">Code Performance</h3>
@@ -1040,7 +1040,7 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] bg-blue-50 text-blue-800 px-2 py-0.5 rounded font-mono font-bold border border-blue-100">
+                      <span className="text-[10px] bg-[#eef4f1] text-[#2b5346] px-2 py-0.5 rounded font-mono font-bold border border-[#2b5346]/20">
                         {foundReports.length} Codes Audited
                       </span>
                     </div>
