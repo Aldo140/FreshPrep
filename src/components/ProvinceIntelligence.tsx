@@ -288,7 +288,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               setActiveLeaderboardSort("paying");
             }}
             id="datasource-audited-toggle-btn"
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center whitespace-nowrap ${
               dataSource === "audited"
                 ? "bg-white text-[#2b5346] shadow-2xs border border-[#2b5346]/20"
                 : "text-slate-550 hover:text-slate-800"
@@ -302,7 +302,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               setActiveLeaderboardSort("paying");
             }}
             id="datasource-file-toggle-btn"
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center whitespace-nowrap ${
               dataSource === "full"
                 ? "bg-white text-[#2b5346] shadow-2xs border border-[#2b5346]/20"
                 : "text-slate-550 hover:text-slate-800"
@@ -316,7 +316,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
       {/* 2. Province Scorecards Grid */}
       <section id="province-scorecards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Best Conversion */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Best Conversion</span>
             <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
@@ -338,7 +338,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
         </div>
 
         {/* Card 2: Highest Average LTV */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Highest Avg LTV12</span>
             <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
@@ -360,7 +360,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
         </div>
 
         {/* Card 3: Most Signups */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Most Regional Signups</span>
             <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
@@ -382,7 +382,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
         </div>
 
         {/* Card 4: Most Paying Customers */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Most Paying Customers</span>
             <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
@@ -447,9 +447,9 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 }
 
                 return (
-                  <div 
-                    key={grade} 
-                    className={`border border-slate-150 p-3 rounded-xl transition ${hoverBorder}`}
+                  <div
+                    key={grade}
+                    className={`border border-slate-150 p-3 rounded-xl transition-colors ${hoverBorder}`}
                   >
                     <div className="flex items-center justify-between gap-4 mb-2">
                       <div className="flex items-center gap-2">
@@ -543,8 +543,8 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                           <span className="font-mono text-slate-800 font-semibold">{row.totalSignups.toLocaleString()} signups</span>
                         </div>
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-slate-400 rounded-full transition-all duration-501"
+                          <div
+                            className="h-full bg-slate-400 rounded-full transition-[width] duration-501"
                             style={{ width: `${relSignups}%` }}
                           />
                         </div>
@@ -558,7 +558,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                         </div>
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#2b5346] rounded-full transition-all duration-501"
+                            className="h-full bg-[#2b5346] rounded-full transition-[width] duration-501"
                             style={{ width: `${Math.min(100, relConv)}%` }}
                           />
                         </div>
@@ -572,7 +572,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                         </div>
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#e7bd27] rounded-full transition-all duration-501"
+                            className="h-full bg-[#e7bd27] rounded-full transition-[width] duration-501"
                             style={{ width: `${relLtv}%` }}
                           />
                         </div>
@@ -727,7 +727,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* Box 1: Highest Opportunity */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition">
+            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition-colors">
               <div>
                 <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1">
                   High Opportunity Segment
@@ -745,7 +745,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             </div>
 
             {/* Box 2: Highest Efficiency */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e78a58]/30 transition">
+            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e78a58]/30 transition-colors">
               <div>
                 <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e78a58] uppercase block mb-1">
                   Highest ROI Efficiency
@@ -763,7 +763,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             </div>
 
             {/* Box 3: Lowest Performing */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-slate-800 transition">
+            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-slate-800 transition-colors">
               <div>
                 <span className="text-[9.5px] font-mono font-bold tracking-widest text-slate-400 uppercase block mb-1">
                   Lowest Conversion Yield
@@ -781,7 +781,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             </div>
 
             {/* Box 4: Further Investment */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition">
+            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition-colors">
               <div>
                 <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1">
                   Investment Target

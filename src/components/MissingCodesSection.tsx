@@ -324,8 +324,8 @@ export default function MissingCodesSection({
                     transition={{ duration: 0.18 }}
                     key={code} 
                     id={`unmatched-card-${code}`}
-                    className={`p-4 rounded-xl border transition-all ${
-                      type !== "none" 
+                    className={`p-4 rounded-xl border transition-colors ${
+                      type !== "none"
                         ? "bg-[#eef4f1]/40 border-[#2b5346] shadow-3xs"
                         : "bg-white border-slate-200 hover:border-slate-350"
                     }`}
@@ -339,7 +339,7 @@ export default function MissingCodesSection({
                         <button
                           type="button"
                           onClick={() => handleCopyCode(code)}
-                          className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition cursor-pointer"
+                          className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
                           title="Copy original code key"
                         >
                           {copiedCode === code ? (
@@ -393,7 +393,7 @@ export default function MissingCodesSection({
                               key={sugg.code}
                               type="button"
                               onClick={() => handleSelectSuggestion(code, sugg.code)}
-                              className={`w-full text-left px-3 py-2 rounded-lg border text-xs font-medium transition flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 cursor-pointer ${
+                              className={`w-full text-left px-3 py-2 rounded-lg border text-xs font-medium transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2 cursor-pointer ${
                                 isItemSelected
                                   ? "bg-[#2b5346]/10 border-[#2b5346] text-[#2b5346] font-bold"
                                   : "bg-slate-50/50 hover:bg-slate-105 border-slate-150 text-slate-705"
@@ -435,7 +435,7 @@ export default function MissingCodesSection({
                         whileTap={{ scale: 0.99 }}
                         type="button"
                         onClick={() => handleSelectNone(code)}
-                        className={`w-full text-left px-3 py-2 rounded-lg border text-xs font-medium transition flex items-center justify-between cursor-pointer ${
+                        className={`w-full text-left px-3 py-2 rounded-lg border text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
                           type === "custom"
                             ? "bg-[#2b5346]/10 border-[#2b5346] text-[#2b5346] font-bold"
                             : "bg-slate-50/50 hover:bg-slate-105 border-slate-150 text-slate-705"
@@ -548,7 +548,7 @@ export default function MissingCodesSection({
                               <button
                                 type="button"
                                 onClick={() => handleResetCode(corr.original)}
-                                className="p-1 rounded text-[#850b0b] hover:text-white hover:bg-[#850b0b] transition cursor-pointer"
+                                className="p-1 rounded text-[#850b0b] hover:text-white hover:bg-[#850b0b] transition-colors cursor-pointer"
                                 title="Remove from correction queue"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -585,7 +585,7 @@ export default function MissingCodesSection({
               type="button"
               onClick={handleApply}
               disabled={activeCorrections.length === 0}
-              className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-tight transition shadow-sm flex items-center justify-center gap-2 cursor-pointer ${
+              className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-tight transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer ${
                 activeCorrections.length > 0
                   ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-[#2b5346]/20 hover:shadow-md"
                   : "bg-slate-100 text-slate-400 border border-slate-205 cursor-not-allowed shadow-none"

@@ -112,7 +112,7 @@ export default function CodeInputBox({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={handleAreaClick}
-          className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer flex flex-col items-center justify-center min-h-[105px] transition-all duration-200 ${
+          className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer flex flex-col items-center justify-center min-h-[105px] transition-colors duration-200 ${
             isDragOver
               ? "border-[#2b5346] bg-[#eef4f1]/30"
               : loadedFileName
@@ -194,7 +194,7 @@ export default function CodeInputBox({
                 id="format-codes-btn"
                 onClick={handleFormatClick}
                 title="Normalize spacing"
-                className="p-1 rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-205 shadow-2xs transition-all cursor-pointer font-bold"
+                className="p-1 rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-205 shadow-2xs transition-colors cursor-pointer font-bold"
               >
                 <Clipboard className="w-3.5 h-3.5" />
               </button>
@@ -202,7 +202,7 @@ export default function CodeInputBox({
                 id="clear-codes-btn"
                 onClick={handleClearCodes}
                 title="Clear contents"
-                className="p-1 rounded bg-white hover:bg-slate-50 text-[#850b0b] border border-slate-205 shadow-2xs transition-all cursor-pointer font-bold"
+                className="p-1 rounded bg-white hover:bg-slate-50 text-[#850b0b] border border-slate-205 shadow-2xs transition-colors cursor-pointer font-bold"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -217,7 +217,7 @@ export default function CodeInputBox({
           id="generate-report-btn"
           onClick={() => onGenerateReport()}
           disabled={normalizedCodes.length === 0}
-          className={`w-full py-2 rounded-lg font-bold text-xs tracking-wide shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`w-full py-2 rounded-lg font-bold text-xs tracking-wide shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
             normalizedCodes.length > 0
               ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-[#2b5346]/20"
               : "bg-slate-100 text-slate-400 cursor-not-allowed"
