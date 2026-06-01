@@ -546,130 +546,118 @@ export default function App() {
           /* VALIDATED STATE AND WIZARD FLOW SELECTOR */
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#f8f7f5] flex flex-col items-center gap-4 sm:gap-6" id="wizard-screen">
             
-            {/* Validation indicators block */}
-            <div className="w-full max-w-4xl bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col gap-4 sm:gap-5">
-              
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-slate-200 pb-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-[#1a1a1a]">Data validation</h3>
-                  <p className="text-xs text-[#3d3d3d] mt-1 font-mono">
-                    {fileName} · {dbRows.length.toLocaleString()} records
-                  </p>
+            {/* Validation card */}
+            <div className="w-full max-w-4xl bg-white border border-[#e5e5e5] rounded-xl shadow-sm overflow-hidden" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards' }}>
+
+              {/* File info bar */}
+              <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-[#f8f7f5]">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#eef4f1] flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="w-4 h-4 text-[#2b5346]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-[#1a1a1a] truncate">{fileName}</p>
+                    <p className="text-xs text-[#a1a1a1] font-mono">{dbRows.length.toLocaleString()} records loaded</p>
+                  </div>
                 </div>
                 <button
                   onClick={handleResetWorkspace}
-                  className="px-3 py-1.5 text-xs font-medium text-[#3d3d3d] bg-white border border-[#e5e5e5] rounded hover:bg-[#f8f7f5] cursor-pointer shrink-0" style={{ transition: 'background-color 150ms var(--ease-out)' }}
+                  className="shrink-0 flex items-center gap-1.5 text-xs text-[#3d3d3d] hover:text-[#1a1a1a] cursor-pointer font-medium"
+                  style={{ transition: 'color 150ms var(--ease-out)' }}
                 >
-                  Replace File
+                  <RefreshCw className="w-3 h-3" />
+                  Replace
                 </button>
               </div>
 
-              {/* SUCCESS / ERROR INDICATOR CARD */}
+              {/* Status banner */}
               {fileValidation?.isValid ? (
-                <div className="bg-[#eef4f1] border border-[#2b5346]/20 p-3.5 rounded-lg flex items-start gap-3" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards' }}>
-                  <div className="p-1.5 rounded-md bg-[#2b5346]/10 flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#2b5346]" />
-                  </div>
+                <div className="flex items-center gap-3 px-5 py-3.5 bg-[#eef4f1]">
+                  <CheckCircle2 className="w-4 h-4 text-[#2b5346] shrink-0" />
                   <div>
-                    <h4 className="text-xs font-semibold text-[#2b5346]">File structure valid</h4>
-                    <p className="text-xs text-[#3d3d3d] leading-relaxed mt-1">
-                      All required columns detected. Select an analysis method below.
-                    </p>
+                    <span className="text-sm font-semibold text-[#2b5346]">File structure valid</span>
+                    <span className="text-xs text-[#3d3d3d] ml-2">All required columns detected. Choose an analysis below.</span>
                   </div>
                 </div>
               ) : (
-                <div className="bg-[#ffd0d0] border border-[#850b0b]/20 p-3.5 rounded-lg flex items-start gap-3" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards' }}>
-                  <div className="p-1.5 rounded-md bg-[#850b0b]/10 flex-shrink-0 mt-0.5">
-                    <XCircle className="w-4 h-4 text-[#850b0b]" />
-                  </div>
+                <div className="flex items-center gap-3 px-5 py-3.5 bg-[#ffd0d0]">
+                  <XCircle className="w-4 h-4 text-[#850b0b] shrink-0" />
                   <div>
-                    <h4 className="text-xs font-semibold text-[#850b0b]">Missing required columns</h4>
-                    <p className="text-xs text-[#3d3d3d] leading-relaxed mt-1">
-                      One or more required column headers are missing. Review the requirements below and update your file.
-                    </p>
+                    <span className="text-sm font-semibold text-[#850b0b]">Missing required columns</span>
+                    <span className="text-xs text-[#3d3d3d] ml-2">Update your file and re-upload.</span>
                   </div>
                 </div>
               )}
 
-              {/* COLUMNS MATRIX */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans">
-                
-                {/* Required Columns List */}
-                <div className="bg-slate-50 border border-slate-300 p-4 sm:p-5 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-semibold text-xs sm:text-sm uppercase tracking-wide text-slate-700">
-                      Required Fields
-                    </h5>
-                    <span className="text-xs font-medium text-slate-600 bg-slate-200 px-2 py-1 rounded">
-                      Must have
-                    </span>
-                  </div>
-                  <ul className="space-y-2">
-                    {[
-                      { key: "discount_code", label: "Code ID (unique identifier)" },
-                      { key: "Signups", label: "Signups (registrations)" },
-                      { key: "Paying cx", label: "Customers (conversions)" },
-                      { key: "Conversion", label: "Conversion Rate" }
-                    ].map((col) => {
-                      const detected = fileValidation?.requiredFound.includes(col.key);
-                      return (
-                        <li key={col.key} className="flex items-center justify-between bg-white border border-slate-150 p-1.5 sm:p-2 rounded-lg gap-2">
-                          <span className="font-mono text-[10.5px] sm:text-[11px] font-bold text-slate-800 truncate" title={col.label}>{col.label}</span>
-                          {detected ? (
-                            <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-[#2b5346] font-mono bg-[#eef4f1] px-2 py-0.5 rounded border border-[#2b5346]/20 shrink-0">
-                              Found
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-[#850b0b] font-mono bg-[#ffd0d0] px-2 py-0.5 rounded border border-[#850b0b]/20 shrink-0">
-                              Missing
-                            </span>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+              {/* Column chips */}
+              <div className="px-5 py-4 space-y-4">
 
-                {/* Optional Columns List */}
-                <div className="bg-[#eef4f1]/40 border border-[#2b5346]/15 p-3 sm:p-4 rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-bold text-[10.5px] sm:text-[11px] uppercase tracking-wider text-[#2b5346] font-mono">
-                      Optional Fields
-                    </h5>
-                    <span className="text-[9px] sm:text-[10px] font-mono font-bold text-[#2b5346] bg-[#eef4f1] px-1.5 py-0.5 rounded">
-                      Enhances insights
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
+                {/* Required */}
+                <div>
+                  <p className="text-[10px] font-semibold text-[#a1a1a1] uppercase tracking-wider font-mono mb-2">Required</p>
+                  <div className="flex flex-wrap gap-2">
                     {[
-                      { key: "channel", label: "Marketing Channel" },
-                      { key: "Province", label: "Region (CA)" },
-                      { key: "total_discount_used", label: "Discount Amount" },
-                      { key: "Sum LTV 12", label: "Total LTV (12m)" },
-                      { key: "Avg LTV 12", label: "Avg LTV (12m)" }
+                      { key: "discount_code", label: "Promo Code" },
+                      { key: "Signups",        label: "Signups" },
+                      { key: "Paying cx",      label: "Customers" },
+                      { key: "Conversion",     label: "Conversion Rate" },
                     ].map(col => {
-                      const detected = fileValidation?.optionalFound.includes(col.key);
+                      const ok = fileValidation?.requiredFound.includes(col.key);
                       return (
                         <span
                           key={col.key}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-[10.5px] font-semibold border ${
-                            detected
-                              ? "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
-                              : "bg-slate-150/40 text-slate-400 border-slate-200 text-line-through decoration-slate-350"
-                          }`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border"
+                          style={ok
+                            ? { backgroundColor: '#eef4f1', color: '#2b5346', borderColor: 'rgba(43,83,70,0.2)' }
+                            : { backgroundColor: '#ffd0d0', color: '#850b0b', borderColor: 'rgba(133,11,11,0.2)' }
+                          }
                         >
-                          {col.label}: {detected ? "Available" : "N/A"}
+                          {ok
+                            ? <CheckCircle2 className="w-3 h-3" />
+                            : <XCircle className="w-3 h-3" />
+                          }
+                          {col.label}
                         </span>
                       );
                     })}
                   </div>
-                  <p className="text-[9.5px] sm:text-[10px] text-slate-450 mt-3 sm:mt-4 leading-relaxed font-sans font-medium">
-                    Fields like LTV and region enable deeper analysis and geographic insights in your reports.
+                </div>
+
+                {/* Optional */}
+                <div>
+                  <p className="text-[10px] font-semibold text-[#a1a1a1] uppercase tracking-wider font-mono mb-2">
+                    Optional <span className="text-[#a1a1a1] normal-case font-normal">— enables regional + LTV breakdowns</span>
                   </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { key: "channel",              label: "Channel" },
+                      { key: "Province",             label: "Province" },
+                      { key: "total_discount_used",  label: "Discount" },
+                      { key: "Sum LTV 12",           label: "LTV 12m" },
+                      { key: "Avg LTV 12",           label: "Avg LTV" },
+                    ].map(col => {
+                      const ok = fileValidation?.optionalFound.includes(col.key);
+                      return (
+                        <span
+                          key={col.key}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border"
+                          style={ok
+                            ? { backgroundColor: '#f8f7f5', color: '#3d3d3d', borderColor: '#e5e5e5' }
+                            : { backgroundColor: '#f8f7f5', color: '#a1a1a1', borderColor: '#e5e5e5' }
+                          }
+                        >
+                          {ok
+                            ? <CheckCircle2 className="w-3 h-3 text-[#2b5346]" />
+                            : <span className="w-3 h-3 rounded-full border border-[#e5e5e5] inline-block" />
+                          }
+                          {col.label}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
 
               </div>
-
             </div>
 
             {/* WIZARD CHOICE BLOCK */}
