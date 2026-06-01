@@ -64,22 +64,22 @@ Give FreshPrep's marketing and growth teams a fast, accurate view of campaign co
 
 ## Core Workflows
 
-### 1. Daily Review (Compliance Analyst, 10 min)
+### 1. Daily Review (Marketing Analyst, 10 min)
 1. Open FreshPrep → see summary of overnight changes
 2. Click into any failing codes → see details
 3. Export morning report → email stakeholders
 4. ✓ Back to email within 10 minutes
 
-### 2. Monthly Audit (Compliance Officer, 2 hours)
+### 2. Campaign Audit (Campaign Manager, 2 hours)
 1. Filter by date range and channel
 2. Scan all codes marked "passed" → confidence check
 3. Drill into "failed" codes → understand root causes
-4. Generate compliance certificate → download/print
+4. Generate campaign report → download/print
 5. Archive findings for audit trail
 
-### 3. Data Pipeline (Data Scientist, async)
+### 3. Data Export (Growth Analyst, async)
 1. Set up scheduled export (FreshPrep API)
-2. Ingest clean data into ML model
+2. Ingest clean data into analytics platform
 3. Monitor quality through FreshPrep dashboard
 4. Alert on anomalies
 
@@ -100,11 +100,11 @@ Give FreshPrep's marketing and growth teams a fast, accurate view of campaign co
 - Professional, confident design
 - Honest error messages that guide recovery
 - Accessibility is non-negotiable
-- Researchers depend on this tool for high-stakes decisions
+- Analysts depend on this tool for high-stakes decisions
 
 ### 4. Performance > Perfection
 - Fast loading > beautiful animations
-- Researchers read data for 30+ min sessions
+- Analysts read data for 30+ min sessions
 - Every interaction should feel responsive
 
 ## Key Features
@@ -202,7 +202,7 @@ Give FreshPrep's marketing and growth teams a fast, accurate view of campaign co
 
 - **Adoption**: % of target users actively using within 6 months
 - **Speed**: Average time to complete a daily review (target: < 10 min)
-- **Trust**: NPS score from compliance teams
+- **Trust**: NPS score from marketing teams
 - **Quality**: Zero undetected compliance issues after release
 - **Efficiency**: Reduction in manual review time
 
@@ -220,13 +220,13 @@ See `DESIGN.md` for complete specifications.
 ## AI Agent Context
 
 When building FreshPrep features, remember:
-1. **Users are researchers** → clarity matters more than creativity
+1. **Users are marketing analysts** → clarity matters more than creativity
 2. **Compliance is serious** → no cute copy or distracting animations
 3. **They read for 30+ minutes** → spacing and hierarchy are critical
 4. **They trust data** → every number displayed exactly as stored
 5. **They need speed** → loading states that calm, not frustrate
 
-Every design choice should answer: "Does this help the researcher understand compliance better?"
+Every design choice should answer: "Does this help the analyst understand campaign performance better?"
 
 ---
 
