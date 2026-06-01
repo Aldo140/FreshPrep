@@ -485,23 +485,21 @@ export default function App() {
         ) : !hasReportGenerated ? (
           
           /* VALIDATED STATE AND WIZARD FLOW SELECTOR */
-          <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 bg-slate-50/50 flex flex-col items-center gap-4 sm:gap-6" id="wizard-screen">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#f8f7f5] flex flex-col items-center gap-4 sm:gap-6" id="wizard-screen">
             
             {/* Validation indicators block */}
             <div className="w-full max-w-4xl bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col gap-4 sm:gap-5">
               
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-slate-200 pb-4">
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                    🔍 Data Validation
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-normal mt-1">
-                    File: <strong className="font-mono text-slate-800">{fileName}</strong> with {dbRows.length.toLocaleString()} records
+                  <h3 className="text-sm font-semibold text-[#1a1a1a]">Data validation</h3>
+                  <p className="text-xs text-[#3d3d3d] mt-1 font-mono">
+                    {fileName} · {dbRows.length.toLocaleString()} records
                   </p>
                 </div>
                 <button
                   onClick={handleResetWorkspace}
-                  className="px-3 py-1.5 self-start sm:self-auto text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 cursor-pointer transition shrink-0"
+                  className="px-3 py-1.5 text-xs font-medium text-[#3d3d3d] bg-white border border-[#e5e5e5] rounded hover:bg-[#f8f7f5] cursor-pointer shrink-0" style={{ transition: 'background-color 150ms var(--ease-out)' }}
                 >
                   Replace File
                 </button>
@@ -509,30 +507,26 @@ export default function App() {
 
               {/* SUCCESS / ERROR INDICATOR CARD */}
               {fileValidation?.isValid ? (
-                <div className="bg-blue-50/60 border border-blue-250 p-3.5 sm:p-4 rounded-xl flex items-start gap-2.5 sm:gap-3">
-                  <div className="p-1.5 rounded-lg bg-blue-100 text-blue-800 flex-shrink-0 mt-0.5 animate-pulse">
-                    <CheckCircle2 className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-blue-700" />
+                <div className="bg-[#eef4f1] border border-[#2b5346]/20 p-3.5 rounded-lg flex items-start gap-3">
+                  <div className="p-1.5 rounded-md bg-[#2b5346]/10 flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#2b5346]" />
                   </div>
                   <div>
-                    <h4 className="text-[11px] sm:text-[12px] font-extrabold uppercase text-blue-950 tracking-wider font-mono">
-                      ✓ File Structure Valid
-                    </h4>
-                    <p className="text-[11px] sm:text-xs text-slate-700 font-medium leading-relaxed mt-1">
-                      All required fields are present and properly formatted. Your data is ready for analysis. Select an analysis method below to proceed.
+                    <h4 className="text-xs font-semibold text-[#2b5346]">File structure valid</h4>
+                    <p className="text-xs text-[#3d3d3d] leading-relaxed mt-1">
+                      All required columns detected. Select an analysis method below.
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-rose-50/50 border border-rose-250 p-3.5 sm:p-4 rounded-xl flex items-start gap-2.5 sm:gap-3">
-                  <div className="p-1.5 rounded-lg bg-rose-100 text-rose-800 flex-shrink-0 mt-0.5">
-                    <XCircle className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-rose-700" />
+                <div className="bg-[#ffd0d0] border border-[#850b0b]/20 p-3.5 rounded-lg flex items-start gap-3">
+                  <div className="p-1.5 rounded-md bg-[#850b0b]/10 flex-shrink-0 mt-0.5">
+                    <XCircle className="w-4 h-4 text-[#850b0b]" />
                   </div>
                   <div>
-                    <h4 className="text-[11px] sm:text-[12px] font-extrabold uppercase text-rose-950 tracking-wider font-mono">
-                      ✗ Missing Required Fields
-                    </h4>
-                    <p className="text-[11px] sm:text-xs text-slate-700 font-medium leading-relaxed mt-1">
-                      Your spreadsheet is missing one or more required column headers. Please review the requirements below and update your file accordingly.
+                    <h4 className="text-xs font-semibold text-[#850b0b]">Missing required columns</h4>
+                    <p className="text-xs text-[#3d3d3d] leading-relaxed mt-1">
+                      One or more required column headers are missing. Review the requirements below and update your file.
                     </p>
                   </div>
                 </div>
@@ -563,8 +557,8 @@ export default function App() {
                         <li key={col.key} className="flex items-center justify-between bg-white border border-slate-150 p-1.5 sm:p-2 rounded-lg gap-2">
                           <span className="font-mono text-[10.5px] sm:text-[11px] font-bold text-slate-800 truncate" title={col.label}>{col.label}</span>
                           {detected ? (
-                            <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-blue-800 font-mono bg-blue-50 px-2 py-0.5 rounded border border-blue-100 shrink-0">
-                              ✓ Found
+                            <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-[#2b5346] font-mono bg-[#eef4f1] px-2 py-0.5 rounded border border-[#2b5346]/20 shrink-0">
+                              Found
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-rose-800 font-mono bg-rose-50 px-2 py-0.5 rounded border border-rose-100 shrink-0">
@@ -578,12 +572,12 @@ export default function App() {
                 </div>
 
                 {/* Optional Columns List */}
-                <div className="bg-blue-50/30 border border-blue-150 p-3 sm:p-4 rounded-xl">
+                <div className="bg-[#eef4f1]/40 border border-[#2b5346]/15 p-3 sm:p-4 rounded-xl">
                   <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-bold text-[10.5px] sm:text-[11px] uppercase tracking-wider text-blue-700 font-mono">
+                    <h5 className="font-bold text-[10.5px] sm:text-[11px] uppercase tracking-wider text-[#2b5346] font-mono">
                       Optional Fields
                     </h5>
-                    <span className="text-[9px] sm:text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold text-[#2b5346] bg-[#eef4f1] px-1.5 py-0.5 rounded">
                       Enhances insights
                     </span>
                   </div>
@@ -597,11 +591,11 @@ export default function App() {
                     ].map(col => {
                       const detected = fileValidation?.optionalFound.includes(col.key);
                       return (
-                        <span 
+                        <span
                           key={col.key}
                           className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-[10.5px] font-semibold border ${
-                            detected 
-                              ? "bg-blue-50/40 text-blue-900 border-blue-200" 
+                            detected
+                              ? "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
                               : "bg-slate-150/40 text-slate-400 border-slate-200 text-line-through decoration-slate-350"
                           }`}
                         >
@@ -622,26 +616,26 @@ export default function App() {
             {/* WIZARD CHOICE BLOCK */}
             {fileValidation?.isValid && (
               <div className="w-full max-w-4xl space-y-4 sm:space-y-5">
-                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wide text-slate-600 text-center">
-                  🔓 Choose Your Analysis
+                <h3 className="text-xs font-semibold text-[#3d3d3d] text-center uppercase tracking-wider">
+                  Choose your analysis
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                   
                   {/* OPTION 1: Specific Codes */}
-                  <div 
+                  <div
                     onClick={() => setSelectedFlow("paste")}
                     className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer transition-all ${
                       selectedFlow === "paste"
-                        ? "bg-white border-blue-500 shadow-lg ring-2 ring-blue-500 ring-opacity-50"
-                        : "bg-white border-slate-300 hover:border-blue-400 shadow hover:shadow-md"
+                        ? "bg-white border-[#2b5346] shadow-lg ring-2 ring-[#2b5346] ring-opacity-30"
+                        : "bg-white border-slate-300 hover:border-[#2b5346] shadow hover:shadow-md"
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`p-2.5 rounded-lg border transition-all ${
-                        selectedFlow === "paste" 
-                          ? "bg-blue-500 text-white border-blue-600" 
-                          : "bg-blue-50 text-blue-600 border-blue-200"
+                        selectedFlow === "paste"
+                          ? "bg-[#2b5346] text-white border-[#0d3a2f]"
+                          : "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
                       }`}>
                         <Clipboard className="w-5 h-5" />
                       </div>
@@ -655,21 +649,21 @@ export default function App() {
                   </div>
 
                   {/* OPTION 2: All Codes */}
-                  <div 
+                  <div
                     onClick={() => {
                       setSelectedFlow("all");
                     }}
                     className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer transition-all ${
                       selectedFlow === "all"
-                        ? "bg-white border-blue-500 shadow-lg ring-2 ring-blue-500 ring-opacity-50"
-                        : "bg-white border-slate-300 hover:border-blue-400 shadow hover:shadow-md"
+                        ? "bg-white border-[#2b5346] shadow-lg ring-2 ring-[#2b5346] ring-opacity-30"
+                        : "bg-white border-slate-300 hover:border-[#2b5346] shadow hover:shadow-md"
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`p-2.5 rounded-lg border transition-all ${
-                        selectedFlow === "all" 
-                          ? "bg-blue-500 text-white border-blue-600" 
-                          : "bg-blue-50 text-blue-600 border-blue-200"
+                        selectedFlow === "all"
+                          ? "bg-[#2b5346] text-white border-[#0d3a2f]"
+                          : "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
                       }`}>
                         <Database className="w-5 h-5" />
                       </div>
@@ -683,19 +677,19 @@ export default function App() {
                   </div>
 
                   {/* OPTION 3: Compare */}
-                  <div 
+                  <div
                     onClick={() => setSelectedFlow("compare")}
                     className={`p-5 sm:p-6 rounded-xl border text-left cursor-pointer transition-all ${
                       selectedFlow === "compare"
-                        ? "bg-white border-blue-500 shadow-lg ring-2 ring-blue-500 ring-opacity-50"
-                        : "bg-white border-slate-300 hover:border-blue-400 shadow hover:shadow-md"
+                        ? "bg-white border-[#2b5346] shadow-lg ring-2 ring-[#2b5346] ring-opacity-30"
+                        : "bg-white border-slate-300 hover:border-[#2b5346] shadow hover:shadow-md"
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`p-2.5 rounded-lg border transition-all ${
-                        selectedFlow === "compare" 
-                          ? "bg-blue-500 text-white border-blue-600" 
-                          : "bg-blue-50 text-blue-600 border-blue-200"
+                        selectedFlow === "compare"
+                          ? "bg-[#2b5346] text-white border-[#0d3a2f]"
+                          : "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20"
                       }`}>
                         <Scale className="w-5 h-5" />
                       </div>
@@ -728,17 +722,17 @@ export default function App() {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         placeholder="Paste your promo codes here...&#10;One code per line&#10;&#10;Example:&#10;FPFREEMEALS&#10;GA75BRAND18&#10;EVSHIPYARDS20"
-                        className="w-full h-40 sm:h-44 font-mono text-sm border border-slate-300 rounded-lg p-4 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        className="w-full h-40 sm:h-44 font-mono text-sm border border-slate-300 rounded-lg p-4 bg-white focus:outline-none focus:ring-2 focus:ring-[#2b5346] focus:border-transparent resize-none"
                       />
 
                       {/* Helper Tools */}
                       <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <span className="text-xs uppercase font-bold text-slate-700 tracking-wide flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-mono font-bold text-xs">⚙️</span>
+                            <span className="w-5 h-5 rounded-full bg-[#eef4f1] text-[#2b5346] flex items-center justify-center font-mono font-bold text-xs">T</span>
                             Text Tools
                           </span>
-                          <span className="text-xs bg-blue-50 text-blue-700 font-semibold px-2 py-1 rounded ">
+                          <span className="text-xs bg-[#eef4f1] text-[#2b5346] font-semibold px-2 py-1 rounded">
                             Auto Clean
                           </span>
                         </div>
@@ -792,7 +786,7 @@ export default function App() {
                               value={eraseKeyword}
                               onChange={(e) => setEraseKeyword(e.target.value)}
                               placeholder="e.g. 'expired', 'test'"
-                              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2b5346] focus:border-[#2b5346]"
                             />
                             <button
                               type="button"
@@ -811,7 +805,7 @@ export default function App() {
                       </div>
 
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-200">
-                        <span className="text-xs sm:text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg font-mono">
+                        <span className="text-xs sm:text-sm font-semibold text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 px-3 py-1.5 rounded-lg font-mono">
                           {normalizedPastedCodes.length} code{normalizedPastedCodes.length === 1 ? "" : "s"} loaded
                         </span>
                         
@@ -829,12 +823,12 @@ export default function App() {
                             disabled={normalizedPastedCodes.length === 0}
                             className={`px-4 sm:px-5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer inline-flex items-center gap-2 ${
                               normalizedPastedCodes.length > 0
-                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                                ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-md hover:shadow-lg"
                                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
                             }`}
                           >
                             <FileText className="w-4 h-4" />
-                            Analyze Selected Codes
+                            Analyze Codes
                           </button>
                         </div>
                       </div>
@@ -845,7 +839,7 @@ export default function App() {
                     <div className="space-y-4 py-4" id="panel-all-flow">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 mb-3">
-                          <Database className="w-6 h-6 text-blue-600" />
+                          <Database className="w-6 h-6 text-[#2b5346]" />
                           <h4 className="text-sm font-bold text-slate-900">
                             Full Dataset Analysis
                           </h4>
@@ -858,10 +852,10 @@ export default function App() {
                       <div className="pt-4 max-w-xs mx-auto">
                         <button
                           onClick={handleCompilePortfolio}
-                          className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full py-2.5 rounded-lg bg-[#2b5346] hover:bg-[#0d3a2f] text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <BarChart3 className="w-4 h-4" />
-                          Analyze Full Dataset
+                          Analyze All Codes
                         </button>
                       </div>
                     </div>
@@ -887,7 +881,7 @@ export default function App() {
                             value={compareSearch}
                             onChange={(e) => setCompareSearch(e.target.value)}
                             placeholder="Type to filter codes..."
-                            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-205 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-sans"
+                            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-205 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] font-sans"
                           />
                         </div>
                       </div>
@@ -895,7 +889,7 @@ export default function App() {
                       {/* Code checklist select box */}
                       <div className="border border-slate-205 rounded-xl bg-slate-50/25 p-3">
                         <div className="flex gap-2.5 mb-2.5 font-mono text-[10px] font-bold">
-                          <button onClick={handleSelectAllCompare} className="text-blue-700 hover:underline cursor-pointer">
+                          <button onClick={handleSelectAllCompare} className="text-[#2b5346] hover:underline cursor-pointer">
                             [Select All]
                           </button>
                           <button onClick={handleSelectNoneCompare} className="text-slate-500 hover:underline cursor-pointer">
@@ -913,8 +907,8 @@ export default function App() {
                               <label 
                                 key={code}
                                 className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer select-none transition ${
-                                  isChecked 
-                                    ? "bg-blue-50/50 border-blue-300 text-blue-950 font-black font-mono" 
+                                  isChecked
+                                    ? "bg-[#eef4f1] border-[#2b5346] text-[#1a1a1a] font-black font-mono"
                                     : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 font-mono"
                                 }`}
                               >
@@ -922,7 +916,7 @@ export default function App() {
                                   type="checkbox"
                                   checked={isChecked}
                                   onChange={() => handleToggleCompareCode(code)}
-                                  className="accent-blue-700 w-3.5 h-3.5"
+                                  className="accent-[#2b5346] w-3.5 h-3.5"
                                 />
                                 <span className="truncate">{code}</span>
                               </label>
@@ -941,12 +935,12 @@ export default function App() {
                           disabled={selectedCompareCodes.length < 2}
                           className={`w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-xs shadow-3xs transition cursor-pointer flex items-center justify-center gap-1.5 ${
                             selectedCompareCodes.length >= 2
-                              ? "bg-blue-600 hover:bg-blue-700 text-white"
+                              ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white"
                               : "bg-slate-100 text-slate-400 cursor-not-allowed"
                           }`}
                         >
                           <Scale className="w-3.5 h-3.5" />
-                          Compare selected codes
+                          Compare Codes
                         </button>
                       </div>
                     </div>
