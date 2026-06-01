@@ -42,7 +42,6 @@ import {
   parseSpreadsheetFile,
   FileValidationResult
 } from "./utils/fileParser";
-import { DuplicateResolution } from "./types";
 
 // Components
 import DashboardMetrics from "./components/DashboardMetrics";
@@ -141,14 +140,12 @@ export default function App() {
 
   // Active compiled analysis reports
   const [rawPastedCodes, setRawPastedCodes] = useState<string[]>([]);
-  // User choices for codes that exist in multiple provinces (duplicate rows)
-  const [duplicateResolutions, setDuplicateResolutions] = useState<Record<string, DuplicateResolution>>({});
 
   const reportResults = useMemo(() => {
-    return generateAnalysisReport(dbRows, rawPastedCodes, duplicateResolutions);
-  }, [dbRows, rawPastedCodes, duplicateResolutions]);
+    return generateAnalysisReport(dbRows, rawPastedCodes);
+  }, [dbRows, rawPastedCodes]);
 
-  const { foundReports, missingCodes, summary, channelSummary, duplicateCodes } = reportResults;
+  const { foundReports, missingCodes, summary, channelSummary } = reportResults;
 
   // Extract all unique channels from matched list for sub-breakdowns
   const uniqueChannels = useMemo(() => {
@@ -251,7 +248,6 @@ export default function App() {
     setInputText("");
     setSelectedCompareCodes([]);
     setCompareSearch("");
-    setDuplicateResolutions({});
     setReportPage("overview");
   };
 
@@ -1026,7 +1022,7 @@ export default function App() {
                 { id: 'revenue',      label: 'Revenue'      },
                 { id: 'regional',     label: 'Regional'     },
                 { id: 'data',         label: 'Data'         },
-                ...((missingCodes.length > 0 || duplicateCodes.length > 0) ? [{ id: 'issues', label: `Issues (${missingCodes.length + duplicateCodes.length})` }] : []),
+                ...(missingCodes.length > 0 ? [{ id: 'issues', label: `Issues (${missingCodes.length})` }] : []),
               ] as { id: typeof reportPage; label: string }[]).map(page => (
                 <button
                   key={page.id}
@@ -1279,14 +1275,8 @@ export default function App() {
               {/* ── PAGE: ISSUES ───────────────────────────────── */}
               {reportPage === 'issues' && (
                 <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
-
                   <div className="flex items-center gap-3">
                     <h2 className="text-base font-semibold text-[#1a1a1a]">Issues</h2>
-                    {duplicateCodes.length > 0 && (
-                      <span className="px-2 py-0.5 bg-[#fdf8e1] text-[#8a6f00] text-[10px] font-mono font-bold rounded border border-[#e7bd27]/30">
-                        {duplicateCodes.length} duplicate{duplicateCodes.length > 1 ? 's' : ''}
-                      </span>
-                    )}
                     {missingCodes.length > 0 && (
                       <span className="px-2 py-0.5 bg-[#fef3ed] text-[#9b4a1c] text-[10px] font-mono font-bold rounded border border-[#e78a58]/30">
                         {missingCodes.length} unmatched
@@ -1294,155 +1284,7 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* DUPLICATE CODES — multi-province resolution */}
-                  {duplicateCodes.length > 0 && (
-                    <div className="bg-white rounded-xl border border-[#e7bd27]/40 shadow-3xs overflow-hidden">
-                      {/* Header */}
-                      <div className="px-5 py-4 border-b border-[#e5e5e5] flex items-start gap-3">
-                        <AlertTriangle className="w-4 h-4 text-[#8a6f00] shrink-0 mt-0.5" />
-                        <div>
-                          <h3 className="text-sm font-semibold text-[#1a1a1a]">
-                            Multi-province codes
-                          </h3>
-                          <p className="text-xs text-[#3d3d3d] mt-0.5 leading-relaxed max-w-xl">
-                            These codes appear in more than one province in your dataset. This typically happens when a signup occurs outside the code's primary province. Choose which province data to use — or combine both into one result (counted as a single code).
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Duplicate code cards */}
-                      <div className="divide-y divide-[#f8f7f5]">
-                        {duplicateCodes.map(({ code, rows }) => {
-                          const currentResolution = duplicateResolutions[code] ?? 'combine';
-                          return (
-                            <div key={code} className="p-5">
-                              {/* Code label + current resolution badge */}
-                              <div className="flex items-center gap-3 mb-4">
-                                <code className="text-sm font-mono font-bold text-[#1a1a1a] bg-[#f8f7f5] px-2.5 py-1 rounded">
-                                  {code}
-                                </code>
-                                <span className="text-[10px] text-[#a1a1a1] font-mono">
-                                  {rows.length} rows found
-                                </span>
-                                {currentResolution === 'combine' && (
-                                  <span className="text-[10px] px-2 py-0.5 bg-[#eef4f1] text-[#2b5346] rounded font-mono font-semibold border border-[#2b5346]/20">
-                                    Combined
-                                  </span>
-                                )}
-                                {typeof currentResolution === 'number' && (
-                                  <span className="text-[10px] px-2 py-0.5 bg-[#fdf8e1] text-[#8a6f00] rounded font-mono font-semibold border border-[#e7bd27]/30">
-                                    {rows[currentResolution]?.Province ?? `Row ${currentResolution + 1}`} only
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Province option cards */}
-                              <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: `repeat(${Math.min(rows.length, 4)}, 1fr)` }}>
-                                {rows.map((row, idx) => {
-                                  const isSelected = currentResolution === idx;
-                                  const conv = row.Signups > 0 ? ((row["Paying cx"] / row.Signups) * 100).toFixed(1) : '0.0';
-                                  return (
-                                    <button
-                                      key={idx}
-                                      onClick={() => setDuplicateResolutions(prev => ({ ...prev, [code]: idx }))}
-                                      className={`text-left p-3 rounded-lg border cursor-pointer ${
-                                        isSelected
-                                          ? 'border-[#2b5346] bg-[#eef4f1]'
-                                          : 'border-[#e5e5e5] bg-[#f8f7f5] hover:border-[#2b5346]/40'
-                                      }`}
-                                      style={{ transition: 'border-color 150ms var(--ease-out), background-color 150ms var(--ease-out)', transform: isSelected ? 'none' : undefined }}
-                                      onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.98)'; }}
-                                      onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
-                                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
-                                    >
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs font-semibold text-[#1a1a1a]">
-                                          {row.Province || 'Unknown'}
-                                        </span>
-                                        {isSelected && (
-                                          <CheckCircle2 className="w-3.5 h-3.5 text-[#2b5346]" />
-                                        )}
-                                      </div>
-                                      <div className="space-y-0.5">
-                                        <div className="flex justify-between text-[10px]">
-                                          <span className="text-[#a1a1a1] font-mono">Signups</span>
-                                          <span className="font-mono font-semibold text-[#1a1a1a]">{row.Signups.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[10px]">
-                                          <span className="text-[#a1a1a1] font-mono">Paying</span>
-                                          <span className="font-mono font-semibold text-[#1a1a1a]">{row["Paying cx"].toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between text-[10px]">
-                                          <span className="text-[#a1a1a1] font-mono">Conv.</span>
-                                          <span className="font-mono font-semibold text-[#1a1a1a]">{conv}%</span>
-                                        </div>
-                                        <div className="flex justify-between text-[10px]">
-                                          <span className="text-[#a1a1a1] font-mono">Avg LTV 12M</span>
-                                          <span className="font-mono font-semibold text-[#1a1a1a]">${row["Avg LTV 12"].toFixed(0)}</span>
-                                        </div>
-                                        {row.channel && (
-                                          <div className="flex justify-between text-[10px]">
-                                            <span className="text-[#a1a1a1] font-mono">Channel</span>
-                                            <span className="font-mono text-[#3d3d3d] truncate max-w-[80px]">{row.channel}</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-
-                              {/* Combine option */}
-                              <button
-                                onClick={() => setDuplicateResolutions(prev => ({ ...prev, [code]: 'combine' }))}
-                                className={`w-full text-left p-3 rounded-lg border cursor-pointer flex items-center justify-between gap-3 ${
-                                  currentResolution === 'combine'
-                                    ? 'border-[#2b5346] bg-[#eef4f1]'
-                                    : 'border-dashed border-[#e5e5e5] hover:border-[#2b5346]/40'
-                                }`}
-                                style={{ transition: 'border-color 150ms var(--ease-out), background-color 150ms var(--ease-out)' }}
-                              >
-                                <div>
-                                  <p className="text-xs font-semibold text-[#1a1a1a]">
-                                    Combine all provinces
-                                    <span className="ml-2 text-[10px] font-normal text-[#a1a1a1] font-mono">
-                                      (counted as one code)
-                                    </span>
-                                  </p>
-                                  <p className="text-[10px] text-[#3d3d3d] mt-0.5 font-mono">
-                                    {rows.reduce((s, r) => s + r.Signups, 0).toLocaleString()} signups &nbsp;·&nbsp;
-                                    {rows.reduce((s, r) => s + r["Paying cx"], 0).toLocaleString()} paying &nbsp;·&nbsp;
-                                    {rows.reduce((s, r) => s + r.Signups, 0) > 0
-                                      ? ((rows.reduce((s, r) => s + r["Paying cx"], 0) / rows.reduce((s, r) => s + r.Signups, 0)) * 100).toFixed(1)
-                                      : '0.0'}% conv.
-                                  </p>
-                                </div>
-                                {currentResolution === 'combine' && (
-                                  <CheckCircle2 className="w-4 h-4 text-[#2b5346] shrink-0" />
-                                )}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Footer: reset all */}
-                      {Object.keys(duplicateResolutions).length > 0 && (
-                        <div className="px-5 py-3 border-t border-[#f8f7f5] flex justify-end">
-                          <button
-                            onClick={() => setDuplicateResolutions({})}
-                            className="text-[11px] text-[#a1a1a1] hover:text-[#3d3d3d] cursor-pointer font-mono"
-                            style={{ transition: 'color 150ms var(--ease-out)' }}
-                          >
-                            Reset all to Combined
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* MISSING CODES */}
-                  {missingCodes.length > 0 && (
+                  {missingCodes.length > 0 ? (
                     <MissingCodesSection
                       missingCodes={missingCodes}
                       allDbCodes={uniqueDbCodes}
@@ -1458,16 +1300,13 @@ export default function App() {
                         setInputText(uniqueNewCodes.join("\n"));
                       }}
                     />
-                  )}
-
-                  {duplicateCodes.length === 0 && missingCodes.length === 0 && (
+                  ) : (
                     <div className="bg-[#eef4f1] border border-[#2b5346]/20 rounded-xl p-8 text-center">
                       <CheckCircle2 className="w-8 h-8 text-[#2b5346] mx-auto mb-2" />
                       <p className="text-sm font-semibold text-[#2b5346]">No issues detected</p>
-                      <p className="text-xs text-[#3d3d3d] mt-1">All codes matched cleanly. No duplicates or unmatched codes.</p>
+                      <p className="text-xs text-[#3d3d3d] mt-1">All codes matched. Multi-province duplicates are combined automatically.</p>
                     </div>
                   )}
-
                 </div>
               )}
 
