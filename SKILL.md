@@ -29,7 +29,7 @@ Build dashboards and data interfaces that researchers trust. Eliminate design sl
 
 ### Anti-Slop Design (Impeccable)
 Remove the reflexive defaults that make AI-generated UIs look generic:
-- **Typography**: Real typeface chosen on purpose (Geist Sans), not Inter by default
+- **Typography**: Real typeface chosen on purpose (DM Sans), not Inter by default
 - **Color**: OKLCH-based semantic palette, not purple gradients
 - **Spacing**: Rhythm-based (4, 8, 12, 16, 24, 32px), not random
 - **Interaction**: Honest affordances—buttons look clickable, inputs look editable
@@ -187,8 +187,8 @@ const Button = ({ disabled, pressed, ...props }) => (
       background: disabled
         ? 'var(--color-neutral-100)'
         : pressed
-        ? 'var(--color-blue-500)'
-        : 'var(--color-blue-400)',
+        ? 'var(--color-brand-dark)'
+        : 'var(--color-brand)',
       color: disabled ? 'var(--color-neutral-700)' : 'white',
       transition: 'all 150ms var(--ease-out)',
       cursor: disabled ? 'not-allowed' : 'pointer',
@@ -278,7 +278,7 @@ export const Button = ({
         ${variants[variant]} ${sizes[size]}
         rounded-md transition-all duration-150
         disabled:opacity-50 disabled:cursor-not-allowed
-        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2b5346]
       `}
       {...props}
     >
