@@ -587,7 +587,7 @@ export function exportToExcelFile(
   summary: KPIReportSummary,
   reports: AnalyzedCodeReport[],
   missing: string[]
-) {
+): void {
   // Sheet 1: Executive Summary 
   const summaryRows = [
     ["EXECUTIVE INTEL REPORT - CAMPAIGN METRICS AUDIT"],
@@ -711,7 +711,7 @@ export function exportToExcelFile(
 /**
  * Handles exporting output data to simple csv (Code report sheet)
  */
-export function exportToCSVFile(reports: AnalyzedCodeReport[]) {
+export function exportToCSVFile(reports: AnalyzedCodeReport[]): void {
   const header = [
     "Rank",
     "Discount Code",
