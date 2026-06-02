@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   BarChart3, 
   RefreshCw, 
@@ -30,17 +30,12 @@ import {
   Scale
 } from "lucide-react";
 
-// Types
-import { DiscountCodeData } from "./types";
-
 // Parsing utilities
 import {
   generateAnalysisReport,
   exportToExcelFile,
   exportToCSVFile,
   parsePastedCodes,
-  parseSpreadsheetFile,
-  FileValidationResult
 } from "./utils/fileParser";
 
 // Components
@@ -60,11 +55,6 @@ export default function App() {
   // Upload flow hook (powers the UploadFlow component)
   const fileUpload = useFileUpload();
 
-  // Core States
-  const [dbRows, setDbRows] = useState<DiscountCodeData[]>([]);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [fileValidation, setFileValidation] = useState<FileValidationResult | null>(null);
-  
   // Reporting States
   const [activeTab, setActiveTab2] = useState<"report" | "explorer">("report");
   const [isPrintPreview, setIsPrintPreview] = useState(false);
@@ -119,17 +109,8 @@ export default function App() {
     setInputText(lines.join("\n"));
   };
 
-  // Drag and drop states
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 1. Unique codes available inside the uploaded spreadsheet
-  const uniqueDbCodes = useMemo(() => {
-    if (dbRows.length === 0) return [];
-    return Array.from(
-      new Set(dbRows.map((r) => r.discount_code.trim().toUpperCase()))
-    ).filter(Boolean).sort();
-  }, [dbRows]);
+  // 1. Unique codes available inside the uploaded spreadsheet (from hook)
+  const uniqueDbCodes = fileUpload.state.uniqueDbCodes;
 
   // Derived filtered compare list
   const filteredCompareCodes = useMemo(() => {
@@ -147,8 +128,8 @@ export default function App() {
   const [rawPastedCodes, setRawPastedCodes] = useState<string[]>([]);
 
   const reportResults = useMemo(() => {
-    return generateAnalysisReport(dbRows, rawPastedCodes);
-  }, [dbRows, rawPastedCodes]);
+    return generateAnalysisReport(fileUpload.state.dbRows, rawPastedCodes);
+  }, [fileUpload.state.dbRows, rawPastedCodes]);
 
   const { foundReports, missingCodes, summary, channelSummary } = reportResults;
 
@@ -159,49 +140,6 @@ export default function App() {
       .filter((c): c is string => typeof c === "string" && c.length > 0)
       .sort();
   }, [foundReports]);
-
-  // Handle uploaded spreadsheet file
-  const processUploadedFile = async (file: File) => {
-    try {
-      const result = await parseSpreadsheetFile(file);
-      setDbRows(result.dbRows);
-      setFileValidation(result.validation);
-      setFileName(file.name);
-      setHasReportGenerated(false);
-      setSelectedFlow("paste"); // default focus
-    } catch (err: any) {
-      alert(`Error reading file: ${err?.message || "Verify document format (XLSX, XLS, CSV, TSV) and retry."}`);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      await processUploadedFile(file);
-    }
-  };
-
-  const triggerBrowsingInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      await processUploadedFile(file);
-    }
-  };
 
   // Compile Report Trigger Actions
   const handleCompileSpecificCodes = () => {
@@ -245,9 +183,7 @@ export default function App() {
 
   // State Resets
   const handleResetWorkspace = () => {
-    setDbRows([]);
-    setFileName(null);
-    setFileValidation(null);
+    fileUpload.actions.reset();
     setHasReportGenerated(false);
     setRawPastedCodes([]);
     setInputText("");
@@ -314,9 +250,9 @@ export default function App() {
             <h1 className="text-xs font-medium text-white/80 tracking-widest uppercase font-mono leading-none">
               Campaign Intelligence
             </h1>
-            {fileName && (
+            {fileUpload.state.fileName && (
               <p className="text-xs text-white/50 font-mono leading-none mt-0.5 truncate max-w-[280px]">
-                {fileName} · {dbRows.length.toLocaleString()} records
+                {fileUpload.state.fileName} · {fileUpload.state.dbRows.length.toLocaleString()} records
               </p>
             )}
           </div>
@@ -324,7 +260,7 @@ export default function App() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
-          {dbRows.length > 0 && (
+          {fileUpload.state.dbRows.length > 0 && (
             <button
               id="reset-workspace-top-btn"
               onClick={handleResetWorkspace}
@@ -380,7 +316,7 @@ export default function App() {
       <main className="flex-1 overflow-hidden flex flex-col min-w-0" id="analysis-main-viewport">
         
         {/* LAUNCH STATE: Asymmetric split layout */}
-        {dbRows.length === 0 ? (
+        {fileUpload.state.dbRows.length === 0 ? (
           <UploadFlow state={fileUpload.state} actions={fileUpload.actions} />
         ) : !hasReportGenerated ? (
           
@@ -397,8 +333,8 @@ export default function App() {
                     <FileSpreadsheet className="w-4 h-4 text-[#2b5346]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#1a1a1a] truncate">{fileName}</p>
-                    <p className="text-xs text-[#a1a1a1] font-mono">{dbRows.length.toLocaleString()} records loaded</p>
+                    <p className="text-sm font-medium text-[#1a1a1a] truncate">{fileUpload.state.fileName}</p>
+                    <p className="text-xs text-[#a1a1a1] font-mono">{fileUpload.state.dbRows.length.toLocaleString()} records loaded</p>
                   </div>
                 </div>
                 <button
@@ -412,7 +348,7 @@ export default function App() {
               </div>
 
               {/* Status banner */}
-              {fileValidation?.isValid ? (
+              {fileUpload.state.fileValidation?.isValid ? (
                 <div className="flex items-center gap-3 px-5 py-3.5 bg-[#eef4f1]">
                   <CheckCircle2 className="w-4 h-4 text-[#2b5346] shrink-0" />
                   <div>
@@ -443,7 +379,7 @@ export default function App() {
                       { key: "Paying cx",      label: "Customers" },
                       { key: "Conversion",     label: "Conversion Rate" },
                     ].map(col => {
-                      const ok = fileValidation?.requiredFound.includes(col.key);
+                      const ok = fileUpload.state.fileValidation?.requiredFound.includes(col.key);
                       return (
                         <span
                           key={col.key}
@@ -477,7 +413,7 @@ export default function App() {
                       { key: "Sum LTV 12",           label: "LTV 12m" },
                       { key: "Avg LTV 12",           label: "Avg LTV" },
                     ].map(col => {
-                      const ok = fileValidation?.optionalFound.includes(col.key);
+                      const ok = fileUpload.state.fileValidation?.optionalFound.includes(col.key);
                       return (
                         <span
                           key={col.key}
@@ -502,7 +438,7 @@ export default function App() {
             </div>
 
             {/* WIZARD CHOICE BLOCK */}
-            {fileValidation?.isValid && (
+            {fileUpload.state.fileValidation?.isValid && (
               <div className="w-full max-w-4xl space-y-4 sm:space-y-5">
                 <h3 className="text-xs font-semibold text-[#3d3d3d] text-center uppercase tracking-wider">
                   Choose your analysis
@@ -914,8 +850,8 @@ export default function App() {
                           {foundReports.length} codes analyzed
                         </h2>
                         <p className="text-sm text-white/70 mt-1">
-                          {fileName && <span className="font-mono">{fileName} · </span>}
-                          {dbRows.length.toLocaleString()} records
+                          {fileUpload.state.fileName && <span className="font-mono">{fileUpload.state.fileName} · </span>}
+                          {fileUpload.state.dbRows.length.toLocaleString()} records
                         </p>
                       </div>
                       <div className="flex gap-6 mt-4">
@@ -1090,7 +1026,7 @@ export default function App() {
                     <span className="text-[10px] text-[#a1a1a1] font-mono">Performance by province</span>
                   </div>
                   <div className="bg-white rounded-xl border border-[#e5e5e5] p-5 shadow-3xs">
-                    <ProvinceIntelligence dbRows={dbRows} foundReports={foundReports} />
+                    <ProvinceIntelligence dbRows={fileUpload.state.dbRows} foundReports={foundReports} />
                   </div>
                 </div>
               )}
@@ -1112,7 +1048,7 @@ export default function App() {
                   <DetailedTable reports={foundReports} channels={uniqueChannels} />
                   <div className="bg-white rounded-xl border border-[#e5e5e5] p-4 shadow-3xs">
                     <h3 className="text-xs font-semibold text-[#3d3d3d] mb-3 uppercase tracking-wide">Source explorer</h3>
-                    <DataExplorer dbRows={dbRows} fileName={fileName} />
+                    <DataExplorer dbRows={fileUpload.state.dbRows} fileName={fileUpload.state.fileName} />
                   </div>
                 </div>
               )}
@@ -1264,11 +1200,11 @@ export default function App() {
                 <dl className="mt-2 space-y-1.5 text-xs">
                   <div className="flex justify-between border-b pb-1">
                     <dt className="text-zinc-650">Source Filename:</dt>
-                    <dd className="font-mono text-zinc-800">{fileName || "Staged CSV/XLSX Export"}</dd>
+                    <dd className="font-mono text-zinc-800">{fileUpload.state.fileName || "Staged CSV/XLSX Export"}</dd>
                   </div>
                   <div className="flex justify-between border-b pb-1">
                     <dt className="text-zinc-650">Total File Records:</dt>
-                    <dd className="font-mono font-bold text-zinc-800">{dbRows.length.toLocaleString()}</dd>
+                    <dd className="font-mono font-bold text-zinc-800">{fileUpload.state.dbRows.length.toLocaleString()}</dd>
                   </div>
                   <div className="flex justify-between text-zinc-850">
                     <dt className="text-zinc-650">Execution Engine:</dt>
