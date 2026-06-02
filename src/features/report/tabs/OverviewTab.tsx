@@ -1,5 +1,5 @@
 import React from "react";
-import { AnalyzedCodeReport, KPIReportSummary, ChannelSummary } from "../../../types";
+import { AnalyzedCodeReport, KPIReportSummary, ReportPage } from "../../../types";
 import { PortfolioHealth } from "../../../hooks/useAnalysis";
 import KeyFindingsSection from "../../../components/KeyFindingsSection";
 import { MetricTooltip } from "../../../components/DesignSystem";
@@ -7,11 +7,11 @@ import { MetricTooltip } from "../../../components/DesignSystem";
 interface OverviewTabProps {
   foundReports: AnalyzedCodeReport[];
   summary: KPIReportSummary;
-  channelSummary: ChannelSummary[];
   fileName: string | null;
   dbRowCount: number;
   portfolioHealth: PortfolioHealth | null;
-  onNavigate: (page: "performance" | "revenue" | "regional" | "data") => void;
+  /** Called when a quick-nav card on the overview page is clicked. */
+  onNavigate: (page: ReportPage) => void;
 }
 
 export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portfolioHealth, onNavigate }: OverviewTabProps): React.ReactElement {
