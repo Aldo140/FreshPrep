@@ -33,12 +33,12 @@ export function useReport(params: UseReportParams): { state: ReportState; action
   const exportExcel = useCallback((): void => {
     if (!params.hasReportGenerated || params.foundReports.length === 0) return;
     exportToExcelFile(params.summary, params.foundReports, params.missingCodes);
-  }, [params]);
+  }, [params.hasReportGenerated, params.foundReports, params.summary, params.missingCodes]);
 
   const exportCsv = useCallback((): void => {
     if (!params.hasReportGenerated || params.foundReports.length === 0) return;
     exportToCSVFile(params.foundReports);
-  }, [params]);
+  }, [params.hasReportGenerated, params.foundReports]);
 
   const reset = useCallback((): void => {
     setReportPage("overview");
