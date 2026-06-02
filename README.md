@@ -20,6 +20,28 @@ All processing is client-side. No data leaves the browser.
 
 ---
 
+## Architecture
+
+```
+Upload → Wizard → Report
+  ↓         ↓        ↓
+useFileUpload  useAnalysis  useReport
+```
+
+State is managed in four custom hooks composed in `App.tsx`. UI is split into feature components under `src/features/`. Shared primitives live in `src/components/`.
+
+| Folder                  | Purpose                                          |
+|-------------------------|--------------------------------------------------|
+| `src/hooks/`            | State management — one hook per concern          |
+| `src/features/upload/`  | Drag-and-drop file upload screen                 |
+| `src/features/wizard/`  | Code-entry flow (Paste / Full Dataset / Compare) |
+| `src/features/report/`  | Multi-page report dashboard + tab components     |
+| `src/components/`       | Shared UI primitives and design system           |
+| `src/utils/`            | Parsing, analysis, scoring, fuzzy matching       |
+| `src/types.ts`          | Shared TypeScript interfaces and type aliases    |
+
+---
+
 ## Using it
 
 1. Export your campaign data as CSV or XLSX
@@ -47,13 +69,40 @@ Opens at [localhost:3000](http://localhost:3000).
 
 ---
 
-## Stack
+## Tech Stack
 
-- React 19 + TypeScript
-- Vite 6 + Tailwind v4
-- DM Sans / DM Serif Text / DM Mono (Google Fonts)
-- xlsx for spreadsheet parsing
-- Deployed via GitHub Actions → GitHub Pages
+| Layer        | Technology             | Version  |
+|--------------|------------------------|----------|
+| Framework    | React                  | 19.0.1   |
+| Language     | TypeScript             | 5.8.2    |
+| Build        | Vite                   | 6.2.3    |
+| Styling      | Tailwind CSS           | 4.1.14   |
+| Animation    | Motion                 | 12.23.24 |
+| Icons        | Lucide React           | 0.546.0  |
+| Spreadsheets | xlsx                   | 0.18.5   |
+| Fonts        | DM Sans / Serif / Mono | Google   |
+| Deployment   | GitHub Actions + Pages | —        |
+
+---
+
+## Developer Guide
+
+**Add a new report tab:**
+1. Create `src/features/report/tabs/YourTab.tsx` as a named export
+2. Add `"yourtab"` to the `ReportPage` union in `src/types.ts`
+3. Import and render it in `src/features/report/ReportDashboard.tsx`
+
+**Run, build, check:**
+```bash
+npm run dev      # dev server at localhost:3000/FreshPrep/
+npm run build    # production build → dist/
+npm run preview  # preview the production build locally
+npm run lint     # TypeScript type check (no emit)
+```
+
+**Required columns in upload file:** `discount_code`, `Signups`, `Paying cx`, `Conversion`
+
+**Optional columns:** `channel`, `Province`, `total_discount_used`, `Sum LTV 12`, `Avg LTV 12`
 
 ---
 
