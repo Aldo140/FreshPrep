@@ -78,7 +78,8 @@ export interface FuzzySuggestionResult {
 }
 
 /**
- * Returns top recommendations paired with confidence ratings
+ * Returns up to `maxCount` fuzzy match suggestions for a missing code,
+ * sorted by confidence score descending. Suggestions scoring below 30 are excluded.
  */
 export function getFuzzySuggestionsWithConfidence(target: string, allCodes: string[], maxCount = 3): FuzzySuggestionResult[] {
   if (!target || allCodes.length === 0) return [];
@@ -107,7 +108,8 @@ export function getFuzzySuggestionsWithConfidence(target: string, allCodes: stri
 }
 
 /**
- * Returns a list of similar codes from a dataset based on query similarity
+ * Simplified wrapper returning only the matched code strings (no scores).
+ * Use getFuzzySuggestionsWithConfidence when confidence tiers are needed.
  */
 export function getFuzzySuggestions(target: string, allCodes: string[], maxCount = 5): string[] {
   if (!target || allCodes.length === 0) return [];

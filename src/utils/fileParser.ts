@@ -151,7 +151,8 @@ export interface ParsedSpreadsheetResult {
 }
 
 /**
- * Parses XLSX, XLS, or CSV files in the browser and returns DiscountCodeData[] with full validation metrics
+ * Parses a spreadsheet file (XLSX, XLS, CSV, TSV) into normalized discount code rows.
+ * Returns rows plus a validation result describing which expected columns were found.
  */
 export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheetResult> {
   return new Promise((resolve, reject) => {
@@ -251,8 +252,8 @@ export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheetResul
 }
 
 /**
- * Clears and normalizes list of target codes entered by user
- * removes duplicates, trims spaces, ignores case, commas, tabs, spreadsheet pastes, uppercase
+ * Splits freeform text into normalized, deduplicated, uppercase discount code tokens.
+ * Accepts comma, newline, semicolon, and tab as delimiters.
  */
 export function parsePastedCodes(text: string): string[] {
   if (!text) return [];
@@ -374,10 +375,8 @@ export function mergeRows(rows: DiscountCodeData[]): DiscountCodeData {
 }
 
 /**
- * Core engine. Searches uploaded data for matching discount codes and returns analysis reports.
- *
- * Exact-match duplicate rows (same discount_code, different provinces) are automatically
- * merged into one aggregated result via mergeRows() — no user intervention required.
+ * Computes per-code performance metrics (conversion rate, LTV efficiency ratio, grade)
+ * and a portfolio-level KPI summary. Codes not found in uploadedData are collected in missingCodes.
  */
 export function generateAnalysisReport(
   uploadedData: DiscountCodeData[],
@@ -577,11 +576,7 @@ export function generateAnalysisReport(
 }
 
 /**
- * Handles exporting output data to sheets (multi-sheet workbook)
- * Sheet 1: Executive Summary
- * Sheet 2: Detailed Report
- * Sheet 3: Missing Codes
- * Sheet 4: Top Performers
+ * Exports the analysis results to an XLSX workbook and triggers a browser file download.
  */
 export function exportToExcelFile(
   summary: KPIReportSummary,
@@ -709,7 +704,7 @@ export function exportToExcelFile(
 }
 
 /**
- * Handles exporting output data to simple csv (Code report sheet)
+ * Exports the analyzed reports to a UTF-8 CSV file and triggers a browser file download.
  */
 export function exportToCSVFile(reports: AnalyzedCodeReport[]): void {
   const header = [
