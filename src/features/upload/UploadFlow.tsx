@@ -1,6 +1,8 @@
 import React from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, ExternalLink } from "lucide-react";
 import { FileUploadState, FileUploadActions } from "../../hooks/useFileUpload";
+
+const LOOKER_URL = "https://datastudio.google.com/u/1/reporting/025f0337-0db3-4d63-8659-8b52ba3c4b6f/page/p_g8t621xt5c";
 
 interface UploadFlowProps {
   state: FileUploadState;
@@ -91,6 +93,41 @@ export function UploadFlow({ state, actions }: UploadFlowProps): React.ReactElem
             </p>
           </div>
 
+          {/* Step 1 — Looker Studios export instructions */}
+          <div className="rounded-xl border border-[#2b5346]/20 bg-[#eef4f1] p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#2b5346] text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+              <p className="text-xs font-semibold text-[#1a1a1a] uppercase tracking-wide">Export your data from Looker Studios</p>
+            </div>
+            <a
+              href={LOOKER_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs font-semibold text-[#2b5346] hover:underline w-fit"
+            >
+              <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+              Signup Flow Evaluation Dashboard
+            </a>
+            <ol className="space-y-1.5 text-xs text-[#3d3d3d] leading-relaxed list-none pl-1">
+              <li className="flex items-start gap-2">
+                <span className="text-[#2b5346] font-bold font-mono mt-px shrink-0">a.</span>
+                <span>Open the dashboard using the link above</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#2b5346] font-bold font-mono mt-px shrink-0">b.</span>
+                <span>Select your date range — narrower ranges export faster</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#2b5346] font-bold font-mono mt-px shrink-0">c.</span>
+                <span>Navigate to the <strong className="font-semibold text-[#1a1a1a]">Client LTV</strong> section</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#2b5346] font-bold font-mono mt-px shrink-0">d.</span>
+                <span>Export the table as <span className="font-mono font-semibold">CSV</span>, then upload it below</span>
+              </li>
+            </ol>
+          </div>
+
           {/* Drag zone */}
           <div>
             <input
@@ -149,11 +186,11 @@ export function UploadFlow({ state, actions }: UploadFlowProps): React.ReactElem
               <ol className="space-y-1.5 text-xs text-[#3d3d3d] leading-relaxed list-none">
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#2b5346' }}>1</span>
-                  <span>Upload campaign export from your database</span>
+                  <span>Export Client LTV CSV from Looker Studios (see above)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#2b5346' }}>2</span>
-                  <span>Columns are validated and mapped automatically</span>
+                  <span>Drop the file above — columns are validated automatically</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: '#2b5346' }}>3</span>
