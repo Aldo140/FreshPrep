@@ -69,16 +69,26 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
     const q = searchQuery.trim().toUpperCase();
     if (!q) return null;
 
-    const exactMatch = dbRows.find(r => r.discount_code.toUpperCase() === q);
-    const partials = dbRows.filter(r => 
-      r.discount_code.toUpperCase().includes(q) && r.discount_code.toUpperCase() !== q
-    );
+    // Collect ALL rows for this code — one per province
+    const exactMatches = dbRows.filter(r => r.discount_code.toUpperCase() === q);
 
-    const hasAnyMatch = !!exactMatch || partials.length > 0;
+    // Deduplicate partials by code name so the same code spanning multiple
+    // provinces doesn't appear as repeated chips in the substring grid
+    const seenCodes = new Set(exactMatches.map(r => r.discount_code.toUpperCase()));
+    const partials: typeof dbRows = [];
+    for (const r of dbRows) {
+      const upper = r.discount_code.toUpperCase();
+      if (upper.includes(q) && upper !== q && !seenCodes.has(upper)) {
+        seenCodes.add(upper);
+        partials.push(r);
+      }
+    }
+
+    const hasAnyMatch = exactMatches.length > 0 || partials.length > 0;
     const suggestions = !hasAnyMatch ? getFuzzySuggestions(searchQuery, allCodes, 5) : [];
 
     return {
-      exactMatch,
+      exactMatches,
       partials: partials.slice(0, 8),
       suggestions,
       searched: q
@@ -161,26 +171,66 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
           {/* Search Outputs Panel */}
           {searchResult ? (
             <div className="space-y-3 animate-fade-in" id="dataset-search-outputs">
-              {/* Scenario 1: Exact Match Found */}
-              {searchResult.exactMatch && (
-                <div className="bg-[#eef4f1] border border-[#2b5346]/20 p-3 rounded-lg">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#2b5346] bg-[#eef4f1]/60 px-2 py-0.5 rounded">
+              {/* Scenario 1: Exact Match(es) Found — one card per province */}
+              {searchResult.exactMatches.length > 0 && (
+                <div className="bg-[#eef4f1] border border-[#2b5346]/20 p-3 rounded-lg space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#2b5346]">
                       Exact Match Found
                     </span>
-                    <span className="text-[10px] font-sans font-semibold text-slate-500">
-                      Channel: {searchResult.exactMatch.channel}
-                    </span>
+                    {searchResult.exactMatches.length > 1 && (
+                      <span className="text-[10px] font-mono text-[#2b5346]/70 bg-[#2b5346]/10 px-2 py-0.5 rounded">
+                        {searchResult.exactMatches.length} regions
+                      </span>
+                    )}
                   </div>
-                  <div className="flex justify-between items-baseline">
-                    <strong className="text-sm font-mono text-slate-900">{searchResult.exactMatch.discount_code}</strong>
-                    <div className="text-right text-xs text-slate-650 font-sans">
-                      <span>Paying / Signups: </span>
-                      <strong className="font-mono text-slate-900 font-bold">
-                        {searchResult.exactMatch["Paying cx"]} / {searchResult.exactMatch.Signups}
-                      </strong>
+                  {searchResult.exactMatches.length === 1 ? (
+                    /* Single row — original compact layout */
+                    <div className="flex justify-between items-baseline">
+                      <strong className="text-sm font-mono text-slate-900">{searchResult.exactMatches[0].discount_code}</strong>
+                      <div className="text-right text-xs text-slate-650 font-sans flex items-center gap-3">
+                        {searchResult.exactMatches[0].Province && (
+                          <span className="font-mono text-slate-500">{searchResult.exactMatches[0].Province}</span>
+                        )}
+                        <span>
+                          Channel: <strong className="font-mono text-slate-700">{searchResult.exactMatches[0].channel}</strong>
+                        </span>
+                        <span>
+                          Paying / Signups: <strong className="font-mono text-slate-900">{searchResult.exactMatches[0]["Paying cx"]} / {searchResult.exactMatches[0].Signups}</strong>
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    /* Multiple rows — province breakdown table */
+                    <table className="w-full text-[10.5px] border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#2b5346]/15 text-[#2b5346]/70 font-mono">
+                          <th className="py-1 text-left">Province</th>
+                          <th className="py-1 text-left">Channel</th>
+                          <th className="py-1 text-right">Signups</th>
+                          <th className="py-1 text-right">Paying cx</th>
+                          <th className="py-1 text-right">Conv %</th>
+                          <th className="py-1 text-right">Avg LTV 12</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {searchResult.exactMatches.map((row, i) => (
+                          <tr key={`${row.Province ?? "ON"}-${i}`} className="border-b border-[#2b5346]/10 last:border-0">
+                            <td className="py-1 font-mono font-bold text-[#2b5346]">{row.Province || "ON"}</td>
+                            <td className="py-1 text-slate-600 truncate max-w-[80px]">{row.channel}</td>
+                            <td className="py-1 text-right font-mono text-slate-800">{row.Signups.toLocaleString()}</td>
+                            <td className="py-1 text-right font-mono text-slate-800">{row["Paying cx"].toLocaleString()}</td>
+                            <td className="py-1 text-right font-mono text-slate-700">
+                              {row.Signups > 0 ? ((row["Paying cx"] / row.Signups) * 100).toFixed(1) : "—"}%
+                            </td>
+                            <td className="py-1 text-right font-mono text-slate-700">
+                              {row["Avg LTV 12"] > 0 ? `$${Math.round(row["Avg LTV 12"]).toLocaleString()}` : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               )}
 
@@ -206,7 +256,7 @@ export default function DataExplorer({ dbRows, fileName }: DataExplorerProps) {
               )}
 
               {/* Scenario 3: No Match & Fuzzy Suggestions */}
-              {!searchResult.exactMatch && searchResult.partials.length === 0 && (
+              {searchResult.exactMatches.length === 0 && searchResult.partials.length === 0 && (
                 <div className="bg-[#fef3ed]/50 border border-[#e78a58]/30 p-3.5 rounded-lg space-y-2">
                   <div className="flex items-start gap-2 text-[#9b4a1c]">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
