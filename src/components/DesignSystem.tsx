@@ -126,18 +126,7 @@ const baseStyles = {
       minHeight: '40px',
       minWidth: '44px',
       outline: 'none',
-      '&:hover': {
-        backgroundColor: variant === 'primary' ? designTokens.colors.brandDark : undefined,
-      },
-      '&:disabled': {
-        opacity: 0.5,
-        cursor: 'not-allowed',
-      },
-      '&:focus': {
-        outline: `2px solid ${designTokens.colors.brand}`,
-        outlineOffset: '2px',
-      },
-    } as CSSProperties;
+    } as unknown as CSSProperties;
   },
 
   card: (): CSSProperties => ({
@@ -158,16 +147,7 @@ const baseStyles = {
     transition: `border-color 150ms ${designTokens.easing.out}`,
     outline: 'none',
     minHeight: '40px',
-    '&:focus': {
-      borderColor: designTokens.colors.brand,
-      boxShadow: `0 0 0 3px ${designTokens.colors.brandSurface}`,
-    },
-    '&:disabled': {
-      backgroundColor: designTokens.colors.neutral[50],
-      color: designTokens.colors.neutral[500],
-      cursor: 'not-allowed',
-    },
-  }),
+  } as CSSProperties),
 };
 
 // ============================================================================

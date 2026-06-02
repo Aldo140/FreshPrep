@@ -13,6 +13,7 @@ import { UploadFlow } from "./features/upload/UploadFlow";
 import { WizardFlow } from "./features/wizard/WizardFlow";
 import { ReportDashboard } from "./features/report/ReportDashboard";
 import { PrintPreview } from "./features/report/PrintPreview";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 export default function App(): React.ReactElement {
   const fileUpload = useFileUpload();
@@ -119,24 +120,26 @@ export default function App(): React.ReactElement {
           />
         )}
         {hasReportGenerated && foundReports.length > 0 && (
-          <ReportDashboard
-            reportPage={report.state.reportPage}
-            setReportPage={report.actions.setReportPage}
-            activeTab={report.state.activeTab}
-            setActiveTab={report.actions.setActiveTab}
-            foundReports={foundReports}
-            summary={summary}
-            channelSummary={channelSummary}
-            dbRows={fileUpload.state.dbRows}
-            fileName={fileUpload.state.fileName}
-            uniqueDbCodes={fileUpload.state.uniqueDbCodes}
-            rawPastedCodes={analysis.state.rawPastedCodes}
-            missingCodes={missingCodes}
-            uniqueChannels={analysis.state.uniqueChannels}
-            portfolioHealth={analysis.state.portfolioHealth}
-            onApplyCorrections={analysis.actions.applyCorrections}
-            onReset={handleResetWorkspace}
-          />
+          <ErrorBoundary onReset={handleResetWorkspace}>
+            <ReportDashboard
+              reportPage={report.state.reportPage}
+              setReportPage={report.actions.setReportPage}
+              activeTab={report.state.activeTab}
+              setActiveTab={report.actions.setActiveTab}
+              foundReports={foundReports}
+              summary={summary}
+              channelSummary={channelSummary}
+              dbRows={fileUpload.state.dbRows}
+              fileName={fileUpload.state.fileName}
+              uniqueDbCodes={fileUpload.state.uniqueDbCodes}
+              rawPastedCodes={analysis.state.rawPastedCodes}
+              missingCodes={missingCodes}
+              uniqueChannels={analysis.state.uniqueChannels}
+              portfolioHealth={analysis.state.portfolioHealth}
+              onApplyCorrections={analysis.actions.applyCorrections}
+              onReset={handleResetWorkspace}
+            />
+          </ErrorBoundary>
         )}
       </main>
 
