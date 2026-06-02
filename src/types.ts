@@ -89,3 +89,9 @@ export interface DuplicateCodeInfo {
  * - 'combine': merge all rows into one aggregated result
  */
 export type DuplicateResolution = number | 'combine';
+
+export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "data" | "issues";
+
+export type AnalysisFlow = "paste" | "all" | "compare";
+
+export type ActiveTab = "report" | "explorer";
