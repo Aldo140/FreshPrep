@@ -12,6 +12,9 @@ import {
   PerformanceRating
 } from "../types";
 
+// Row shape coming directly from XLSX sheet_to_json
+type SheetRow = Record<string, unknown>;
+
 // Helper to normalize the column headings to identify key fields
 const headerMappings: Record<string, string[]> = {
   discount_code: ["discount_code", "discount code", "code", "coupon", "promo code", "promocode", "promo_code", "discount_codes", "discountcodes"],
@@ -41,7 +44,7 @@ function normalizeHeader(rawHeader: string): string | null {
 }
 
 // Cleans numbers from spreadsheet (handling strings with '$', '%', commas)
-function parseNumericValue(value: any): number {
+function parseNumericValue(value: unknown): number {
   if (value === null || value === undefined) return 0;
   if (typeof value === "number") return value;
   const cleanedStr = String(value)
@@ -54,7 +57,7 @@ function parseNumericValue(value: any): number {
 /**
  * Parses raw objects from sheets and normalizes them to DiscountCodeData
  */
-export function normalizeSheetRawData(rows: any[]): DiscountCodeData[] {
+export function normalizeSheetRawData(rows: SheetRow[]): DiscountCodeData[] {
   if (!rows || rows.length === 0) return [];
 
   return rows.map((row) => {
@@ -72,7 +75,19 @@ export function normalizeSheetRawData(rows: any[]): DiscountCodeData[] {
           normalizedRow.Province = String(row[colName]).trim();
         } else {
           // It's a numeric field
-          (normalizedRow as any)[standardKey] = parseNumericValue(row[colName]);
+          const numVal = parseNumericValue(row[colName]);
+          switch (standardKey) {
+            case "Signups": normalizedRow.Signups = numVal; break;
+            case "Paying cx": normalizedRow["Paying cx"] = numVal; break;
+            case "Conversion": normalizedRow.Conversion = numVal; break;
+            case "total_discount_used": normalizedRow.total_discount_used = numVal; break;
+            case "Sum LTV 3": normalizedRow["Sum LTV 3"] = numVal; break;
+            case "Sum LTV 6": normalizedRow["Sum LTV 6"] = numVal; break;
+            case "Sum LTV 12": normalizedRow["Sum LTV 12"] = numVal; break;
+            case "Avg LTV 3": normalizedRow["Avg LTV 3"] = numVal; break;
+            case "Avg LTV 6": normalizedRow["Avg LTV 6"] = numVal; break;
+            case "Avg LTV 12": normalizedRow["Avg LTV 12"] = numVal; break;
+          }
         }
       }
     });
@@ -155,11 +170,11 @@ export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheetResul
         const worksheet = workbook.Sheets[firstSheetName];
         
         // Convert to array of objects raw
-        const rawJsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+        const rawJsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" }) as SheetRow[];
         const normalizedData = normalizeSheetRawData(rawJsonData);
 
         // Get headers list from excel sheet
-        const sheetsRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+        const sheetsRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
         const rawHeaders = sheetsRows.length > 0 ? sheetsRows[0].map(h => String(h).trim()).filter(h => h.length > 0) : [];
 
         // Validate headers mapping keys
