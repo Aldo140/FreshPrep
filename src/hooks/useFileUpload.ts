@@ -74,6 +74,7 @@ export function useFileUpload(): { state: FileUploadState; actions: FileUploadAc
     setDbRows([]);
     setFileName(null);
     setFileValidation(null);
+    setIsDragOver(false);
   }, []);
 
   return {
