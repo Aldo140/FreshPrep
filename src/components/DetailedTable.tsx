@@ -595,12 +595,18 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                   )}
                   {visibleColumns.discount && (
                     <td className="py-2.5 px-5 text-right font-mono text-slate-550">
-                      {formatCurrency(row.total_discount_used)}
+                      {row.total_discount_used === 0 && row.calculatedConversion > 0 ? (
+                        <span className="text-[10px] text-[#8a6f00] bg-[#fdf8e1] border border-[#e7bd27]/40 rounded px-1.5 py-0.5" title="Looker Studios hasn't logged spend for this code yet">
+                          Pending
+                        </span>
+                      ) : formatCurrency(row.total_discount_used)}
                     </td>
                   )}
                   {visibleColumns.efficiency && (
                     <td className="py-2.5 px-4 text-right font-mono font-extrabold text-[#2b5346]">
-                      {row.efficiencyRatio.toFixed(1)}x
+                      {row.total_discount_used === 0 && row.calculatedConversion > 0 ? (
+                        <span className="text-[10px] text-[#a1a1a1] font-normal" title="Efficiency excluded — no spend data yet">—</span>
+                      ) : `${row.efficiencyRatio.toFixed(1)}x`}
                     </td>
                   )}
                   {visibleColumns.grade && (

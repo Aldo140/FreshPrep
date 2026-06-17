@@ -174,7 +174,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
               title={kpi.tooltip.title}
               definition={kpi.tooltip.definition}
               note={kpi.tooltip.note}
-              position="above"
+              position="below"
             >
               <div
                 id={`kpi-card-${kpi.id}`}
@@ -237,7 +237,7 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
                 title={kpi.tooltip.title}
                 definition={kpi.tooltip.definition}
                 note={kpi.tooltip.note}
-                position="above"
+                position="below"
               >
                 <div
                   id={`kpi-card-${kpi.id}`}

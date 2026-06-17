@@ -17,19 +17,28 @@ type SheetRow = Record<string, unknown>;
 
 // Helper to normalize the column headings to identify key fields
 const headerMappings: Record<string, string[]> = {
-  discount_code: ["discount_code", "discount code", "code", "coupon", "promo code", "promocode", "promo_code", "discount_codes", "discountcodes"],
+  // "Promo Code Used" = BC / ON wrap-up sheet naming
+  discount_code: ["discount_code", "discount code", "code", "coupon", "promo code", "promo code used", "promocode", "promo_code", "discount_codes", "discountcodes"],
   channel: ["channel", "source", "marketing channel", "medium", "mkt_channel", "marketing_channel", "traffic source", "trafficsource"],
   Province: ["province", "prov", "state", "region", "territory", "loc", "location"],
-  Signups: ["signups", "signup", "registrations", "leads", "signup count", "total signups", "signup_count", "total_signups"],
+  // "Sign ups" (two words) = all province wrap-up sheets
+  Signups: ["signups", "signup", "sign ups", "registrations", "signup count", "total signups", "signup_count", "total_signups"],
   "Paying cx": ["paying cx", "paying customer", "paying cx count", "paying_cx", "paying_customers", "paying customers", "sales", "purchases", "paying_customer_count", "paying_cx_count"],
-  Conversion: ["conversion", "conversion_rate", "conversion rate", "conversion %", "conv_rate", "conv %", "conversion_percent", "conversion percentage"],
+  // Province naming variants: AB = "Customer Conversion - 30 Days", BC/ON = "Customer Conversion Rate", QC = "Customer Conversion"
+  Conversion: ["conversion", "conversion_rate", "conversion rate", "conversion %", "conv_rate", "conv %", "conversion_percent", "conversion percentage", "customer conversion", "customer conversion rate", "customer conversion 30 days"],
   total_discount_used: ["total_discount_used", "total discount used", "total discount", "discount used", "total_discount", "discount_used", "discountused"],
   "Sum LTV 3": ["sum ltv 3", "sum_ltv_3", "ltv 3 sum", "total ltv 3", "sum ltv3", "sumltv3", "ltv3_sum"],
   "Sum LTV 6": ["sum ltv 6", "sum_ltv_6", "ltv 6 sum", "total ltv 6", "sum ltv6", "sumltv6", "ltv6_sum"],
   "Sum LTV 12": ["sum ltv 12", "sum_ltv_12", "ltv 12 sum", "total ltv 12", "sum ltv12", "sumltv12", "ltv12_sum"],
-  "Avg LTV 3": ["avg ltv 3", "avg_ltv_3", "ltv 3 avg", "average ltv 3", "avg ltv3", "avgltv3", "ltv3_avg", "average_ltv_3"],
-  "Avg LTV 6": ["avg ltv 6", "avg_ltv_6", "ltv 6 avg", "average ltv 6", "avg ltv6", "avgltv6", "ltv6_avg", "average_ltv_6"],
+  // AB uses "LTV 3" / "AVG 3", ON uses "Average LTV3"
+  "Avg LTV 3": ["avg ltv 3", "avg_ltv_3", "ltv 3 avg", "average ltv 3", "avg ltv3", "avgltv3", "ltv3_avg", "average_ltv_3", "ltv 3", "avg 3", "average ltv3"],
+  "Avg LTV 6": ["avg ltv 6", "avg_ltv_6", "ltv 6 avg", "average ltv 6", "avg ltv6", "avgltv6", "ltv6_avg", "average_ltv_6", "ltv 6", "avg 6", "average ltv6"],
   "Avg LTV 12": ["avg ltv 12", "avg_ltv_12", "ltv 12 avg", "average ltv 12", "avg ltv12", "avgltv12", "ltv12_avg", "average_ltv_12"],
+  // Cost columns present in all province wrap-up sheets (not in Looker export)
+  "Total Spend": ["total spend", "total_spend", "totalspend", "total cost", "total_cost"],
+  "CPA": ["cpa", "cost per acquisition", "cost_per_acquisition", "cost per customer", "cost_per_customer"],
+  "Staff Spend": ["staff spend", "staff_spend", "staff & expenses spend", "staff and expenses spend", "staff expenses"],
+  "Event Spend": ["event spend", "event_spend", "event cost", "event_cost"],
 };
 
 function normalizeHeader(rawHeader: string): string | null {
@@ -87,6 +96,10 @@ export function normalizeSheetRawData(rows: SheetRow[]): DiscountCodeData[] {
             case "Avg LTV 3": normalizedRow["Avg LTV 3"] = numVal; break;
             case "Avg LTV 6": normalizedRow["Avg LTV 6"] = numVal; break;
             case "Avg LTV 12": normalizedRow["Avg LTV 12"] = numVal; break;
+            case "Total Spend": normalizedRow["Total Spend"] = numVal; break;
+            case "CPA": normalizedRow["CPA"] = numVal; break;
+            case "Staff Spend": normalizedRow["Staff Spend"] = numVal; break;
+            case "Event Spend": normalizedRow["Event Spend"] = numVal; break;
           }
         }
       }
@@ -105,6 +118,10 @@ export function normalizeSheetRawData(rows: SheetRow[]): DiscountCodeData[] {
     const avgLtv3 = parseNumericValue(normalizedRow["Avg LTV 3"]);
     const avgLtv6 = parseNumericValue(normalizedRow["Avg LTV 6"]);
     const avgLtv12 = parseNumericValue(normalizedRow["Avg LTV 12"]);
+    const totalSpend = parseNumericValue(normalizedRow["Total Spend"]);
+    const cpa = parseNumericValue(normalizedRow["CPA"]);
+    const staffSpend = parseNumericValue(normalizedRow["Staff Spend"]);
+    const eventSpend = parseNumericValue(normalizedRow["Event Spend"]);
 
     // Calculate conversion rate as fraction if not provided
     let conversion = normalizedRow.Conversion;
@@ -131,6 +148,10 @@ export function normalizeSheetRawData(rows: SheetRow[]): DiscountCodeData[] {
       "Avg LTV 3": avgLtv3,
       "Avg LTV 6": avgLtv6,
       "Avg LTV 12": avgLtv12,
+      "Total Spend": totalSpend,
+      "CPA": cpa,
+      "Staff Spend": staffSpend,
+      "Event Spend": eventSpend,
     };
   }).filter(item => item.discount_code.length > 0);
 }
@@ -169,21 +190,35 @@ export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheetResul
         const workbook = XLSX.read(data, { type: "binary" });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        
-        // Convert to array of objects raw
-        const rawJsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" }) as SheetRow[];
+
+        // Scan the first 5 rows to find the one with the most recognized column headers.
+        // Province wrap-up sheets have a title row first, with actual headers in row 2.
+        const allRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
+        let headerRowIndex = 0;
+        let maxMatches = 0;
+        for (let i = 0; i < Math.min(5, allRows.length); i++) {
+          const row = (allRows[i] as unknown[]) || [];
+          const matches = row.filter(h => h && normalizeHeader(String(h).trim()) !== null).length;
+          if (matches > maxMatches) {
+            maxMatches = matches;
+            headerRowIndex = i;
+          }
+        }
+
+        // Parse data starting from the detected header row
+        const rawJsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "", range: headerRowIndex }) as SheetRow[];
         const normalizedData = normalizeSheetRawData(rawJsonData);
 
-        // Get headers list from excel sheet
-        const sheetsRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
-        const rawHeaders = sheetsRows.length > 0 ? sheetsRows[0].map(h => String(h).trim()).filter(h => h.length > 0) : [];
+        // Use the detected header row for column validation
+        const rawHeaders = (allRows[headerRowIndex] as unknown[] || []).map(h => String(h ?? "").trim()).filter(h => h.length > 0);
 
         // Validate headers mapping keys
         const requiredFields = ["discount_code", "Signups", "Paying cx", "Conversion"];
         const optionalFields = [
-          "channel", "Province", "total_discount_used", 
-          "Sum LTV 3", "Sum LTV 6", "Sum LTV 12", 
-          "Avg LTV 3", "Avg LTV 6", "Avg LTV 12"
+          "channel", "Province", "total_discount_used",
+          "Sum LTV 3", "Sum LTV 6", "Sum LTV 12",
+          "Avg LTV 3", "Avg LTV 6", "Avg LTV 12",
+          "Total Spend", "CPA", "Staff Spend", "Event Spend",
         ];
 
         const requiredFound: string[] = [];
@@ -324,14 +359,21 @@ export function calculateOverallScore(
   conversionRate: number,
   avgLtv12: number,
   signups: number,
-  efficiencyRatio: number
+  efficiencyRatio: number,
+  hasDiscountData: boolean = true
 ): { score: number; badge: string } {
   const sConv = Math.min(100, conversionRate * 2.0); // 50% = 100pts
   const sLtv = Math.min(100, (avgLtv12 / 200) * 100);  // $200 = 100pts
   const sSign = Math.min(100, (signups / 250) * 100);  // 250 = 100pts
-  const sEff = Math.min(100, (efficiencyRatio / 8.0) * 100); // 8x = 100pts
 
-  const score = Math.round((0.4 * sConv) + (0.3 * sLtv) + (0.2 * sSign) + (0.1 * sEff));
+  // When discount data isn't logged yet, redistribute efficiency weight rather than penalising
+  let score: number;
+  if (hasDiscountData) {
+    const sEff = Math.min(100, (efficiencyRatio / 8.0) * 100); // 8x = 100pts
+    score = Math.round((0.40 * sConv) + (0.30 * sLtv) + (0.20 * sSign) + (0.10 * sEff));
+  } else {
+    score = Math.round((0.45 * sConv) + (0.35 * sLtv) + (0.20 * sSign));
+  }
 
   let badge = "Weak";
   if (score >= 95) badge = "Elite";
@@ -440,6 +482,7 @@ export function generateAnalysisReport(
       // Calculate Efficiency Ratio: Sum LTV 12 ÷ ABS(total_discount_used)
       const absDiscount = Math.abs(matched.total_discount_used);
       const efficiencyRatio = absDiscount > 0 ? (matched["Sum LTV 12"] / absDiscount) : 0;
+      const hasDiscountData = absDiscount > 0;
 
       // Calculate performance grading
       const performanceGrade = calculatePerformanceGrade(calculatedConversion);
@@ -449,7 +492,8 @@ export function generateAnalysisReport(
         calculatedConversion,
         matched["Avg LTV 12"],
         signups,
-        efficiencyRatio
+        efficiencyRatio,
+        hasDiscountData
       );
 
       foundReports.push({
@@ -581,12 +625,20 @@ export function generateAnalysisReport(
 export function exportToExcelFile(
   summary: KPIReportSummary,
   reports: AnalyzedCodeReport[],
-  missing: string[]
+  missing: string[],
+  eventName = "",
+  eventDate = ""
 ): void {
-  // Sheet 1: Executive Summary 
+  const reportTitle = eventName ? `POST-EVENT REPORT - ${eventName.toUpperCase()}` : "CAMPAIGN PERFORMANCE REPORT";
+  const formattedEventDate = eventDate
+    ? new Date(eventDate + "T00:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
+    : null;
+
+  // Sheet 1: Executive Summary
   const summaryRows = [
-    ["EXECUTIVE INTEL REPORT - CAMPAIGN METRICS AUDIT"],
-    ["Generated on:", new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()],
+    [reportTitle],
+    ["Generated:", new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()],
+    ...(formattedEventDate ? [["Event Date:", formattedEventDate]] : []),
     [],
     ["Metric", "Value", "Notes"],
     ["Total Codes Submitted", reports.length + missing.length, "User query pool"],
@@ -700,7 +752,8 @@ export function exportToExcelFile(
   XLSX.utils.book_append_sheet(wb, wsMissing, "Missing Codes");
   XLSX.utils.book_append_sheet(wb, wsTopRecs, "Top Performers");
 
-  XLSX.writeFile(wb, "Event_Intelligence_Performance_Report.xlsx");
+  const safeEventName = eventName ? `_${eventName.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+  XLSX.writeFile(wb, `FreshPrep_Campaign_Report${safeEventName}.xlsx`);
 }
 
 /**
