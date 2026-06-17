@@ -18,7 +18,7 @@ const TIERS = [
   { rating: "Average",   color: "#8a6f00", bg: "#fdf8e1", border: "rgba(231,189,39,0.35)"},
   { rating: "Weak",      color: "#9b4a1c", bg: "#fff4ec", border: "rgba(231,138,88,0.35)"},
   { rating: "Poor",      color: "#850b0b", bg: "#fff4f4", border: "rgba(133,11,11,0.25)" },
-  { rating: "Too Early", color: "#a1a1a1", bg: "#f8f7f5", border: "#e5e5e5"               },
+  { rating: "Undisclosed", color: "#a1a1a1", bg: "#f8f7f5", border: "#e5e5e5"             },
 ] as const;
 
 export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, onSwitchToExplorer }: DataTabProps): React.ReactElement {
@@ -67,7 +67,7 @@ export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, onSwit
                 <div>
                   <p className="text-[11px] font-semibold leading-none" style={{ color: t.color }}>{t.rating}</p>
                   <p className="text-[9px] text-[#a1a1a1] font-mono mt-0.5">
-                    {t.rating === "Strong" ? "≥40%" : t.rating === "Good" ? "30–40%" : t.rating === "Average" ? "20–30%" : t.rating === "Weak" ? "10–20%" : t.rating === "Poor" ? "<10%" : "<5 signups"}
+                    {t.rating === "Strong" ? "≥40%" : t.rating === "Good" ? "30–40%" : t.rating === "Average" ? "20–30%" : t.rating === "Weak" ? "10–20%" : t.rating === "Poor" ? "<10%" : "data pending"}
                   </p>
                 </div>
               </div>

@@ -17,9 +17,14 @@ export interface DiscountCodeData {
   "Avg LTV 3": number;
   "Avg LTV 6": number;
   "Avg LTV 12": number;
+  // Cost columns — present in province wrap-up sheets, absent in Looker export
+  "Total Spend"?: number;
+  "CPA"?: number;
+  "Staff Spend"?: number;
+  "Event Spend"?: number;
 }
 
-export type PerformanceRating = "Strong" | "Good" | "Average" | "Weak" | "Poor" | "Too Early";
+export type PerformanceRating = "Strong" | "Good" | "Average" | "Weak" | "Poor" | "Undisclosed";
 
 export interface AnalyzedCodeReport extends DiscountCodeData {
   calculatedConversion: number; // 0 to 100 percentage

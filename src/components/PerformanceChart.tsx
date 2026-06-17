@@ -44,7 +44,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
       case "Average":   return "bg-[#e7bd27]";
       case "Weak":      return "bg-[#e78a58]";
       case "Poor":      return "bg-[#850b0b]";
-      case "Too Early": return "bg-[#c0c0c0]";
+      case "Undisclosed": return "bg-[#c0c0c0]";
       default:          return "bg-[#c0c0c0]";
     }
   };
@@ -56,7 +56,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
       case "Average":   return "text-[#8a6f00] font-medium";
       case "Weak":      return "text-[#9b4a1c]";
       case "Poor":      return "text-[#850b0b]";
-      case "Too Early": return "text-[#a1a1a1] font-medium";
+      case "Undisclosed": return "text-[#a1a1a1] font-medium";
       default:          return "text-[#a1a1a1] font-medium";
     }
   };
@@ -125,7 +125,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
                     <span className="text-[10px] text-slate-450 px-1.5 py-0.5 rounded border border-slate-150 font-normal">
                       {item.channel}
                     </span>
-                    {item.performanceRating === "Too Early" && (
+                    {item.performanceRating === "Undisclosed" && (
                       <span className="text-[9px] text-[#a1a1a1] font-mono italic">too early</span>
                     )}
                   </div>
@@ -156,7 +156,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
               { color: "#e7bd27", label: "Avg 20–30%" },
               { color: "#e78a58", label: "Weak 10–20%" },
               { color: "#850b0b", label: "Poor <10%" },
-              { color: "#c0c0c0", label: "Too Early" },
+              { color: "#c0c0c0", label: "Undisclosed" },
             ].map(t => (
               <div key={t.label} className="flex flex-col items-center gap-0.5">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} />

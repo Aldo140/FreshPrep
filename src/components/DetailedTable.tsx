@@ -306,7 +306,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
                 <option value="Average">Average (20-30%)</option>
                 <option value="Weak">Weak (10-20%)</option>
                 <option value="Poor">Poor (&lt;10%)</option>
-                <option value="Too Early">Too Early (&lt;5 signups)</option>
+                <option value="Undisclosed">Undisclosed (data pending)</option>
               </select>
             </div>
 
