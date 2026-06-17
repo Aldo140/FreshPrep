@@ -88,24 +88,23 @@ export default function MissingCodesSection({
     setCustomValue((prev) => ({ ...prev, [code]: "" }));
   };
 
-  // Accept All High Confidence Matches
+  // Accept and immediately apply all high-confidence matches
   const handleAcceptAllHighConfidence = () => {
-    const updatedType = { ...selectionType };
-    const updatedValue = { ...selectedValue };
+    const correctionMapping: Record<string, string> = {};
 
     missingCodes.forEach((code) => {
       const suggestions = codeSuggestions[code] || [];
-      if (suggestions.length > 0) {
-        const topSuggestion = suggestions[0];
-        if (topSuggestion.tier === "High") {
-          updatedType[code] = "suggest";
-          updatedValue[code] = topSuggestion.code;
-        }
+      if (suggestions.length > 0 && suggestions[0].tier === "High") {
+        correctionMapping[code] = suggestions[0].code;
       }
     });
 
-    setSelectionType(updatedType);
-    setSelectedValue(updatedValue);
+    if (Object.keys(correctionMapping).length > 0) {
+      onApplyCorrections(correctionMapping);
+      setSelectionType({});
+      setSelectedValue({});
+      setCustomValue({});
+    }
   };
 
   // Compute active corrections queue list

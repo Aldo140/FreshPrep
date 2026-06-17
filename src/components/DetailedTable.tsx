@@ -20,9 +20,10 @@ import {
 interface DetailedTableProps {
   reports: AnalyzedCodeReport[];
   channels: string[];
+  hideSpendCols?: boolean;
 }
 
-export default function DetailedTable({ reports, channels }: DetailedTableProps) {
+export default function DetailedTable({ reports, channels, hideSpendCols = false }: DetailedTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState<string>("ALL");
   const [channelFilter, setChannelFilter] = useState<string>("ALL");
@@ -38,7 +39,7 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
 
   // Column Visibility state
   const [showColMenu, setShowColMenu] = useState(false);
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => ({
     rank: true,
     discount_code: true,
     province: true,
@@ -49,11 +50,11 @@ export default function DetailedTable({ reports, channels }: DetailedTableProps)
     ltv3: true,
     ltv6: true,
     ltv12: true,
-    discount: true,
-    efficiency: true,
+    discount: !hideSpendCols,
+    efficiency: !hideSpendCols,
     grade: true,
     score: true,
-  });
+  }));
 
   const columnLabels = [
     { key: "rank", label: "Rank" },

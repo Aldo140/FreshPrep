@@ -110,36 +110,6 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
       tooltip: { title: "Average Conversion Rate", definition: "Mean conversion rate per code, unweighted by volume.", note: "Differs from Blended Rate — each code counts equally here regardless of signup volume." },
     },
     {
-      id: "avg-ltv-12",
-      title: "Average LTV (12M)",
-      value: formatCurrency(summary.averageLTV12),
-      subtitle: "Mean customer value",
-      icon: DollarSign,
-      color: "text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20",
-      bgClass: "bg-white border-[#e5e5e5]",
-      tooltip: { title: "Average LTV (12 Month)", definition: "Mean 12-month lifetime value per acquired customer across all codes.", note: "Higher = better quality acquisitions. Use to compare code quality beyond conversion rate." },
-    },
-    {
-      id: "ltv-3",
-      title: "Total LTV (3M)",
-      value: formatCurrency(summary.totalLTV3),
-      subtitle: "Recognized cohort LTV",
-      icon: DollarSign,
-      color: "text-[#3d3d3d] bg-[#f8f7f5] border-[#e5e5e5]",
-      bgClass: "bg-white border-[#e5e5e5]",
-      tooltip: { title: "Total LTV (3 Month)", definition: "Combined 3-month recognized revenue from all customers in this cohort." },
-    },
-    {
-      id: "ltv-6",
-      title: "Total LTV (6M)",
-      value: formatCurrency(summary.totalLTV6),
-      subtitle: "Recognized cohort LTV",
-      icon: DollarSign,
-      color: "text-[#3d3d3d] bg-[#f8f7f5] border-[#e5e5e5]",
-      bgClass: "bg-white border-[#e5e5e5]",
-      tooltip: { title: "Total LTV (6 Month)", definition: "Combined 6-month recognized revenue from all customers in this cohort." },
-    },
-    {
       id: "top-performer-code",
       title: "Highest Conversion",
       value: summary.topPerformingCodeCode || "N/A",
@@ -200,6 +170,23 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
             </MetricTooltip>
           );
         })}
+      </div>
+
+      {/* LTV milestones — always visible, grouped as a progression */}
+      <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+        <div className="grid grid-cols-3 divide-x divide-[#f0f0f0]">
+          {[
+            { label: "LTV 3-Month",    value: formatCurrency(summary.totalLTV3),    sub: "Total cohort value" },
+            { label: "LTV 6-Month",    value: formatCurrency(summary.totalLTV6),    sub: "Total cohort value" },
+            { label: "Avg per Customer", value: formatCurrency(summary.averageLTV12), sub: "12-month avg per paying cx" },
+          ].map((m, i) => (
+            <div key={i} className="px-4 py-3.5">
+              <p className="text-[9px] font-semibold text-[#b0b0b0] uppercase tracking-widest font-mono">{m.label}</p>
+              <p className="text-lg font-bold font-mono text-[#1a1a1a] mt-0.5 tracking-tight">{m.value}</p>
+              <p className="text-[9px] text-[#c0c0c0] font-mono mt-0.5">{m.sub}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Accordion expand toggle button */}
