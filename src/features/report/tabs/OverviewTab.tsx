@@ -2,7 +2,7 @@ import React from "react";
 import { AnalyzedCodeReport, AnalysisFlow, KPIReportSummary, ReportPage } from "../../../types";
 import { TAB_RELEVANCE } from "../../../config/flowRelevance";
 import { PortfolioHealth } from "../../../hooks/useAnalysis";
-import KeyFindingsSection from "../../../components/KeyFindingsSection";
+import KeyFindingsSection from "../components/KeyFindingsSection";
 import { ArrowRight, BarChart3, DollarSign, MapPin, Table2 } from "lucide-react";
 
 interface OverviewTabProps {

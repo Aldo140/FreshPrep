@@ -31,6 +31,8 @@ export interface AnalysisState {
   reportResults: AnalysisReportResults;
   portfolioHealth: PortfolioHealth | null;
   uniqueChannels: string[];
+  eventName: string;
+  eventDate: string;
 }
 
 export interface AnalysisActions {
@@ -46,6 +48,9 @@ export interface AnalysisActions {
   compileComparison: () => void;
   applyCorrections: (corrections: Record<string, string>) => void;
   reset: () => void;
+  backToWizard: () => void;
+  setEventName: (name: string) => void;
+  setEventDate: (date: string) => void;
 }
 
 export function useAnalysis(
@@ -60,6 +65,8 @@ export function useAnalysis(
   const [rawPastedCodes, setRawPastedCodes] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasReportGenerated, setHasReportGenerated] = useState(false);
+  const [eventName, setEventName] = useState("");
+  const [eventDate, setEventDate] = useState("");
 
   const filteredCompareCodes = useMemo(() => {
     const query = compareSearch.trim().toUpperCase();
@@ -140,6 +147,13 @@ export function useAnalysis(
     setSelectedCompareCodes([]);
     setCompareSearch("");
     setSelectedFlow("paste");
+    setEventName("");
+    setEventDate("");
+  }, []);
+
+  // Returns to wizard without clearing inputs — codes and event name are preserved
+  const backToWizard = useCallback((): void => {
+    setHasReportGenerated(false);
   }, []);
 
   return {
@@ -147,7 +161,7 @@ export function useAnalysis(
       selectedFlow, inputText, compareSearch, selectedCompareCodes, eraseKeyword,
       rawPastedCodes, isAnalyzing, hasReportGenerated,
       filteredCompareCodes, normalizedPastedCodes, reportResults,
-      portfolioHealth, uniqueChannels,
+      portfolioHealth, uniqueChannels, eventName, eventDate,
     },
     actions: {
       setSelectedFlow, setInputText, setCompareSearch, setEraseKeyword,
@@ -155,7 +169,7 @@ export function useAnalysis(
       selectAllCompareCodes: setSelectedCompareCodes,
       clearCompareCodes: () => setSelectedCompareCodes([]),
       compileSpecificCodes, compilePortfolio, compileComparison,
-      applyCorrections, reset,
+      applyCorrections, reset, backToWizard, setEventName, setEventDate,
     },
   };
 }

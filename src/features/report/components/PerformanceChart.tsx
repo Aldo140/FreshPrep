@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { AnalyzedCodeReport, ChannelSummary } from "../types";
+import { AnalyzedCodeReport, ChannelSummary } from "../../../types";
 import { BarChart3, Layers, Trophy, Award } from "lucide-react";
 
 interface PerformanceChartProps {

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { DiscountCodeData } from "../types";
+import { DiscountCodeData } from "../../../types";
 import { 
   Search, 
   CheckCircle2, 
@@ -13,7 +13,7 @@ import {
   Eye,
   AlertCircle
 } from "lucide-react";
-import { getFuzzySuggestions } from "../utils/fuzzy";
+import { getFuzzySuggestions } from "../../../utils/fuzzy";
 
 interface DataExplorerProps {
   dbRows: DiscountCodeData[];

@@ -5,7 +5,7 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { Upload, Clipboard, RefreshCw, Trash2, FileSpreadsheet, FileText } from "lucide-react";
-import { parsePastedCodes } from "../utils/fileParser";
+import { parsePastedCodes } from "../../../utils/fileParser";
 
 interface CodeInputBoxProps {
   onFileLoaded: (data: any[], fileName: string) => void;

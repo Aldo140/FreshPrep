@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from "react";
-import { KPIReportSummary } from "../types";
-import { MetricTooltip } from "./DesignSystem";
+import { KPIReportSummary } from "../../../types";
+import { MetricTooltip } from "../../../components/DesignSystem";
 import { 
   Users, 
   CreditCard, 

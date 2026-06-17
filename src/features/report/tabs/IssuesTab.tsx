@@ -1,6 +1,6 @@
 import React from "react";
 import { AnalyzedCodeReport } from "../../../types";
-import MissingCodesSection from "../../../components/MissingCodesSection";
+import MissingCodesSection from "../components/MissingCodesSection";
 import { CheckCircle2 } from "lucide-react";
 
 interface IssuesTabProps {

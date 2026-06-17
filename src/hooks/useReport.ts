@@ -8,6 +8,8 @@ interface UseReportParams {
   missingCodes: string[];
   summary: KPIReportSummary;
   hasReportGenerated: boolean;
+  eventName: string;
+  eventDate: string;
 }
 
 export interface ReportState {
@@ -32,8 +34,8 @@ export function useReport(params: UseReportParams): { state: ReportState; action
 
   const exportExcel = useCallback((): void => {
     if (!params.hasReportGenerated || params.foundReports.length === 0) return;
-    exportToExcelFile(params.summary, params.foundReports, params.missingCodes);
-  }, [params.hasReportGenerated, params.foundReports, params.summary, params.missingCodes]);
+    exportToExcelFile(params.summary, params.foundReports, params.missingCodes, params.eventName, params.eventDate);
+  }, [params.hasReportGenerated, params.foundReports, params.summary, params.missingCodes, params.eventName, params.eventDate]);
 
   const exportCsv = useCallback((): void => {
     if (!params.hasReportGenerated || params.foundReports.length === 0) return;

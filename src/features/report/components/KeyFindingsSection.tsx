@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo } from "react";
-import { AnalyzedCodeReport, KPIReportSummary } from "../types";
+import { AnalyzedCodeReport, KPIReportSummary } from "../../../types";
 import { TrendingUp, TrendingDown, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface KeyFindingsSectionProps {

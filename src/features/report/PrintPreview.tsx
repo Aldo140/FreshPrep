@@ -6,6 +6,8 @@ interface PrintPreviewProps {
   missingCodes: string[];
   summary: KPIReportSummary;
   fileName: string | null;
+  eventName: string;
+  eventDate: string;
   isPrintPreview: boolean;
   onClose: () => void;
 }
@@ -15,10 +17,19 @@ export function PrintPreview({
   missingCodes,
   summary,
   fileName,
+  eventName,
+  eventDate,
   isPrintPreview,
   onClose,
 }: PrintPreviewProps): React.ReactElement | null {
   if (foundReports.length === 0) return null;
+
+  const withDiscount = foundReports.filter(r => r.total_discount_used !== 0).length;
+  const discountAbsent = foundReports.length > 0 && withDiscount / foundReports.length < 0.2;
+
+  const formattedEventDate = eventDate
+    ? new Date(eventDate + "T00:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
+    : null;
 
   return (
     <div
@@ -78,10 +89,17 @@ export function PrintPreview({
                 style={{ filter: "brightness(0)" }}
               />
               <h1 className="text-xl font-black uppercase tracking-tight text-zinc-900">
-                Campaign Performance Report
+                {eventName ? eventName : "Campaign Performance Report"}
               </h1>
+              {(eventName || formattedEventDate) && (
+                <p className="text-xs font-mono text-zinc-500 mt-0.5">
+                  {eventName && "Post-Event Report"}
+                  {eventName && formattedEventDate && " · "}
+                  {formattedEventDate}
+                </p>
+              )}
               <p className="text-xs font-mono text-zinc-500 mt-1">
-                Analysis Compiled: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
               </p>
             </div>
             <div className="text-right">
@@ -106,9 +124,12 @@ export function PrintPreview({
                 <dd className="font-bold font-mono">{summary.numCodesFound}</dd>
               </div>
               <div className="flex justify-between text-rose-700">
-                <dt className="font-medium">Missing / Untracked Codes:</dt>
+                <dt className="font-medium">Not found in export:</dt>
                 <dd className="font-bold font-mono">{summary.numCodesMissing}</dd>
               </div>
+              {summary.numCodesMissing > 0 && (
+                <p className="text-[10px] text-zinc-500 mt-1">These codes weren't in the Looker export. Check your date range.</p>
+              )}
             </dl>
           </div>
           <div>
@@ -119,8 +140,8 @@ export function PrintPreview({
                 <dd className="font-mono text-zinc-800">{fileName || "Staged CSV/XLSX Export"}</dd>
               </div>
               <div className="flex justify-between border-b pb-1">
-                <dt className="text-zinc-650">Execution Engine:</dt>
-                <dd className="font-mono font-semibold">100% Client-Side Web Sandbox</dd>
+                <dt className="text-zinc-650">Processing:</dt>
+                <dd className="font-mono font-semibold">Local only. No data uploaded.</dd>
               </div>
             </dl>
           </div>
@@ -180,9 +201,11 @@ export function PrintPreview({
               Executive Portfolios
             </h2>
             <ul className="list-disc pl-4 space-y-1 text-xs text-zinc-700 leading-relaxed">
-              <li>Optimize focus toward **{summary.bestOverallScoreCode ?? "N/A"}** styled events.</li>
-              <li>Deprecate under-performing codes returning poor customer lifetimes.</li>
-              <li>Verify **{missingCodes.length}** mismatched inputs with source records.</li>
+              <li>Replicate the offer structure behind <strong>{summary.bestOverallScoreCode ?? "N/A"}</strong> in future events.</li>
+              <li>Review under-performing codes for discontinuation or re-targeting.</li>
+              {missingCodes.length > 0 && (
+                <li>Follow up on <strong>{missingCodes.length}</strong> codes not found in the export.</li>
+              )}
             </ul>
           </div>
         </div>
@@ -202,7 +225,7 @@ export function PrintPreview({
                 <th className="py-1 px-2 text-right">Paying</th>
                 <th className="py-1 px-2 text-right">Conversion</th>
                 <th className="py-1 px-2 text-right font-bold">Avg LTV 12</th>
-                <th className="py-1 px-2 text-right">Eff. Ratio</th>
+                {!discountAbsent && <th className="py-1 px-2 text-right">Eff. Ratio</th>}
                 <th className="py-1 px-1 text-center font-mono">Grade</th>
               </tr>
             </thead>
@@ -217,7 +240,7 @@ export function PrintPreview({
                   <td className="py-1 px-2 text-right font-mono">{r["Paying cx"]}</td>
                   <td className="py-1 px-2 text-right font-mono">{r.calculatedConversion.toFixed(1)}%</td>
                   <td className="py-1 px-2 text-right font-mono font-medium">${r["Avg LTV 12"].toFixed(0)}</td>
-                  <td className="py-1 px-2 text-right font-mono font-bold text-blue-700">{r.efficiencyRatio.toFixed(1)}x</td>
+                  {!discountAbsent && <td className="py-1 px-2 text-right font-mono font-bold text-blue-700">{r.efficiencyRatio.toFixed(1)}x</td>}
                   <td className="py-1 px-1 text-center font-mono font-bold">{r.performanceGrade}</td>
                 </tr>
               ))}

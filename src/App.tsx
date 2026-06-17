@@ -24,10 +24,12 @@ export default function App(): React.ReactElement {
     missingCodes: analysis.state.reportResults.missingCodes,
     summary: analysis.state.reportResults.summary,
     hasReportGenerated: analysis.state.hasReportGenerated,
+    eventName: analysis.state.eventName,
+    eventDate: analysis.state.eventDate,
   });
 
   const { foundReports, missingCodes, summary, channelSummary } = analysis.state.reportResults;
-  const { hasReportGenerated } = analysis.state;
+  const { hasReportGenerated, eventName, eventDate } = analysis.state;
 
   const handleResetWorkspace = (): void => {
     fileUpload.actions.reset();
@@ -119,6 +121,23 @@ export default function App(): React.ReactElement {
             onReset={handleResetWorkspace}
           />
         )}
+        {hasReportGenerated && foundReports.length === 0 && (
+          <div className="flex-1 flex items-center justify-center p-10">
+            <div className="bg-white border border-[#e5e5e5] rounded-xl p-8 max-w-sm w-full shadow-sm text-center">
+              <p className="text-sm font-semibold text-[#1a1a1a] mb-1">No codes matched</p>
+              <p className="text-xs text-[#3d3d3d] leading-relaxed mb-5">
+                None of the codes you entered were found in the uploaded file. Check your date range in Looker Studios or try different codes.
+              </p>
+              <button
+                onClick={analysis.actions.reset}
+                className="px-4 py-2 bg-[#2b5346] text-white text-xs font-medium rounded-lg hover:bg-[#0d3a2f] cursor-pointer"
+                style={{ transition: "background-color 150ms var(--ease-out)" }}
+              >
+                Try different codes
+              </button>
+            </div>
+          </div>
+        )}
         {hasReportGenerated && foundReports.length > 0 && (
           <ErrorBoundary onReset={handleResetWorkspace}>
             <ReportDashboard
@@ -136,7 +155,11 @@ export default function App(): React.ReactElement {
               missingCodes={missingCodes}
               uniqueChannels={analysis.state.uniqueChannels}
               portfolioHealth={analysis.state.portfolioHealth}
+              selectedFlow={analysis.state.selectedFlow}
+              eventName={eventName}
+              eventDate={eventDate}
               onApplyCorrections={analysis.actions.applyCorrections}
+              onBackToWizard={analysis.actions.backToWizard}
               onReset={handleResetWorkspace}
             />
           </ErrorBoundary>
@@ -148,6 +171,8 @@ export default function App(): React.ReactElement {
         missingCodes={missingCodes}
         summary={summary}
         fileName={fileUpload.state.fileName}
+        eventName={eventName}
+        eventDate={eventDate}
         isPrintPreview={report.state.isPrintPreview}
         onClose={() => report.actions.setIsPrintPreview(false)}
       />

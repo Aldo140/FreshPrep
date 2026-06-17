@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { AnalyzedCodeReport, KPIReportSummary, ChannelSummary } from "../../../types";
-import DashboardMetrics from "../../../components/DashboardMetrics";
-import PerformanceChart from "../../../components/PerformanceChart";
-import PortfolioSummaryWidget from "../../../components/PortfolioSummaryWidget";
+import DashboardMetrics from "../components/DashboardMetrics";
+import PerformanceChart from "../components/PerformanceChart";
+import PortfolioSummaryWidget from "../components/PortfolioSummaryWidget";
 
 interface PerformanceTabProps {
   foundReports: AnalyzedCodeReport[];

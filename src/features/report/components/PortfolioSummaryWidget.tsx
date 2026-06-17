@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from "react";
-import { KPIReportSummary, AnalyzedCodeReport, ChannelSummary } from "../types";
+import { KPIReportSummary, AnalyzedCodeReport, ChannelSummary } from "../../../types";
 import { 
   TrendingUp, 
   TrendingDown, 

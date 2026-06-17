@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { AnalyzedCodeReport, SortField, SortOrder } from "../types";
+import { AnalyzedCodeReport, SortField, SortOrder } from "../../../types";
 import { 
   Search, 
   ArrowUpDown, 

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { DiscountCodeData, AnalyzedCodeReport } from "../types";
+import { DiscountCodeData, AnalyzedCodeReport } from "../../../types";
 import { 
   Compass, 
   Map as MapIcon, 

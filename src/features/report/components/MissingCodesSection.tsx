@@ -22,7 +22,7 @@ import {
   ThumbsUp,
   X
 } from "lucide-react";
-import { getFuzzySuggestionsWithConfidence, FuzzySuggestionResult } from "../utils/fuzzy";
+import { getFuzzySuggestionsWithConfidence, FuzzySuggestionResult } from "../../../utils/fuzzy";
 
 interface MissingCodesSectionProps {
   missingCodes: string[];
