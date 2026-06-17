@@ -24,7 +24,7 @@ export interface DiscountCodeData {
   "Event Spend"?: number;
 }
 
-export type PerformanceRating = "Strong" | "Good" | "Average" | "Weak" | "Poor" | "Undisclosed";
+export type PerformanceRating = "Strong" | "Good" | "Average" | "Weak" | "Poor";
 
 export interface AnalyzedCodeReport extends DiscountCodeData {
   calculatedConversion: number; // 0 to 100 percentage

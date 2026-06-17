@@ -18,7 +18,6 @@ const TIERS = [
   { rating: "Average",   color: "#8a6f00", bg: "#fdf8e1", border: "rgba(231,189,39,0.35)"},
   { rating: "Weak",      color: "#9b4a1c", bg: "#fff4ec", border: "rgba(231,138,88,0.35)"},
   { rating: "Poor",      color: "#850b0b", bg: "#fff4f4", border: "rgba(133,11,11,0.25)" },
-  { rating: "Undisclosed", color: "#a1a1a1", bg: "#f8f7f5", border: "#e5e5e5"             },
 ] as const;
 
 export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, onSwitchToExplorer }: DataTabProps): React.ReactElement {

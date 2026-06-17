@@ -316,11 +316,9 @@ export function parsePastedCodes(text: string): string[] {
 }
 
 /**
- * Assign performance ratings based on conversion rate and data availability.
- * "Undisclosed" when discount is $0 but conversions exist — Looker hasn't finished logging.
+ * Assign performance ratings based on conversion rate.
  */
-export function calculatePerformanceRating(conversionRate: number, hasDiscountData: boolean): PerformanceRating {
-  if (!hasDiscountData) return "Undisclosed";
+export function calculatePerformanceRating(conversionRate: number): PerformanceRating {
   if (conversionRate >= 40) return "Strong";
   if (conversionRate >= 30) return "Good";
   if (conversionRate >= 20) return "Average";
@@ -499,7 +497,7 @@ export function generateAnalysisReport(
         ...matched,
         Province: matched.Province || "ON",
         calculatedConversion,
-        performanceRating: calculatePerformanceRating(calculatedConversion, hasDiscountData),
+        performanceRating: calculatePerformanceRating(calculatedConversion),
         efficiencyRatio,
         overallScore,
         performanceGrade,
