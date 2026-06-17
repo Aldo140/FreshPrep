@@ -1,8 +1,9 @@
 import React from "react";
-import { AnalyzedCodeReport, KPIReportSummary, ReportPage } from "../../../types";
+import { AnalyzedCodeReport, AnalysisFlow, KPIReportSummary, ReportPage } from "../../../types";
+import { TAB_RELEVANCE } from "../../../config/flowRelevance";
 import { PortfolioHealth } from "../../../hooks/useAnalysis";
 import KeyFindingsSection from "../../../components/KeyFindingsSection";
-import { MetricTooltip } from "../../../components/DesignSystem";
+import { ArrowRight, BarChart3, DollarSign, MapPin, Table2 } from "lucide-react";
 
 interface OverviewTabProps {
   foundReports: AnalyzedCodeReport[];
@@ -10,136 +11,291 @@ interface OverviewTabProps {
   fileName: string | null;
   dbRowCount: number;
   portfolioHealth: PortfolioHealth | null;
-  /** Called when a quick-nav card on the overview page is clicked. */
+  selectedFlow: AnalysisFlow;
+  eventName: string;
+  eventDate: string;
   onNavigate: (page: ReportPage) => void;
 }
 
-export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portfolioHealth, onNavigate }: OverviewTabProps): React.ReactElement {
-  return (
-    <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+function conversionGrade(r: number): { label: string; color: string; bg: string } {
+  if (r >= 50) return { label: "A+", color: "#166534", bg: "#dcfce7" };
+  if (r >= 40) return { label: "A",  color: "#2b5346", bg: "#eef4f1" };
+  if (r >= 30) return { label: "B",  color: "#3b6e2a", bg: "#f0fdf4" };
+  if (r >= 20) return { label: "C",  color: "#8a6f00", bg: "#fdf8e1" };
+  if (r >= 10) return { label: "D",  color: "#9b4a1c", bg: "#fff0e8" };
+  return                { label: "F",  color: "#850b0b", bg: "#ffd0d0" };
+}
 
-      {/* Hero card with food photo */}
-      <div className="rounded-2xl overflow-hidden flex min-h-[180px] shadow-sm">
-        {/* Left: brand panel */}
-        <div className="flex-1 bg-[#2b5346] p-7 flex flex-col justify-between">
-          <div>
-            <p className="text-xs text-white/50 font-mono uppercase tracking-widest mb-2">Campaign Performance Report</p>
-            <h2 className="text-2xl font-display font-semibold text-white leading-tight">
-              {foundReports.length} codes analyzed
-            </h2>
-            <p className="text-sm text-white/70 mt-1">
-              {fileName && <span className="font-mono">{fileName} · </span>}
-              {dbRowCount.toLocaleString()} records
-            </p>
+export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portfolioHealth, selectedFlow, eventName, eventDate, onNavigate }: OverviewTabProps): React.ReactElement {
+  const formattedEventDate = eventDate
+    ? new Date(eventDate + "T00:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
+    : null;
+
+  const n = foundReports.length;
+  const codeLabel = n === 1 ? "code" : "codes";
+  const grade = conversionGrade(summary.blendedConversionRate);
+
+  const uniqueProvinces = new Set(foundReports.map(r => r.Province).filter(Boolean)).size;
+
+  const pressMd = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.97)"; };
+  const pressUp = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLButtonElement).style.transform = ""; };
+
+  return (
+    <div className="p-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
+
+      {/* ── Hero ────────────────────────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden flex shadow-md" style={{ minHeight: 220 }}>
+        {/* Left brand panel */}
+        <div className="flex-1 bg-[#2b5346] relative flex flex-col justify-between px-8 py-7"
+          style={{ background: "linear-gradient(135deg, #1a3d31 0%, #2b5346 50%, #3a6b58 100%)" }}
+        >
+          {/* Subtle texture grid */}
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(0deg,#fff 0px,#fff 1px,transparent 1px,transparent 32px),repeating-linear-gradient(90deg,#fff 0px,#fff 1px,transparent 1px,transparent 32px)"
+            }}
+          />
+
+          <div className="relative">
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] text-white/40 font-mono uppercase tracking-[0.2em] mb-2">
+                  FreshPrep · Campaign Performance Report
+                </p>
+                <h2 className="text-3xl font-display font-semibold text-white leading-tight tracking-tight">
+                  {eventName || `${n} ${codeLabel} analyzed`}
+                </h2>
+                <p className="text-xs text-white/50 mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  {eventName && <span>{n} {codeLabel}</span>}
+                  {formattedEventDate && <><span className="text-white/20">·</span><span>{formattedEventDate}</span></>}
+                  {fileName && <><span className="text-white/20">·</span><span className="font-mono">{fileName}</span></>}
+                  <span className="text-white/20">·</span>
+                  <span>{dbRowCount.toLocaleString()} records</span>
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-6 mt-4">
+
+          {/* KPI numbers */}
+          <div className="relative grid grid-cols-3 gap-px mt-6 pt-6 border-t border-white/10">
+            {/* Conversion — includes grade tag */}
             <div>
-              <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Blended Conv.</p>
-              <p className="text-xl font-bold font-mono text-white">{summary.blendedConversionRate.toFixed(1)}%</p>
+              <p className="text-4xl font-bold font-mono text-white leading-none tracking-tight">
+                {summary.blendedConversionRate.toFixed(1)}%
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-[9px] text-white/45 uppercase tracking-widest font-mono">Conversion rate</p>
+                <span
+                  className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md"
+                  style={{ backgroundColor: grade.bg, color: grade.color }}
+                  title={`${grade.label} — ${summary.blendedConversionRate.toFixed(1)}% blended conversion`}
+                >
+                  {grade.label}
+                </span>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Avg LTV 12M</p>
-              <p className="text-xl font-bold font-mono text-white">${Math.round(summary.averageLTV12).toLocaleString()}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Total Signups</p>
-              <p className="text-xl font-bold font-mono text-white">{summary.totalSignups.toLocaleString()}</p>
-            </div>
+            {[
+              { label: "Avg LTV 12M",   value: `$${Math.round(summary.averageLTV12).toLocaleString()}` },
+              { label: "Total signups", value: summary.totalSignups.toLocaleString() },
+            ].map(k => (
+              <div key={k.label}>
+                <p className="text-4xl font-bold font-mono text-white leading-none tracking-tight">{k.value}</p>
+                <p className="text-[9px] text-white/45 uppercase tracking-widest font-mono mt-2">{k.label}</p>
+              </div>
+            ))}
           </div>
         </div>
+
         {/* Right: food photo */}
-        <div className="hidden sm:block w-[38%] shrink-0 relative">
+        <div className="hidden sm:block w-[34%] shrink-0 relative">
           <img
             src="https://freshprep.imgix.net/landing/carousel/recipe_1.jpg?auto=compress,format&w=600"
             alt="FreshPrep meal"
             className="w-full h-full object-cover"
-            style={{ filter: 'brightness(0.92) saturate(1.1)' }}
+            style={{ filter: "brightness(0.85) saturate(1.15)" }}
           />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #2b5346 0%, transparent 30%)' }} />
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(to right, #1a3d31 0%, rgba(43,83,70,0.5) 40%, transparent 70%)" }}
+          />
         </div>
       </div>
 
-      {/* Portfolio health tiles */}
-      <div className="bg-white rounded-xl border border-[#e5e5e5] p-5 shadow-3xs">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-[#1a1a1a]">Code performance</h3>
-          <span className="text-[10px] bg-[#eef4f1] text-[#2b5346] px-2 py-0.5 rounded font-mono font-bold border border-[#2b5346]/20">
-            {foundReports.length} Codes
-          </span>
+      {/* ── Stats strip ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-xl overflow-hidden shadow-sm" style={{ background: "#e8e8e8" }}>
+        {[
+          { label: "Total Signups",    value: summary.totalSignups.toLocaleString(),             sub: "people reached" },
+          { label: "Paying Customers", value: summary.totalPayingCustomers.toLocaleString(),      sub: "converted" },
+          { label: "Conversion Rate",  value: `${summary.blendedConversionRate.toFixed(1)}%`,    sub: "blended rate",  accent: grade.color, accentBg: grade.bg },
+          { label: "Avg LTV 12M",      value: `$${Math.round(summary.averageLTV12).toLocaleString()}`, sub: "per customer" },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className="px-6 py-5 bg-white"
+            style={stat.accentBg ? { background: stat.accentBg } : undefined}
+          >
+            <p className="text-[9px] font-semibold text-[#a1a1a1] uppercase tracking-widest font-mono">{stat.label}</p>
+            <p
+              className="font-bold font-mono leading-none mt-3 tracking-tight"
+              style={{ fontSize: "2.25rem", color: stat.accent ?? "#1a1a1a" }}
+            >
+              {stat.value}
+            </p>
+            <p className="text-[9px] text-[#b0b0b0] mt-2 font-mono">{stat.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Code health — multi-code only */}
+      {n > 1 && portfolioHealth && portfolioHealth.total > 0 && (
+        <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm">
+          {/* Header + bar stay clipped for rounded top corners */}
+          <div className="overflow-hidden rounded-t-xl">
+            <div className="flex items-center justify-between px-6 py-3 border-b border-[#f2f2f2]">
+              <p className="text-[9px] font-semibold text-[#a1a1a1] uppercase tracking-widest font-mono">Code health</p>
+              <span className="text-[9px] font-mono text-[#c0c0c0]">{portfolioHealth.total} codes · hover each tier to learn more</span>
+            </div>
+            <div className="flex h-1.5" style={{ background: "#f5f5f5" }}>
+              {portfolioHealth.strong  > 0 && <div style={{ flex: portfolioHealth.strong  }} className="bg-[#2b5346]" />}
+              {portfolioHealth.average > 0 && <div style={{ flex: portfolioHealth.average }} className="bg-[#e7bd27]" />}
+              {portfolioHealth.weak    > 0 && <div style={{ flex: portfolioHealth.weak    }} className="bg-[#e07a45]" />}
+            </div>
+          </div>
+
+          {/* Columns — no overflow constraint so tooltips can escape upward */}
+          <div className="grid grid-cols-3 divide-x divide-[#f2f2f2] rounded-b-xl">
+            {[
+              { count: portfolioHealth.strong,  label: "Strong",  threshold: "≥ 40% conversion", action: "Replicate — these are your best performers.",       color: "#2b5346", bg: "#f6fbf8", dot: "#2b5346" },
+              { count: portfolioHealth.average, label: "Average", threshold: "20–39% conversion", action: "Monitor — optimize the offer or targeting.",         color: "#8a6f00", bg: "#fdfbf0", dot: "#e7bd27" },
+              { count: portfolioHealth.weak,    label: "Weak",    threshold: "< 20% conversion",  action: "Review — consider retiring or reworking the code.",  color: "#9b4a1c", bg: "#fdf7f4", dot: "#e07a45" },
+            ].map((tier, i) => (
+              <div
+                key={tier.label}
+                className="group relative px-6 py-5 cursor-default"
+                style={{
+                  backgroundColor: tier.bg,
+                  borderBottomLeftRadius: i === 0 ? "0.75rem" : undefined,
+                  borderBottomRightRadius: i === 2 ? "0.75rem" : undefined,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tier.dot }} />
+                  <p className="text-[9px] font-semibold uppercase tracking-widest font-mono" style={{ color: tier.color }}>{tier.label}</p>
+                </div>
+                <p className="text-3xl font-bold font-mono leading-none" style={{ color: tier.color }}>{tier.count}</p>
+                <p className="text-[9px] text-[#b8b8b8] font-mono mt-2">{tier.threshold}</p>
+
+                {/* Tooltip — escapes upward, z-50 to clear siblings */}
+                <div
+                  className="absolute bottom-full left-1/2 mb-2.5 w-56 pointer-events-none z-50"
+                  style={{
+                    transform: "translateX(-50%) translateY(6px)",
+                    opacity: 0,
+                    transition: "opacity 140ms ease, transform 140ms ease",
+                  }}
+                  ref={el => {
+                    if (!el) return;
+                    const p = el.parentElement!;
+                    const show = () => { el.style.opacity = "1"; el.style.transform = "translateX(-50%) translateY(0)"; };
+                    const hide = () => { el.style.opacity = "0"; el.style.transform = "translateX(-50%) translateY(6px)"; };
+                    p.addEventListener("mouseenter", show);
+                    p.addEventListener("mouseleave", hide);
+                  }}
+                >
+                  <div className="bg-[#1c1c1c] rounded-xl px-3.5 py-3 shadow-xl text-[11px] leading-relaxed">
+                    <p className="font-semibold text-white">{tier.label} — {tier.threshold}</p>
+                    <p className="text-white/55 mt-1">{tier.action}</p>
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="w-0 h-0" style={{ borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "5px solid #1c1c1c" }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <MetricTooltip title="Codes Analyzed" definition="Total unique promo codes matched and analyzed." note="Unmatched codes appear in Issues." position="below">
-            <div className="p-3 bg-[#f8f7f5] rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '0ms' }}>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a1a1a1] font-mono">Analyzed</p>
-              <p className="text-xl font-bold text-[#1a1a1a] font-mono mt-0.5">{portfolioHealth?.total}</p>
-              <p className="text-[9px] text-[#a1a1a1] mt-0.5">codes</p>
-            </div>
-          </MetricTooltip>
-          <MetricTooltip title="High Converting" definition="Codes achieving ≥40% conversion." note="Strong. Replicate the offer structure." position="below">
-            <div className="p-3 bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '40ms' }}>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-[#2b5346] font-mono">High</p>
-              <p className="text-xl font-bold text-[#2b5346] font-mono mt-0.5">{portfolioHealth?.strong}</p>
-              <p className="text-[9px] text-[#3d3d3d] mt-0.5">≥ 40%</p>
-            </div>
-          </MetricTooltip>
-          <MetricTooltip title="Average Performers" definition="Codes in the 20–39% conversion range." note="Monitor. Optimize targeting or offer." position="below">
-            <div className="p-3 bg-[#fdf8e1] border border-[#e7bd27]/30 rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '80ms' }}>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-[#8a6f00] font-mono">Average</p>
-              <p className="text-xl font-bold text-[#8a6f00] font-mono mt-0.5">{portfolioHealth?.average}</p>
-              <p className="text-[9px] text-[#3d3d3d] mt-0.5">20–39%</p>
-            </div>
-          </MetricTooltip>
-          <MetricTooltip title="Weak Performers" definition="Codes below 20% conversion." note="Review for discontinuation or re-targeting." position="below">
-            <div className="p-3 bg-[#fef3ed] border border-[#e78a58]/30 rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '120ms' }}>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-[#9b4a1c] font-mono">Weak</p>
-              <p className="text-xl font-bold text-[#9b4a1c] font-mono mt-0.5">{portfolioHealth?.weak}</p>
-              <p className="text-[9px] text-[#3d3d3d] mt-0.5">&lt; 20%</p>
-            </div>
-          </MetricTooltip>
-          <MetricTooltip title="Portfolio Conversion" definition="Total paying customers ÷ total signups across all codes." note="Weighted by volume — large codes affect this most." position="below">
-            <div className="p-3 bg-[#f8f7f5] rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '160ms' }}>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a1a1a1] font-mono">Conv.</p>
-              <p className="text-xl font-bold text-[#1a1a1a] font-mono mt-0.5">{summary.blendedConversionRate.toFixed(1)}%</p>
-              <p className="text-[9px] text-[#a1a1a1] mt-0.5">blended</p>
-            </div>
-          </MetricTooltip>
-          <MetricTooltip title="Portfolio LTV" definition="Mean 12-month lifetime value per acquired customer." note="Higher LTV justifies higher acquisition cost." position="below">
-            <div className="p-3 bg-[#f8f7f5] rounded-lg cursor-default" style={{ opacity: 0, animation: 'slideUp 200ms var(--ease-out) forwards', animationDelay: '200ms' }}>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a1a1a1] font-mono">LTV 12M</p>
-              <p className="text-xl font-bold text-[#1a1a1a] font-mono mt-0.5">${Math.round(summary.averageLTV12).toLocaleString()}</p>
-              <p className="text-[9px] text-[#a1a1a1] mt-0.5">avg / customer</p>
-            </div>
-          </MetricTooltip>
+      )}
+
+      {/* ── Key findings ────────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+        <div className="px-6 py-3.5 border-b border-[#f2f2f2] flex items-center justify-between">
+          <p className="text-[9px] font-semibold text-[#a1a1a1] uppercase tracking-widest font-mono">Key findings</p>
+          <span className="text-[9px] font-mono text-[#c0c0c0]">{n} {codeLabel} analyzed</span>
+        </div>
+        <div className="p-5">
+          <KeyFindingsSection reports={foundReports} summary={summary} eventDate={eventDate} />
         </div>
       </div>
 
-      {/* Key findings snapshot */}
-      <div className="bg-white rounded-xl border border-[#e5e5e5] p-5 shadow-3xs">
-        <h3 className="text-sm font-semibold text-[#1a1a1a] mb-3">Key findings</h3>
-        <KeyFindingsSection reports={foundReports} summary={summary} />
-      </div>
-
-      {/* Navigation prompt */}
+      {/* ── Navigation cards ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { page: 'performance' as const, label: 'Performance', sub: 'KPIs + conversion chart', color: '#2b5346', bg: '#eef4f1' },
-          { page: 'revenue' as const,     label: 'Revenue',     sub: 'LTV + portfolio health', color: '#8a6f00', bg: '#fdf8e1' },
-          { page: 'regional' as const,    label: 'Regional',    sub: 'Province breakdown',     color: '#3d3d3d', bg: '#f8f7f5' },
-          { page: 'data' as const,        label: 'Data',        sub: 'Full sortable table',    color: '#3d3d3d', bg: '#f8f7f5' },
-        ].map(item => (
-          <button
-            key={item.page}
-            onClick={() => onNavigate(item.page)}
-            className="text-left p-4 rounded-xl border cursor-pointer"
-            style={{ backgroundColor: item.bg, borderColor: `${item.color}20`, transition: 'box-shadow 150ms var(--ease-out), transform 100ms var(--ease-out)' }}
-            onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
-            onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
-          >
-            <p className="text-xs font-semibold" style={{ color: item.color }}>{item.label}</p>
-            <p className="text-[10px] text-[#a1a1a1] mt-0.5">{item.sub}</p>
-          </button>
-        ))}
+          {
+            page: "performance" as const,
+            label: "Performance",
+            sub: "Conversion rates · KPI chart",
+            icon: <BarChart3 className="w-4 h-4" />,
+            preview: `${summary.blendedConversionRate.toFixed(1)}% conv`,
+            previewColor: grade.color,
+            hoverBorder: "#2b5346",
+          },
+          {
+            page: "revenue" as const,
+            label: "Revenue",
+            sub: "LTV · portfolio value",
+            icon: <DollarSign className="w-4 h-4" />,
+            preview: `$${Math.round(summary.averageLTV12).toLocaleString()} avg LTV`,
+            previewColor: "#8a6f00",
+            hoverBorder: "#e7bd27",
+          },
+          {
+            page: "regional" as const,
+            label: "Regional",
+            sub: "Province breakdown",
+            icon: <MapPin className="w-4 h-4" />,
+            preview: uniqueProvinces > 0 ? `${uniqueProvinces} province${uniqueProvinces !== 1 ? "s" : ""}` : "Province data",
+            previewColor: "#3d3d3d",
+            hoverBorder: "#3d3d3d",
+          },
+          {
+            page: "data" as const,
+            label: "Data",
+            sub: "Full sortable table",
+            icon: <Table2 className="w-4 h-4" />,
+            preview: `${n} ${codeLabel}`,
+            previewColor: "#3d3d3d",
+            hoverBorder: "#3d3d3d",
+          },
+        ].map(item => {
+          const isPartial = TAB_RELEVANCE[item.page][selectedFlow] === "partial";
+          return (
+            <button
+              key={item.page}
+              onClick={() => onNavigate(item.page)}
+              className="group text-left bg-white rounded-xl border border-[#e8e8e8] p-5 cursor-pointer flex flex-col gap-4 shadow-sm hover:shadow-md"
+              style={{ transition: "box-shadow 150ms var(--ease-out), border-color 150ms var(--ease-out), transform 100ms var(--ease-out)" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = item.hoverBorder + "55"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "#e8e8e8"; pressUp(e); }}
+              onMouseDown={pressMd}
+              onMouseUp={pressUp}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[#2b5346]">{item.icon}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#d0d0d0] group-hover:text-[#a1a1a1]" style={{ transition: "color 150ms var(--ease-out), transform 150ms var(--ease-out)" }} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-[#1a1a1a]">{item.label}</p>
+                <p className="text-[10px] text-[#b0b0b0] mt-0.5">
+                  {item.sub}{isPartial ? " — partial view" : ""}
+                </p>
+              </div>
+              <p className="text-[11px] font-semibold font-mono" style={{ color: item.previewColor }}>
+                {item.preview}
+              </p>
+            </button>
+          );
+        })}
       </div>
 
     </div>

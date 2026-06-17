@@ -40,29 +40,25 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
   // Helper to determine color classes based on conversion percentage or ratings
   const getRatingColor = (rating: string) => {
     switch (rating) {
-      case "Strong":
-        return "bg-[#2b5346]";
-      case "Good":
-        return "bg-[#3d7060]";
-      case "Average":
-        return "bg-[#e7bd27]";
-      case "Weak":
-        return "bg-[#e78a58]";
-      case "Poor":
-        return "bg-[#850b0b]";
-      default:
-        return "bg-slate-450";
+      case "Strong":    return "bg-[#2b5346]";
+      case "Good":      return "bg-[#3d7060]";
+      case "Average":   return "bg-[#e7bd27]";
+      case "Weak":      return "bg-[#e78a58]";
+      case "Poor":      return "bg-[#850b0b]";
+      case "Too Early": return "bg-[#c0c0c0]";
+      default:          return "bg-[#c0c0c0]";
     }
   };
 
   const getRatingTextColor = (rating: string) => {
     switch (rating) {
-      case "Strong": return "text-[#2b5346] font-bold";
-      case "Good": return "text-[#3d7060] font-semibold";
-      case "Average": return "text-[#8a6f00] font-medium";
-      case "Weak": return "text-[#9b4a1c]";
-      case "Poor": return "text-[#850b0b]";
-      default: return "text-slate-700 font-bold";
+      case "Strong":    return "text-[#2b5346] font-bold";
+      case "Good":      return "text-[#3d7060] font-semibold";
+      case "Average":   return "text-[#8a6f00] font-medium";
+      case "Weak":      return "text-[#9b4a1c]";
+      case "Poor":      return "text-[#850b0b]";
+      case "Too Early": return "text-[#a1a1a1] font-medium";
+      default:          return "text-[#a1a1a1] font-medium";
     }
   };
 
@@ -176,7 +172,7 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
           </div>
 
           {/* Leaderboard Rating Legend */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-1 border-t border-slate-100 pt-3.5 mt-2 text-[9px] font-bold text-slate-400 text-center font-mono uppercase tracking-wider">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-1 border-t border-slate-100 pt-3.5 mt-2 text-[9px] font-bold text-slate-400 text-center font-mono uppercase tracking-wider">
             <div className="flex flex-col items-center gap-0.5">
               <span className="w-2 h-2 rounded-full bg-[#2b5346]" />
               <span>Strong (&ge;40%)</span>
@@ -193,9 +189,13 @@ export default function PerformanceChart({ reports, channels }: PerformanceChart
               <span className="w-2 h-2 rounded-full bg-[#e78a58]" />
               <span>Weak (10-20%)</span>
             </div>
-            <div className="flex flex-col items-center gap-0.5 col-span-2 sm:col-span-1">
-              <span className="w-2 h-2 rounded-full bg-[#850b0b] mx-auto" />
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#850b0b]" />
               <span>Poor (&lt;10%)</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#c0c0c0]" />
+              <span>Too Early</span>
             </div>
           </div>
         </div>

@@ -5,146 +5,181 @@
 
 import React, { useMemo } from "react";
 import { AnalyzedCodeReport, KPIReportSummary } from "../types";
-import { Lightbulb, TrendingUp, TrendingDown, ClipboardCheck, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface KeyFindingsSectionProps {
   reports: AnalyzedCodeReport[];
   summary: KPIReportSummary;
+  eventDate?: string;
 }
 
-export default function KeyFindingsSection({ reports, summary }: KeyFindingsSectionProps) {
-  const calculations = useMemo(() => {
+export default function KeyFindingsSection({ reports, summary, eventDate }: KeyFindingsSectionProps) {
+  const calc = useMemo(() => {
     if (reports.length === 0) return null;
 
-    // 1. Count codes with conversion rate exceed 40%
-    const thresholdCount = reports.filter(r => r.calculatedConversion > 40).length;
+    const sorted = [...reports].sort((a, b) => b.calculatedConversion - a.calculatedConversion);
+    const best = sorted[0];
+    const worst = sorted[sorted.length - 1];
+    const aboveTarget = reports.filter(r => r.calculatedConversion >= 40);
+    const belowTarget = reports.filter(r => r.calculatedConversion < 20);
 
-    // 2. Highest LTV code (either Average LTV 12 or Sum LTV 12)
     const sortedByLTV = [...reports].sort((a, b) => b["Avg LTV 12"] - a["Avg LTV 12"]);
-    const highestLTVCode = sortedByLTV[0];
+    const highestLTV = sortedByLTV[0];
 
-    // 3. Lowest performer
-    const sortedByConv = [...reports].sort((a, b) => a.calculatedConversion - b.calculatedConversion);
-    const lowestPerformer = sortedByConv[0];
+    const avgConversion = reports.reduce((s, r) => s + r.calculatedConversion, 0) / reports.length;
+    const avgLTV = reports.reduce((s, r) => s + r["Avg LTV 12"], 0) / reports.length;
 
-    // 4. Mean conversion rate
-    const avgConversion = reports.reduce((sum, r) => sum + r.calculatedConversion, 0) / reports.length;
-
-    // 5. Best opportunity
-    const sortedOpportunities = [...reports].sort((a,b) => {
-      const scoreA = a.calculatedConversion * a.efficiencyRatio;
-      const scoreB = b.calculatedConversion * b.efficiencyRatio;
-      return scoreB - scoreA;
-    });
-    const bestOpportunity = sortedOpportunities[0];
-
-    return {
-      thresholdCount,
-      highestLTVCode,
-      lowestPerformer,
-      avgConversion,
-      bestOpportunity
-    };
+    return { sorted, best, worst, aboveTarget, belowTarget, highestLTV, avgConversion, avgLTV };
   }, [reports]);
 
-  if (!calculations) return null;
+  if (!calc) return null;
 
-  const { thresholdCount, highestLTVCode, lowestPerformer, avgConversion, bestOpportunity } = calculations;
+  const { best, worst, aboveTarget, belowTarget, highestLTV, avgConversion, avgLTV } = calc;
+  const n = reports.length;
+  const isSingle = n === 1;
+
+  // Determine if this is a recent event (conversions not fully materialized yet)
+  // FreshPrep: customers aren't paying until their 2nd box (full price), ~1–2 weeks post-signup
+  const eventDaysDelta = eventDate
+    ? Math.floor((Date.now() - new Date(eventDate + "T00:00:00").getTime()) / 86_400_000)
+    : null;
+  const isRecentEvent = eventDaysDelta !== null && eventDaysDelta <= 14;
+
+  // Build plain-language findings
+  const findings: { icon: React.ReactNode; text: React.ReactNode; tone: "good" | "warn" | "bad" | "neutral" }[] = [];
+
+  // Conversion threshold
+  if (isSingle) {
+    const tone = best.calculatedConversion >= 40 ? "good" : best.calculatedConversion >= 20 ? "warn" : "bad";
+    findings.push({
+      icon: tone === "good" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />,
+      text: <>
+        <strong className="font-mono">{best.discount_code}</strong> converted at{" "}
+        <strong>{best.calculatedConversion.toFixed(1)}%</strong>
+        {tone === "good" ? " — above the 40% target." : tone === "warn" ? " — within the average range (20–39%)." : " — below the 20% floor."}
+        {tone !== "good" && isRecentEvent && (
+          <span className="block mt-1 text-[10px] opacity-70">
+            Event was {eventDaysDelta}d ago — conversions are still coming in. Customers only become paying after their 2nd box (first full-price week).
+          </span>
+        )}
+        {tone !== "good" && !isRecentEvent && !eventDate && (
+          <span className="block mt-1 text-[10px] opacity-70">
+            FreshPrep customers are only counted as paying after their 2nd box. If this is a recent event, the rate will improve over the next 1–2 weeks.
+          </span>
+        )}
+      </>,
+      tone,
+    });
+  } else if (aboveTarget.length > 0) {
+    findings.push({
+      icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+      text: <>
+        <strong>{aboveTarget.length} of {n} codes</strong> hit the 40% conversion target.{" "}
+        {aboveTarget.length === 1
+          ? <><strong className="font-mono">{aboveTarget[0].discount_code}</strong> is your strongest performer.</>
+          : <>Top: <strong className="font-mono">{best.discount_code}</strong> at <strong>{best.calculatedConversion.toFixed(1)}%</strong>.</>
+        }
+      </>,
+      tone: "good",
+    });
+  } else {
+    findings.push({
+      icon: <AlertCircle className="w-3.5 h-3.5" />,
+      text: <>
+        No codes hit the 40% target — blended average is <strong>{avgConversion.toFixed(1)}%</strong>.{" "}
+        Best result: <strong className="font-mono">{best.discount_code}</strong> at <strong>{best.calculatedConversion.toFixed(1)}%</strong>.
+        {isRecentEvent && (
+          <span className="block mt-1 text-[10px] opacity-70">
+            Event was {eventDaysDelta}d ago — conversions are still materializing. Customers pay full price on their 2nd box, typically 1–2 weeks post-signup.
+          </span>
+        )}
+        {!isRecentEvent && !eventDate && (
+          <span className="block mt-1 text-[10px] opacity-70">
+            If this is a recent event, expect the rate to improve — FreshPrep counts paying customers from the 2nd box (first full-price week), not the initial discounted order.
+          </span>
+        )}
+      </>,
+      tone: "warn",
+    });
+  }
+
+  // LTV finding (only meaningful with multiple codes, or if single and LTV is set)
+  if (highestLTV["Avg LTV 12"] > 0) {
+    if (!isSingle) {
+      findings.push({
+        icon: <TrendingUp className="w-3.5 h-3.5" />,
+        text: <>
+          <strong className="font-mono">{highestLTV.discount_code}</strong> produced the highest-value customers —{" "}
+          avg LTV of <strong>${highestLTV["Avg LTV 12"].toFixed(0)}</strong> vs portfolio avg of <strong>${avgLTV.toFixed(0)}</strong>.
+        </>,
+        tone: "good",
+      });
+    } else {
+      findings.push({
+        icon: <TrendingUp className="w-3.5 h-3.5" />,
+        text: <>
+          Avg 12-month LTV per customer: <strong>${best["Avg LTV 12"].toFixed(0)}</strong>.
+          {best["Avg LTV 12"] > 500 ? " Strong customer quality for this code." : ""}
+        </>,
+        tone: "neutral",
+      });
+    }
+  }
+
+  // Low performers (only useful with multiple codes)
+  if (!isSingle && belowTarget.length > 0) {
+    findings.push({
+      icon: <TrendingDown className="w-3.5 h-3.5" />,
+      text: <>
+        <strong>{belowTarget.length} {belowTarget.length === 1 ? "code" : "codes"}</strong> fell below 20%
+        {belowTarget.length <= 2
+          ? <>: {belowTarget.map((r, i) => <><strong key={r.discount_code} className="font-mono">{r.discount_code}</strong>{i < belowTarget.length - 1 ? ", " : ""}</>)}.</>
+          : <>. Worst: <strong className="font-mono">{worst.discount_code}</strong> at <strong>{worst.calculatedConversion.toFixed(1)}%</strong>.</>
+        }
+        {isRecentEvent && (
+          <span className="block mt-1 text-[10px] opacity-70">
+            These rates may still improve — it's only been {eventDaysDelta}d since the event.
+          </span>
+        )}
+      </>,
+      tone: "bad",
+    });
+  }
+
+  // Average baseline (skip for single)
+  if (!isSingle) {
+    findings.push({
+      icon: <span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-bold font-mono">avg</span>,
+      text: <>
+        Portfolio average: <strong>{avgConversion.toFixed(1)}%</strong> conversion,{" "}
+        <strong>${avgLTV.toFixed(0)}</strong> avg LTV across {n} codes.
+      </>,
+      tone: "neutral",
+    });
+  }
+
+  const toneColor = {
+    good: { dot: "#2b5346", bg: "#eef4f1", border: "rgba(43,83,70,0.15)", icon: "text-[#2b5346]" },
+    warn: { dot: "#8a6f00", bg: "#fdf8e1", border: "rgba(231,189,39,0.25)", icon: "text-[#8a6f00]" },
+    bad:  { dot: "#850b0b", bg: "#fff4f4", border: "rgba(133,11,11,0.15)", icon: "text-[#850b0b]" },
+    neutral: { dot: "#a1a1a1", bg: "#f8f7f5", border: "#e5e5e5", icon: "text-[#a1a1a1]" },
+  };
 
   return (
-    <div
-      id="key-findings-container"
-      className="p-4 sm:p-5 rounded-lg border border-[#2b5346]/15 bg-[#eef4f1]/40 animate-fade-in"
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-md bg-[#2b5346]/10 text-[#2b5346] flex items-center justify-center">
-          <Lightbulb className="w-4 h-4" />
-        </div>
-        <div>
-          <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">
-            Key Findings & Operational Decisions
-          </h3>
-          <p className="text-[10px] text-slate-500 font-sans">
-            Executive performance actions based on live validated marketing metrics
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans">
-        
-        {/* Bullet listings in tidy slate box */}
-        <div className="bg-white border border-slate-205 p-4 rounded-xl flex flex-col justify-between">
-          <ul className="space-y-3 text-slate-700 leading-relaxed font-sans" id="findings-bullet-list">
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2b5346] mt-1.5 shrink-0" />
-              <span>
-                <strong>{thresholdCount} promo codes</strong> exceed the target 40% conversion rate threshold, proving exceptional target segment traction.
-              </span>
-            </li>
-            
-            {highestLTVCode && (
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2b5346] mt-1.5 shrink-0" />
-                <span>
-                  The highest customer segment longevity is registered by code{" "}
-                  <strong className="text-slate-900 font-mono">{highestLTVCode.discount_code}</strong>{" "}
-                  with a 12M Average LTV of{" "}
-                  <strong className="text-[#2b5346] font-bold">
-                    ${highestLTVCode["Avg LTV 12"].toFixed(0)}
-                  </strong>.
-                </span>
-              </li>
-            )}
-            
-            {lowestPerformer && (
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2b5346] mt-1.5 shrink-0" />
-                <span>
-                  The lowest converting promotional asset is{" "}
-                  <strong className="text-slate-900 font-mono">{lowestPerformer.discount_code}</strong>{" "}
-                  performing at a conversion rate of{" "}
-                  <strong className="text-[#850b0b] font-bold">{lowestPerformer.calculatedConversion.toFixed(1)}%</strong>.
-                </span>
-              </li>
-            )}
-
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2b5346] mt-1.5 shrink-0" />
-              <span>
-                The current average benchmark across searched vouchers sits at{" "}
-                <strong className="text-slate-900">{avgConversion.toFixed(1)}%</strong>.
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Opportunity Card */}
-        {bestOpportunity && (
-          <div className="bg-[#eef4f1]/40 border border-[#2b5346]/20 p-4 rounded-xl flex flex-col justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-1.5 text-[#2b5346] mb-2">
-                <Zap className="w-4 h-4 flex-shrink-0 text-[#2b5346]" />
-                <span className="font-bold uppercase text-[10px] tracking-wider font-mono">Recommended Scale Path</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed">
-                Marketing program <strong className="text-slate-950 font-mono">{bestOpportunity.discount_code}</strong> represents our best expansion route. It registers a high conversion of <strong className="text-[#2b5346] font-bold font-mono">{bestOpportunity.calculatedConversion.toFixed(1)}%</strong> backed by an outstanding efficiency coefficient of{" "}
-                <strong className="text-[#2b5346] font-bold font-mono">{bestOpportunity.efficiencyRatio.toFixed(1)}x</strong> return on coupon allowances.
-              </p>
-            </div>
-
-            <div className="bg-white p-2.5 rounded-lg border border-[#2b5346]/20 flex justify-between items-center text-[10.5px]">
-              <div>
-                <span className="text-slate-400 uppercase text-[8px] font-bold block font-mono">Recommendation</span>
-                <span className="font-semibold text-slate-800 text-xs">Scale affiliate spend allocations</span>
-              </div>
-              <span className="px-2 py-0.5 bg-[#eef4f1] text-[#2b5346] rounded font-bold font-mono text-[9px] uppercase">
-                Active
-              </span>
-            </div>
+    <div className="space-y-2.5">
+      {findings.map((f, i) => {
+        const c = toneColor[f.tone];
+        return (
+          <div
+            key={i}
+            className="flex items-start gap-3 px-4 py-3 rounded-xl border text-xs leading-relaxed"
+            style={{ backgroundColor: c.bg, borderColor: c.border }}
+          >
+            <span className={`shrink-0 mt-0.5 ${c.icon}`}>{f.icon}</span>
+            <span className="text-[#3d3d3d]">{f.text}</span>
           </div>
-        )}
-
-      </div>
+        );
+      })}
     </div>
   );
 }
