@@ -474,6 +474,33 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
                   </div>
                 </div>
 
+                {/* Edition labels — shown when ≥2 codes selected */}
+                {state.selectedCompareCodes.length >= 2 && (
+                  <div className="border border-[#e5e5e5] rounded-xl bg-[#f8f7f5]/50 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-[#a1a1a1] uppercase tracking-wider font-mono">
+                        Label each edition
+                      </span>
+                      <span className="text-[10px] text-[#a1a1a1] font-mono">— used for chart axes</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {state.selectedCompareCodes.map(code => (
+                        <div key={code} className="flex items-center gap-2">
+                          <span className="font-mono text-[10.5px] text-[#3d3d3d] shrink-0 w-28 truncate">{code}</span>
+                          <span className="text-[#c8c8c8] shrink-0 text-xs">→</span>
+                          <input
+                            type="text"
+                            value={state.editionLabels[code] ?? code}
+                            onChange={e => actions.setEditionLabel(code, e.target.value)}
+                            placeholder={code}
+                            className="flex-1 px-2.5 py-1.5 text-xs border border-[#e5e5e5] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] font-mono"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs text-[#a1a1a1] font-mono">
                     {state.selectedCompareCodes.length} selected — need at least 2
