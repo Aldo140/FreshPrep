@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { DiscountCodeData, AnalysisFlow } from "../types";
+import { DiscountCodeData, AnalysisFlow, UserPersona } from "../types";
 import { AnalyzedCodeReport, KPIReportSummary, ChannelSummary } from "../types";
 import { generateAnalysisReport, parsePastedCodes } from "../utils/fileParser";
 
@@ -33,6 +33,8 @@ export interface AnalysisState {
   uniqueChannels: string[];
   eventName: string;
   eventDate: string;
+  bdFilter: boolean;
+  userPersona: UserPersona;
 }
 
 export interface AnalysisActions {
@@ -51,6 +53,7 @@ export interface AnalysisActions {
   backToWizard: () => void;
   setEventName: (name: string) => void;
   setEventDate: (date: string) => void;
+  setBdFilter: (on: boolean) => void;
 }
 
 export function useAnalysis(
@@ -67,6 +70,14 @@ export function useAnalysis(
   const [hasReportGenerated, setHasReportGenerated] = useState(false);
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState("");
+  const [bdFilter, setBdFilter] = useState(false);
+
+  const userPersona = useMemo((): UserPersona => {
+    if (selectedFlow === "paste") return "bd-rep";
+    if (selectedFlow === "all" && bdFilter) return "bd-lead";
+    if (selectedFlow === "compare") return "analyst";
+    return "neutral";
+  }, [selectedFlow, bdFilter]);
 
   const filteredCompareCodes = useMemo(() => {
     const query = compareSearch.trim().toUpperCase();
@@ -149,6 +160,7 @@ export function useAnalysis(
     setSelectedFlow("paste");
     setEventName("");
     setEventDate("");
+    setBdFilter(false);
   }, []);
 
   // Returns to wizard without clearing inputs — codes and event name are preserved
@@ -162,6 +174,7 @@ export function useAnalysis(
       rawPastedCodes, isAnalyzing, hasReportGenerated,
       filteredCompareCodes, normalizedPastedCodes, reportResults,
       portfolioHealth, uniqueChannels, eventName, eventDate,
+      bdFilter, userPersona,
     },
     actions: {
       setSelectedFlow, setInputText, setCompareSearch, setEraseKeyword,
@@ -170,6 +183,7 @@ export function useAnalysis(
       clearCompareCodes: () => setSelectedCompareCodes([]),
       compileSpecificCodes, compilePortfolio, compileComparison,
       applyCorrections, reset, backToWizard, setEventName, setEventDate,
+      setBdFilter,
     },
   };
 }
