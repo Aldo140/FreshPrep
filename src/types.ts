@@ -99,4 +99,6 @@ export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "
 
 export type AnalysisFlow = "paste" | "all" | "compare";
 
+export type UserPersona = "bd-rep" | "bd-lead" | "neutral" | "analyst";
+
 export type ActiveTab = "report" | "explorer";
