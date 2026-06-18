@@ -11,7 +11,7 @@ import {
 } from "../../types";
 import { PortfolioHealth } from "../../hooks/useAnalysis";
 import { TAB_RELEVANCE } from "../../config/flowRelevance";
-import { RefreshCw, ArrowLeft, Lock } from "lucide-react";
+import { RefreshCw, ArrowLeft } from "lucide-react";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PerformanceTab } from "./tabs/PerformanceTab";
 import { RevenueTab } from "./tabs/RevenueTab";
@@ -38,8 +38,12 @@ interface ReportDashboardProps {
   rawPastedCodes: string[];
   editionLabels: Record<string, string>;
   customerData: CustomerDataResult;
+  customerFileName: string | null;
   isLoadingCustomer: boolean;
   onCustomerFile: (file: File) => void;
+  onClearCustomer: () => void;
+  staticLoading: boolean;
+  staticError: string | null;
   missingCodes: string[];
   uniqueChannels: string[];
   portfolioHealth: PortfolioHealth | null;
@@ -66,8 +70,12 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     rawPastedCodes,
     editionLabels,
     customerData,
+    customerFileName,
     isLoadingCustomer,
     onCustomerFile,
+    onClearCustomer,
+    staticLoading,
+    staticError,
     missingCodes,
     uniqueChannels,
     portfolioHealth,
@@ -99,7 +107,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   const pages = allPages.filter(p => {
     if (p.id === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) return false;
     if (p.id === "comparison" && selectedFlow !== "compare") return false;
-    if (p.id === "calendar" && !(userPersona === "bd-rep" && customerData.hasData)) return false;
+    if (p.id === "calendar" && selectedFlow === "compare") return false;
     return true;
   });
 
@@ -146,16 +154,6 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             )}
           </button>
         ))}
-        {userPersona === "bd-rep" && !customerData.hasData && (
-          <button
-            onClick={() => setShowCustomerModal(true)}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-3 text-xs font-semibold text-[#a1a1a1] cursor-pointer hover:text-[#2b5346] transition-colors"
-            title="Upload customer export to unlock Calendar tab"
-          >
-            <Lock className="w-3 h-3" />
-            <span className="hidden sm:inline">Calendar</span>
-          </button>
-        )}
         <div className="flex-1" />
         <button
           onClick={onBackToWizard}
@@ -177,16 +175,12 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </button>
       </div>
 
-      {/* Persona context banner */}
-      {(userPersona === "bd-rep" || userPersona === "bd-lead") && (
+      {/* BD events filter active — quiet scope note */}
+      {userPersona === "bd-lead" && (
         <div className="px-4 pt-3 max-w-6xl mx-auto w-full">
           <ContextBanner
-            title={userPersona === "bd-rep" ? "BD Rep Mode" : "BD Lead Mode"}
-            message={
-              userPersona === "bd-rep"
-                ? "Regional tab hidden — you're viewing event-level performance for your submitted codes."
-                : "Showing BD event codes only (EV prefix). Regional tab available for province breakdown."
-            }
+            title="Filtered to event codes"
+            message="Showing EV-prefix codes only. Switch to Full Dataset in the wizard to include all codes."
           />
         </div>
       )}
@@ -199,7 +193,18 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       >
 
         {reportPage === "calendar" && (
-          <CalendarTab customerData={customerData} />
+          <CalendarTab
+            customerData={customerData}
+            rawPastedCodes={rawPastedCodes}
+            foundReports={foundReports}
+            selectedFlow={selectedFlow}
+            staticLoading={staticLoading}
+            staticError={staticError}
+            customerFileName={customerFileName}
+            isLoadingCustomer={isLoadingCustomer}
+            onCustomerFile={onCustomerFile}
+            onClearCustomer={onClearCustomer}
+          />
         )}
 
         {reportPage === "comparison" && (
@@ -257,7 +262,6 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             dbRows={dbRows}
             fileName={fileName}
             selectedFlow={selectedFlow}
-            userPersona={userPersona}
             onSwitchToExplorer={() => setActiveTab("explorer")}
           />
         )}

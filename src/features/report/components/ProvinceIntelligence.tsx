@@ -1,24 +1,8 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useMemo } from "react";
 import { DiscountCodeData, AnalyzedCodeReport } from "../../../types";
-import { 
-  Compass, 
-  Map as MapIcon, 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  AlertTriangle, 
-  Award, 
-  Compass as OpportunityIcon, 
-  Flame as EfficiencyIcon, 
-  TrendingDown, 
-  LineChart,
-  HelpCircle,
-  HelpCircle as InfoIcon
+import {
+  Users, DollarSign, TrendingUp, AlertTriangle,
+  Award, TrendingDown, LineChart, Info,
 } from "lucide-react";
 
 interface ProvinceIntelligenceProps {
@@ -35,669 +19,390 @@ interface ProvinceMetricSummary {
   avgLTV12: number;
   totalDiscount: number;
   efficiencyRatio: number;
-  metricScore: number; // calculated 0-100 regional performance score
+  metricScore: number;
   grade: "Elite" | "Strong" | "Average" | "Weak";
 }
 
+const GRADE_STYLE: Record<string, { pill: string; border: string; bg: string }> = {
+  Elite:   { pill: "bg-purple-100 text-purple-900 border-purple-200",    border: "hover:border-purple-300",   bg: "bg-purple-50/20" },
+  Strong:  { pill: "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20",   border: "hover:border-[#2b5346]/30", bg: "bg-[#eef4f1]/10" },
+  Average: { pill: "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30",   border: "hover:border-[#e7bd27]/50", bg: "bg-[#fdf8e1]/20" },
+  Weak:    { pill: "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20",   border: "hover:border-[#850b0b]/30", bg: "bg-[#ffd0d0]/10" },
+};
+
+const GRADE_DESC: Record<string, string> = {
+  Elite:   "Top conversion and LTV — prioritise budget here.",
+  Strong:  "Solid results. Worth growing event presence.",
+  Average: "Baseline performance. Room to improve.",
+  Weak:    "Low conversion or LTV — review fit or event format.",
+};
+
 export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceIntelligenceProps) {
-  // Toggle between matching query list (active report) and the entire loaded database file!
   const [dataSource, setDataSource] = useState<"audited" | "full">("audited");
-  const [activeLeaderboardSort, setActiveLeaderboardSort] = useState<"paying" | "conversion" | "ltv" | "signups" | "score">("paying");
+  const [sortBy, setSortBy] = useState<"paying" | "conversion" | "ltv" | "signups" | "score">("paying");
 
   const activeDataset = useMemo(() => {
-    // Always use dbRows as the source — individual rows have clean single-province
-    // values (BC, AB, ON, QC). foundReports contains merged Province strings like
-    // "BC + AB" from mergeRows() and must not be used for geographic grouping.
     if (dataSource === "audited") {
-      // Filter raw rows to only those whose code appears in the analyzed set.
       const analyzedCodes = new Set(
-        foundReports.map(r => r.discount_code.trim().toUpperCase())
+        foundReports.map(r => r.discount_code.trim().toUpperCase()),
       );
-      return dbRows.filter(row =>
-        analyzedCodes.has(row.discount_code.trim().toUpperCase())
-      );
+      return dbRows.filter(row => analyzedCodes.has(row.discount_code.trim().toUpperCase()));
     }
     return dbRows;
   }, [dataSource, foundReports, dbRows]);
 
-  // Aggregate regional data by Province
   const provinceMetrics = useMemo(() => {
-    const regionalMap = new Map<string, {
-      province: string;
-      signups: number;
-      paying: number;
-      ltv12: number;
-      discount: number;
-      codeCount: number;
+    const map = new Map<string, {
+      province: string; signups: number; paying: number;
+      ltv12: number; discount: number;
     }>();
 
-    activeDataset.forEach((row) => {
-      const provRaw = (row.Province || "").trim().toUpperCase();
-      const provObj = provRaw === "" || provRaw === "-" ? "ON" : provRaw;
+    for (const row of activeDataset) {
+      const prov = (row.Province || "").trim().toUpperCase() || "ON";
+      const e = map.get(prov) ?? { province: prov, signups: 0, paying: 0, ltv12: 0, discount: 0 };
+      e.signups  += row.Signups || 0;
+      e.paying   += row["Paying cx"] || 0;
+      e.ltv12    += row["Sum LTV 12"] || 0;
+      e.discount += Math.abs(row.total_discount_used || 0);
+      map.set(prov, e);
+    }
 
-      const existing = regionalMap.get(provObj) || {
-        province: provObj,
-        signups: 0,
-        paying: 0,
-        ltv12: 0,
-        discount: 0,
-        codeCount: 0
-      };
-
-      existing.codeCount += 1;
-      existing.signups += row.Signups || 0;
-      existing.paying += row["Paying cx"] || 0;
-      // activeDataset is always dbRows (DiscountCodeData), which has "Sum LTV 12"
-      existing.ltv12 += row["Sum LTV 12"] || 0;
-
-      existing.discount += Math.abs(row.total_discount_used || 0);
-
-      regionalMap.set(provObj, existing);
-    });
-
-    const list: ProvinceMetricSummary[] = [];
-
-    regionalMap.forEach((val) => {
+    return Array.from(map.values()).map(val => {
       const conversion = val.signups > 0 ? (val.paying / val.signups) * 100 : 0;
-      const avgLTV12 = val.paying > 0 ? (val.ltv12 / val.paying) : 0;
-      const efficiencyRatio = val.discount > 0 ? (val.ltv12 / val.discount) : 0;
+      const avgLTV12 = val.paying > 0 ? val.ltv12 / val.paying : 0;
+      const efficiencyRatio = val.discount > 0 ? val.ltv12 / val.discount : 0;
 
-      // Mathematically balanced composite score based on regional health factors
-      // 40% conversion metrics, 40% value profile (per-buyer LTV), 20% acquisition volume
-      const sConv = Math.min(100, conversion * 1.8); // 55% conversion yields full points
-      const sLtv = Math.min(100, (avgLTV12 / 1000) * 100); // $1,000 LTV yields full points
-      const sSignups = Math.min(100, (val.signups / 500) * 100); // 500 signups yields full volume points
-      
-      const metricScore = Math.round((sConv * 0.4) + (sLtv * 0.4) + (sSignups * 0.2));
+      const sConv    = Math.min(100, conversion * 1.8);
+      const sLtv     = Math.min(100, (avgLTV12 / 1000) * 100);
+      const sSignups = Math.min(100, (val.signups / 500) * 100);
+      const metricScore = Math.round(sConv * 0.4 + sLtv * 0.4 + sSignups * 0.2);
 
-      // Category designation
-      let grade: "Elite" | "Strong" | "Average" | "Weak" = "Weak";
+      let grade: ProvinceMetricSummary["grade"] = "Weak";
       if (metricScore >= 75 || (conversion >= 50 && val.paying >= 10)) grade = "Elite";
       else if (metricScore >= 50 || (conversion >= 35 && val.paying >= 5)) grade = "Strong";
       else if (metricScore >= 25 || conversion >= 20) grade = "Average";
 
-      list.push({
-        province: val.province,
-        totalSignups: val.signups,
-        totalPayingCustomers: val.paying,
-        conversion,
-        totalLTV12: val.ltv12,
-        avgLTV12,
-        totalDiscount: val.discount,
-        efficiencyRatio,
-        metricScore,
-        grade
-      });
+      return {
+        province: val.province, totalSignups: val.signups,
+        totalPayingCustomers: val.paying, conversion,
+        totalLTV12: val.ltv12, avgLTV12, totalDiscount: val.discount,
+        efficiencyRatio, metricScore, grade,
+      } satisfies ProvinceMetricSummary;
     });
-
-    return list;
   }, [activeDataset]);
 
-  // Leaders scorecard calculations
   const scorecards = useMemo(() => {
-    let bestConversion = { province: "N/A", val: 0, sub: "0/0" };
-    let bestLTV = { province: "N/A", val: 0, sub: "$0 total" };
-    let mostSignups = { province: "N/A", val: 0 };
-    let mostPaying = { province: "N/A", val: 0 };
+    let bestConversion  = { province: "N/A", val: 0, sub: "0/0" };
+    let bestLTV         = { province: "N/A", val: 0, sub: "$0 total" };
+    let mostSignups     = { province: "N/A", val: 0 };
+    let mostPaying      = { province: "N/A", val: 0 };
 
-    provinceMetrics.forEach((m) => {
-      if (m.conversion > bestConversion.val) {
-        bestConversion = { 
-          province: m.province, 
-          val: m.conversion,
-          sub: `${m.totalPayingCustomers.toLocaleString()} / ${m.totalSignups.toLocaleString()} converted`
-        };
-      }
-      if (m.avgLTV12 > bestLTV.val && m.totalPayingCustomers > 0) {
-        bestLTV = { 
-          province: m.province, 
-          val: m.avgLTV12,
-          sub: `$${Math.round(m.totalLTV12).toLocaleString()} total region value`
-        };
-      }
-      if (m.totalSignups > mostSignups.val) {
+    for (const m of provinceMetrics) {
+      if (m.conversion > bestConversion.val)
+        bestConversion = { province: m.province, val: m.conversion,
+          sub: `${m.totalPayingCustomers.toLocaleString()} / ${m.totalSignups.toLocaleString()} converted` };
+      if (m.avgLTV12 > bestLTV.val && m.totalPayingCustomers > 0)
+        bestLTV = { province: m.province, val: m.avgLTV12,
+          sub: `$${Math.round(m.totalLTV12).toLocaleString()} total region value` };
+      if (m.totalSignups > mostSignups.val)
         mostSignups = { province: m.province, val: m.totalSignups };
-      }
-      if (m.totalPayingCustomers > mostPaying.val) {
+      if (m.totalPayingCustomers > mostPaying.val)
         mostPaying = { province: m.province, val: m.totalPayingCustomers };
-      }
-    });
-
-    return {
-      bestConversion,
-      bestLTV,
-      mostSignups,
-      mostPaying
-    };
+    }
+    return { bestConversion, bestLTV, mostSignups, mostPaying };
   }, [provinceMetrics]);
 
-  // Expansion recommendations logic
   const recommendations = useMemo(() => {
     if (provinceMetrics.length === 0) return null;
 
-    // 1. Highest Opportunity Province
-    // High Conversion & High Avg LTV, but less signup depth (indicates high purchase intent but low penetration)
     let highestOpportunity = provinceMetrics[0];
-    let maxOpportunityIndex = -1;
-
-    // 2. Highest Efficiency Province
-    // Highest LTV per dollar spent on discount (highest efficiency ratio)
+    let maxOppIdx = -1;
     let highestEfficiency = provinceMetrics[0];
-
-    // 3. Lowest Performing Province
-    // Lowest conversion rate
     let lowestPerforming = provinceMetrics[0];
-
-    // 4. Province requiring further investment
-    // High signup volume but low conversion: market clearly wants the product but checkout friction or pricing is killing sales
     let extraInvestment = provinceMetrics[0];
-    let maxInvestmentMargin = -1;
+    let maxInvestMargin = -1;
 
-    provinceMetrics.forEach((m) => {
-      // Opportunity index = conversion % * average LTV12 / total signups
-      const oppIndex = m.totalSignups > 0 ? (m.conversion * m.avgLTV12) / Math.sqrt(m.totalSignups) : 0;
-      if (oppIndex > maxOpportunityIndex) {
-        maxOpportunityIndex = oppIndex;
-        highestOpportunity = m;
-      }
-
-      if (m.efficiencyRatio > highestEfficiency.efficiencyRatio && m.totalDiscount > 0) {
-        highestEfficiency = m;
-      }
-
-      if (m.conversion < lowestPerforming.conversion) {
-        lowestPerforming = m;
-      }
-
-      // Investment margin = high signups relative to low conversion
+    for (const m of provinceMetrics) {
+      const oppIdx = m.totalSignups > 0 ? (m.conversion * m.avgLTV12) / Math.sqrt(m.totalSignups) : 0;
+      if (oppIdx > maxOppIdx) { maxOppIdx = oppIdx; highestOpportunity = m; }
+      if (m.efficiencyRatio > highestEfficiency.efficiencyRatio && m.totalDiscount > 0) highestEfficiency = m;
+      if (m.conversion < lowestPerforming.conversion) lowestPerforming = m;
       const investMargin = m.totalSignups * (100 - m.conversion);
-      if (investMargin > maxInvestmentMargin) {
-        maxInvestmentMargin = investMargin;
-        extraInvestment = m;
-      }
-    });
-
-    return {
-      highestOpportunity,
-      highestEfficiency,
-      lowestPerforming,
-      extraInvestment
-    };
+      if (investMargin > maxInvestMargin) { maxInvestMargin = investMargin; extraInvestment = m; }
+    }
+    return { highestOpportunity, highestEfficiency, lowestPerforming, extraInvestment };
   }, [provinceMetrics]);
 
-  // Sort leaderboard items
-  const sortedLeaderboard = useMemo(() => {
-    return [...provinceMetrics].sort((a, b) => {
-      switch (activeLeaderboardSort) {
-        case "conversion":
-          return b.conversion - a.conversion;
-        case "ltv":
-          return b.avgLTV12 - a.avgLTV12;
-        case "signups":
-          return b.totalSignups - a.totalSignups;
-        case "score":
-          return b.metricScore - a.metricScore;
-        case "paying":
-        default:
-          return b.totalPayingCustomers - a.totalPayingCustomers;
-      }
-    });
-  }, [provinceMetrics, activeLeaderboardSort]);
+  const sortedLeaderboard = useMemo(() => [...provinceMetrics].sort((a, b) => {
+    if (sortBy === "conversion") return b.conversion - a.conversion;
+    if (sortBy === "ltv")        return b.avgLTV12 - a.avgLTV12;
+    if (sortBy === "signups")    return b.totalSignups - a.totalSignups;
+    if (sortBy === "score")      return b.metricScore - a.metricScore;
+    return b.totalPayingCustomers - a.totalPayingCustomers;
+  }), [provinceMetrics, sortBy]);
 
-  // Helper values for maximums to scale relative visual meters
-  const getMaxStats = useMemo(() => {
-    let maxSignups = 1;
-    let maxLtv = 1;
-    let maxPaying = 1;
-    provinceMetrics.forEach(m => {
-      if (m.totalSignups > maxSignups) maxSignups = m.totalSignups;
-      if (m.avgLTV12 > maxLtv) maxLtv = m.avgLTV12;
-      if (m.totalPayingCustomers > maxPaying) maxPaying = m.totalPayingCustomers;
-    });
+  const maxStats = useMemo(() => {
+    let maxSignups = 1, maxLtv = 1, maxPaying = 1;
+    for (const m of provinceMetrics) {
+      if (m.totalSignups > maxSignups)            maxSignups = m.totalSignups;
+      if (m.avgLTV12 > maxLtv)                   maxLtv     = m.avgLTV12;
+      if (m.totalPayingCustomers > maxPaying)     maxPaying  = m.totalPayingCustomers;
+    }
     return { maxSignups, maxLtv, maxPaying };
   }, [provinceMetrics]);
 
   if (provinceMetrics.length === 0) {
     return (
-      <div className="bg-white border rounded-2xl p-8 text-center text-slate-500 font-medium">
-        Load full portfolio discount data or audit promo codes in the sidebar to populate Province Regional Analytics.
+      <div className="bg-white border border-[#e5e5e5] rounded-2xl p-10 text-center">
+        <p className="text-sm text-[#a1a1a1] font-mono">No regional data available for the current selection.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 font-sans" id="regional-intelligence-viewport">
-      
-      {/* Upper Module Control Bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white border border-slate-200/90 p-4 gap-4 rounded-2xl shadow-3xs">
+    <div className="flex flex-col gap-6">
+
+      {/* ── Data scope toggle ──────────────────────────────── */}
+      <div className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 justify-between shadow-sm">
         <div>
-          <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-450 font-mono flex items-center gap-1.5">
-            <Compass className="w-4 h-4 text-[#2b5346] animate-spin-slow" />
-            Geography Workspace Settings
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Analyzing operational statistics aggregated across <strong className="font-semibold text-slate-800">{activeDataset.length.toLocaleString()} active records</strong>.
+          <p className="text-xs font-semibold text-[#1a1a1a]">
+            {activeDataset.length.toLocaleString()} records in view
+          </p>
+          <p className="text-[10px] text-[#a1a1a1] font-mono">
+            {dataSource === "audited"
+              ? "Filtered to your analyzed codes only."
+              : "Full uploaded dataset — all codes, all channels."}
           </p>
         </div>
-
-        {/* Source Toggle Mode selector */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
+        <div className="flex bg-[#f5f5f3] p-1 rounded-lg border border-[#e5e5e5] shrink-0">
           <button
-            onClick={() => {
-              setDataSource("audited");
-              setActiveLeaderboardSort("paying");
-            }}
-            id="datasource-audited-toggle-btn"
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center whitespace-nowrap ${
-              dataSource === "audited"
-                ? "bg-white text-[#2b5346] shadow-2xs border border-[#2b5346]/20"
-                : "text-slate-550 hover:text-slate-800"
+            onClick={() => { setDataSource("audited"); setSortBy("paying"); }}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap ${
+              dataSource === "audited" ? "bg-white text-[#2b5346] shadow-sm border border-[#d0e8e2]" : "text-[#888] hover:text-[#1a1a1a]"
             }`}
           >
-            Audited Event List ({foundReports.length})
+            Analyzed codes ({foundReports.length})
           </button>
           <button
-            onClick={() => {
-              setDataSource("full");
-              setActiveLeaderboardSort("paying");
-            }}
-            id="datasource-file-toggle-btn"
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center whitespace-nowrap ${
-              dataSource === "full"
-                ? "bg-white text-[#2b5346] shadow-2xs border border-[#2b5346]/20"
-                : "text-slate-550 hover:text-slate-800"
+            onClick={() => { setDataSource("full"); setSortBy("paying"); }}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap ${
+              dataSource === "full" ? "bg-white text-[#2b5346] shadow-sm border border-[#d0e8e2]" : "text-[#888] hover:text-[#1a1a1a]"
             }`}
           >
-            Full Loaded Catalog ({dbRows.length.toLocaleString()})
+            Full dataset ({dbRows.length.toLocaleString()})
           </button>
         </div>
       </div>
 
-      {/* 2. Province Scorecards Grid */}
-      <section id="province-scorecards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Best Conversion */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
-          <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Best Conversion</span>
-            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
-              {scorecards.bestConversion.val.toFixed(1)}%
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
-                {scorecards.bestConversion.province}
-              </span>
-            </h4>
-            <p className="text-[10.5px] text-slate-500 mt-1 truncate" title={scorecards.bestConversion.sub}>
-              {scorecards.bestConversion.sub}
-            </p>
-          </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
-        </div>
-
-        {/* Card 2: Highest Average LTV */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
-          <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Highest Avg LTV12</span>
-            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
-              ${Math.round(scorecards.bestLTV.val).toLocaleString()}
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
-                {scorecards.bestLTV.province}
-              </span>
-            </h4>
-            <p className="text-[10.5px] text-slate-500 mt-1 truncate" title={scorecards.bestLTV.sub}>
-              {scorecards.bestLTV.sub}
-            </p>
-          </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
-        </div>
-
-        {/* Card 3: Most Signups */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
-          <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Most Regional Signups</span>
-            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
-              {scorecards.mostSignups.val.toLocaleString()}
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
-                {scorecards.mostSignups.province}
-              </span>
-            </h4>
-            <p className="text-[10.5px] text-slate-500 mt-1">
-              Aggregate market interest footprint
-            </p>
-          </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
-        </div>
-
-        {/* Card 4: Most Paying Customers */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-[#2b5346]/50 transition-colors">
-          <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Most Paying Customers</span>
-            <div className="w-7 h-7 rounded-lg bg-[#eef4f1] text-[#2b5346] flex items-center justify-center">
-              <Award className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <h4 className="text-3xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1">
-              {scorecards.mostPaying.val.toLocaleString()}
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] font-mono border border-[#2b5346]/20">
-                {scorecards.mostPaying.province}
-              </span>
-            </h4>
-            <p className="text-[10.5px] text-slate-500 mt-1">
-              Net customer lifetime acquisitions
-            </p>
-          </div>
-          <div className="absolute right-0 bottom-0 w-8 h-8 bg-[#2b5346]/5 rounded-tl-full pointer-events-none" />
-        </div>
-      </section>
-
-      {/* Grid: Heatmap Grading Matrix & Direct Comparison Visualizer */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* LEFT COMPONENT: Heatmap Matrix (Elite, Strong, Average, Weak Tiers) */}
-        <div className="lg:col-span-6 bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs flex flex-col justify-between gap-5" id="geography-heatmap-panel">
-          <div>
-            <div className="flex items-center justify-between border-b pb-3 mb-4">
-              <div>
-                <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-850 font-mono flex items-center gap-1.5">
-                  <MapIcon className="w-4.5 h-4.5 text-[#2b5346]" />
-                  Regional Performance Heatmap Matrix
-                </h3>
-                <p className="text-[10.5px] text-slate-500 mt-0.5">
-                  Regional markets classified by conversion yield, average checkout LTV, and lifecycle value density.
-                </p>
+      {/* ── Top scorecards ──────────────────────────────────── */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Best conversion", icon: <TrendingUp className="w-4 h-4" />, value: `${scorecards.bestConversion.val.toFixed(1)}%`, badge: scorecards.bestConversion.province, sub: scorecards.bestConversion.sub },
+          { label: "Highest avg LTV 12m", icon: <DollarSign className="w-4 h-4" />, value: `$${Math.round(scorecards.bestLTV.val).toLocaleString()}`, badge: scorecards.bestLTV.province, sub: scorecards.bestLTV.sub },
+          { label: "Most signups", icon: <Users className="w-4 h-4" />, value: scorecards.mostSignups.val.toLocaleString(), badge: scorecards.mostSignups.province, sub: "Highest signup volume" },
+          { label: "Most paying customers", icon: <Award className="w-4 h-4" />, value: scorecards.mostPaying.val.toLocaleString(), badge: scorecards.mostPaying.province, sub: "Total paying acquisitions" },
+        ].map(card => (
+          <div key={card.label} className="bg-white border border-[#e5e5e5] rounded-xl p-4 flex flex-col gap-3 shadow-sm hover:border-[#2b5346]/30 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-[9.5px] font-mono font-semibold uppercase tracking-wider text-[#a1a1a1]">{card.label}</span>
+              <div className="w-6 h-6 rounded-lg bg-[#eef4f1] flex items-center justify-center text-[#2b5346]">
+                {card.icon}
               </div>
             </div>
-
-            {/* Matrix grading buckets */}
-            <div className="space-y-4">
-              {["Elite", "Strong", "Average", "Weak"].map((grade) => {
-                const provincesInGrade = provinceMetrics.filter(p => p.grade === grade);
-                
-                // Styling definitions matching each tier context
-                let titleBg = "bg-purple-100 text-purple-900 border-purple-200";
-                let hoverBorder = "hover:border-purple-300 hover:bg-purple-50/15";
-                let summaryQuote = "Superior market footprint displaying optimal consumer conversion and high LTV values.";
-                
-                if (grade === "Strong") {
-                  titleBg = "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
-                  hoverBorder = "hover:border-[#2b5346]/30 hover:bg-[#eef4f1]/15";
-                  summaryQuote = "Healthy responsiveness. High acquisition rate and stable LTV with strong operational leverage.";
-                } else if (grade === "Average") {
-                  titleBg = "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30";
-                  hoverBorder = "hover:border-[#e7bd27]/50 hover:bg-[#fdf8e1]/40";
-                  summaryQuote = "Baseline results. Displays average checkout rates, requiring progressive event refinement.";
-                } else if (grade === "Weak") {
-                  titleBg = "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20";
-                  hoverBorder = "hover:border-[#850b0b]/30 hover:bg-[#ffd0d0]/40";
-                  summaryQuote = "Underpenetrated segment. Poor signup engagement or lower average customer lifetimes.";
-                }
-
-                return (
-                  <div
-                    key={grade}
-                    className={`border border-slate-150 p-3 rounded-xl transition-colors ${hoverBorder}`}
-                  >
-                    <div className="flex items-center justify-between gap-4 mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-extrabold font-mono tracking-widest px-2.5 py-0.5 rounded-full border uppercase ${titleBg}`}>
-                          {grade} Tier
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">({provincesInGrade.length} region{provincesInGrade.length === 1 ? "" : "s"})</span>
-                      </div>
-                      
-                      {/* Condensed quote metric preview */}
-                      <span className="text-[10px] text-slate-450 italic font-medium hidden sm:inline-block">
-                        {summaryQuote}
-                      </span>
-                    </div>
-
-                    {provincesInGrade.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                        {provincesInGrade.map(row => (
-                          <div 
-                            key={row.province} 
-                            className="bg-slate-50/50 border border-slate-200/60 p-2.5 rounded-lg flex justify-between items-center"
-                          >
-                            <div>
-                              <p className="font-extrabold text-[12px] text-slate-900 font-mono uppercase">{row.province}</p>
-                              <p className="text-[9.5px] text-slate-500 font-medium tracking-tight mt-0.5">
-                                Conv Rate: <strong className="font-bold text-slate-800 font-mono">{row.conversion.toFixed(1)}%</strong>
-                              </p>
-                            </div>
-                            <div className="text-right font-mono">
-                              <p className="text-[11px] font-black text-slate-800">${Math.round(row.avgLTV12).toLocaleString()}</p>
-                              <p className="text-[8px] uppercase tracking-wider text-slate-400 font-bold">LTV 12 PROFILE</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-[10.5px] text-slate-400 italic">No provinces classified in this performance stratum.</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          <div className="border-t pt-2 text-[10px] text-slate-450 leading-normal flex items-start gap-1 p-1 italic font-medium">
-            <InfoIcon className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-400" />
-            Classification matrix weights: 50% checkout conversions, 40% absolute cohort buyer LTV, and 10% acquisition lead depth.
-          </div>
-        </div>
-
-        {/* RIGHT COMPONENT: Interactive Visual Comparison Panel */}
-        <div className="lg:col-span-6 bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs flex flex-col justify-between gap-5" id="geography-visual-comparison">
-          <div>
-            <div className="flex items-center justify-between border-b pb-3 mb-4">
-              <div>
-                <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-850 font-mono flex items-center gap-1.5">
-                  <LineChart className="w-4.5 h-4.5 text-[#2b5346]" />
-                  Relative Province Market Comparison
-                </h3>
-                <p className="text-[10.5px] text-slate-500 mt-0.5">
-                  Bespoke vector meters tracking product demand (Signups), purchase rates (Conversion), and long-term values (LTV12).
-                </p>
-              </div>
-            </div>
-
-            {/* Render parallel visual meters for each province */}
-            <div className="space-y-4 max-h-[352px] overflow-y-auto pr-1">
-              {provinceMetrics.map((row) => {
-                // Determine percentage score relative to theoretical caps
-                const relSignups = Math.min(100, (row.totalSignups / getMaxStats.maxSignups) * 100);
-                const relLtv = Math.min(100, (row.avgLTV12 / getMaxStats.maxLtv) * 100);
-                const relConv = row.conversion; // conversion is already as percentage
-
-                return (
-                  <div key={row.province} className="border border-slate-100 p-3 rounded-xl bg-slate-50/20 shadow-3xs space-y-2">
-                    <div className="flex justify-between items-baseline">
-                      <span className="font-black text-xs text-slate-900 font-mono uppercase bg-slate-100 px-2 py-0.5 border border-slate-200 rounded">
-                        {row.province} Market Segment
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-450 uppercase font-mono">
-                        Regional score: <strong className="text-[#2b5346]">{row.metricScore}/100</strong>
-                      </span>
-                    </div>
-
-                    {/* Progress meters row */}
-                    <div className="space-y-1.5 text-[9.5px]">
-                      {/* Metric 1: Signups */}
-                      <div>
-                        <div className="flex justify-between text-slate-500 font-medium mb-0.5">
-                          <span>Lead Signups Volume:</span>
-                          <span className="font-mono text-slate-800 font-semibold">{row.totalSignups.toLocaleString()} signups</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-slate-400 rounded-full transition-[width] duration-501"
-                            style={{ width: `${relSignups}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Metric 2: Conversion */}
-                      <div>
-                        <div className="flex justify-between text-slate-500 font-medium mb-0.5">
-                          <span>Purchase conversion rate:</span>
-                          <span className="font-mono text-slate-800 font-semibold">{row.conversion.toFixed(1)}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#2b5346] rounded-full transition-[width] duration-501"
-                            style={{ width: `${Math.min(100, relConv)}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Metric 3: Avg LTV12 */}
-                      <div>
-                        <div className="flex justify-between text-slate-500 font-medium mb-0.5">
-                          <span>Customer Average LTV12:</span>
-                          <span className="font-mono text-slate-800 font-semibold">${Math.round(row.avgLTV12).toLocaleString()} value</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#e7bd27] rounded-full transition-[width] duration-501"
-                            style={{ width: `${relLtv}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 border-t pt-2">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-400 inline-block" /> Signups</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#2b5346] inline-block" /> Conversion</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#e7bd27] inline-block" /> Avg LTV12</span>
-          </div>
-        </div>
-
-      </section>
-
-      {/* 1. Province Leaderboard Table Section */}
-      <section id="province-leaderboard-section">
-        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden flex flex-col justify-between font-sans">
-          
-          <div className="p-4 border-b border-slate-100 bg-slate-50/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h3 className="font-extrabold text-[12px] uppercase tracking-wider text-slate-850 font-mono flex items-center gap-1.5">
-                <Award className="w-4.5 h-4.5 text-[#2b5346]" />
-                Province Leaderboard Ranking
-              </h3>
-              <p className="text-[10.5px] text-slate-500 mt-0.5">
-                Sort, compare, and study regional market efficiency indices. Ranked dynamically by chosen columns.
-              </p>
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-[26px] font-black font-mono text-[#1a1a1a] leading-none">{card.value}</span>
+                <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] border border-[#2b5346]/20">
+                  {card.badge}
+                </span>
+              </div>
+              <p className="text-[10px] text-[#a1a1a1] mt-1.5 truncate">{card.sub}</p>
             </div>
+          </div>
+        ))}
+      </section>
 
-            {/* Quick Sort Sort selector triggers */}
-            <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-              <span className="text-[9px] uppercase font-bold text-slate-450 self-center px-1.5 font-mono">Rank by:</span>
-              <button
-                onClick={() => setActiveLeaderboardSort("paying")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "paying" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
-              >
-                Acquisitions
-              </button>
-              <button
-                onClick={() => setActiveLeaderboardSort("conversion")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "conversion" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
-              >
-                Conversion
-              </button>
-              <button
-                onClick={() => setActiveLeaderboardSort("ltv")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "ltv" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
-              >
-                LTV12 Mean
-              </button>
-              <button
-                onClick={() => setActiveLeaderboardSort("signups")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "signups" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
-              >
-                Signups
-              </button>
-              <button
-                onClick={() => setActiveLeaderboardSort("score")}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${activeLeaderboardSort === "score" ? "bg-white text-[#2b5346] shadow-3xs border border-[#2b5346]/20" : "text-slate-500 hover:text-slate-800"}`}
-              >
-                Score index
-              </button>
+      {/* ── Performance tiers + Province comparison ─────────── */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        {/* Performance tiers */}
+        <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+          <div className="border-b border-[#f5f5f3] pb-3">
+            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Classification</p>
+            <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5">Performance tiers</h3>
+            <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Provinces ranked by conversion, LTV, and signup volume.</p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {(["Elite", "Strong", "Average", "Weak"] as const).map(grade => {
+              const inGrade = provinceMetrics.filter(p => p.grade === grade);
+              const gs = GRADE_STYLE[grade];
+              return (
+                <div key={grade} className={`border border-[#f0f0ee] p-3 rounded-xl transition-colors ${gs.border}`}>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[9px] font-black font-mono tracking-widest px-2 py-0.5 rounded-full border uppercase ${gs.pill}`}>
+                        {grade}
+                      </span>
+                      <span className="text-[9.5px] text-[#a1a1a1]">
+                        {inGrade.length} province{inGrade.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <span className="text-[9.5px] text-[#888] italic hidden sm:block">{GRADE_DESC[grade]}</span>
+                  </div>
+
+                  {inGrade.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {inGrade.map(row => (
+                        <div key={row.province} className={`${gs.bg} border border-[#f0f0ee] p-2.5 rounded-lg flex justify-between items-center`}>
+                          <div>
+                            <p className="font-black text-[13px] text-[#0f0f0f] font-mono">{row.province}</p>
+                            <p className="text-[9px] text-[#888] font-mono mt-0.5">
+                              {row.conversion.toFixed(1)}% conv.
+                            </p>
+                          </div>
+                          <div className="text-right font-mono">
+                            <p className="text-[11px] font-black text-[#1a1a1a]">${Math.round(row.avgLTV12).toLocaleString()}</p>
+                            <p className="text-[8px] uppercase tracking-wider text-[#a1a1a1] font-semibold">avg LTV 12m</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-[#c0c0c0] italic">No provinces in this tier.</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-[9px] font-mono text-[#c8c8c8] border-t border-[#f5f5f3] pt-2 flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            Score: 40% conversion · 40% avg LTV · 20% signup volume
+          </p>
+        </div>
+
+        {/* Province bars */}
+        <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+          <div className="border-b border-[#f5f5f3] pb-3">
+            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Comparison</p>
+            <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5">Province metrics</h3>
+            <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Signups, conversion rate, and avg LTV — relative to the top province.</p>
+          </div>
+
+          <div className="flex flex-col gap-3 overflow-y-auto max-h-[380px] pr-0.5">
+            {provinceMetrics.map(row => {
+              const relSignups = Math.min(100, (row.totalSignups / maxStats.maxSignups) * 100);
+              const relLtv     = Math.min(100, (row.avgLTV12    / maxStats.maxLtv)     * 100);
+              const relConv    = Math.min(100, row.conversion);
+
+              return (
+                <div key={row.province} className="border border-[#f0f0ee] p-3 rounded-xl bg-[#fafafa] flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-[#0f0f0f] font-mono bg-[#f0f0ee] px-2 py-0.5 rounded border border-[#e5e5e5]">
+                      {row.province}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#888]">
+                      Score <span className="font-black text-[#2b5346]">{row.metricScore}</span>/100
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-[9.5px]">
+                    {[
+                      { label: "Signups", value: row.totalSignups.toLocaleString(), pct: relSignups, color: "#c0c0c0" },
+                      { label: "Conversion", value: `${row.conversion.toFixed(1)}%`, pct: relConv, color: "#2b5346" },
+                      { label: "Avg LTV 12m", value: `$${Math.round(row.avgLTV12).toLocaleString()}`, pct: relLtv, color: "#c9a000" },
+                    ].map(m => (
+                      <div key={m.label}>
+                        <div className="flex justify-between text-[#888] mb-0.5">
+                          <span>{m.label}</span>
+                          <span className="font-mono font-semibold text-[#3d3d3d]">{m.value}</span>
+                        </div>
+                        <div className="h-1.5 bg-[#eee] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${m.pct}%`, backgroundColor: m.color }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-4 text-[9px] font-mono text-[#a1a1a1] border-t border-[#f5f5f3] pt-2">
+            {[["#c0c0c0","Signups"],["#2b5346","Conversion"],["#c9a000","Avg LTV 12m"]].map(([c, l]) => (
+              <span key={l} className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: c }} />
+                {l}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Province leaderboard ─────────────────────────────── */}
+      <section>
+        <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f5f5f3] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#fafafa]">
+            <div>
+              <h3 className="text-sm font-black text-[#0f0f0f]">Province leaderboard</h3>
+              <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Sort by any column to rerank.</p>
+            </div>
+            <div className="flex items-center gap-1 bg-[#f0f0ee] p-1 rounded-lg border border-[#e5e5e5] flex-wrap">
+              <span className="text-[9px] font-mono uppercase text-[#a1a1a1] px-1 shrink-0">Sort:</span>
+              {([
+                ["paying",     "Paying cx"],
+                ["conversion", "Conversion"],
+                ["ltv",        "Avg LTV"],
+                ["signups",    "Signups"],
+                ["score",      "Score"],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setSortBy(key)}
+                  className={`px-2 py-1 text-[10px] font-semibold rounded-md cursor-pointer transition ${
+                    sortBy === key ? "bg-white text-[#2b5346] shadow-sm border border-[#d0e8e2]" : "text-[#888] hover:text-[#1a1a1a]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="overflow-x-auto w-full">
+          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold font-mono tracking-wider select-none uppercase text-[9.5px]">
-                  <th className="py-2.5 px-4 text-center w-14">Rank</th>
-                  <th className="py-2.5 px-5">Province</th>
-                  <th className="py-2.5 px-4 text-right">Registered Signups</th>
-                  <th className="py-2.5 px-4 text-right">Paying Acquisitions</th>
-                  <th className="py-2.5 px-4 text-right">Conversion Rate</th>
-                  <th className="py-2.5 px-4 text-right">Average LTV12</th>
-                  <th className="py-2.5 px-4 text-right">Total Discount Expended</th>
-                  <th className="py-2.5 px-4 text-right">ROI Efficiency Coefficient</th>
-                  <th className="py-2.5 px-4 text-center">Score Profile</th>
-                  <th className="py-2.5 px-4 text-center">Heatmap Grade</th>
+                <tr className="bg-[#fafafa] border-b border-[#f0f0ee] text-[#a1a1a1] font-semibold font-mono uppercase text-[9px]">
+                  <th className="py-2.5 px-4 text-center w-10">#</th>
+                  <th className="py-2.5 px-4">Province</th>
+                  <th className="py-2.5 px-4 text-right">Signups</th>
+                  <th className="py-2.5 px-4 text-right">Paying cx</th>
+                  <th className="py-2.5 px-4 text-right">Conversion</th>
+                  <th className="py-2.5 px-4 text-right">Avg LTV 12m</th>
+                  <th className="py-2.5 px-4 text-right">Discount used</th>
+                  <th className="py-2.5 px-4 text-right">LTV / discount</th>
+                  <th className="py-2.5 px-4 text-center">Score</th>
+                  <th className="py-2.5 px-4 text-center">Tier</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
-                {sortedLeaderboard.map((row, index) => {
-                  let gradeBadge = "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20";
-                  if (row.grade === "Elite") gradeBadge = "bg-purple-100 text-purple-900 border-purple-200";
-                  else if (row.grade === "Strong") gradeBadge = "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20";
-                  else if (row.grade === "Average") gradeBadge = "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30";
-
+              <tbody className="divide-y divide-[#f8f8f8] text-[#3d3d3d]">
+                {sortedLeaderboard.map((row, i) => {
+                  const gs = GRADE_STYLE[row.grade];
                   return (
-                    <tr key={row.province} className="hover:bg-slate-50/40 font-medium">
-                      <td className="py-2.5 px-4 text-center text-slate-400 font-mono text-[10.5px]">
-                        {index + 1}
-                      </td>
-                      <td className="py-2.5 px-5 font-black text-slate-900 font-mono uppercase text-xs">
-                        {row.province}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-mono">
-                        {row.totalSignups.toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-mono">
-                        {row.totalPayingCustomers.toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
-                        {row.conversion.toFixed(1)}%
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-mono">
-                        ${Math.round(row.avgLTV12).toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-mono text-slate-500">
-                        ${Math.round(row.totalDiscount).toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-extrabold text-[#2b5346]">
-                        {row.efficiencyRatio.toFixed(1)}x
-                      </td>
-                      <td className="py-2.5 px-4 text-center font-mono">
-                        <span className="font-extrabold text-slate-800">{row.metricScore}</span>/100
+                    <tr key={row.province} className="hover:bg-[#fafafa]">
+                      <td className="py-2.5 px-4 text-center text-[#c0c0c0] font-mono text-[10.5px]">{i + 1}</td>
+                      <td className="py-2.5 px-4 font-black text-[#0f0f0f] font-mono">{row.province}</td>
+                      <td className="py-2.5 px-4 text-right font-mono">{row.totalSignups.toLocaleString()}</td>
+                      <td className="py-2.5 px-4 text-right font-mono">{row.totalPayingCustomers.toLocaleString()}</td>
+                      <td className="py-2.5 px-4 text-right font-mono font-bold text-[#1a1a1a]">{row.conversion.toFixed(1)}%</td>
+                      <td className="py-2.5 px-4 text-right font-mono">${Math.round(row.avgLTV12).toLocaleString()}</td>
+                      <td className="py-2.5 px-4 text-right font-mono text-[#a1a1a1]">${Math.round(row.totalDiscount).toLocaleString()}</td>
+                      <td className="py-2.5 px-4 text-right font-mono font-bold text-[#2b5346]">{row.efficiencyRatio.toFixed(1)}x</td>
+                      <td className="py-2.5 px-4 text-center font-mono text-[#888]">
+                        <span className="font-black text-[#1a1a1a]">{row.metricScore}</span>/100
                       </td>
                       <td className="py-2.5 px-4 text-center">
-                        <span className={`inline-block text-[9px] font-extrabold font-mono tracking-wider uppercase px-2 py-0.5 border rounded-full ${gradeBadge}`}>
+                        <span className={`inline-block text-[8.5px] font-black font-mono tracking-wider uppercase px-2 py-0.5 border rounded-full ${gs.pill}`}>
                           {row.grade}
                         </span>
                       </td>
@@ -707,97 +412,69 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               </tbody>
             </table>
           </div>
-
         </div>
       </section>
 
-      {/* 5. Expansion Recommendations Section */}
+      {/* ── Regional insights ───────────────────────────────── */}
       {recommendations && (
-        <section id="expansion-recommendations" className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-md">
-          <div className="border-b border-slate-800 pb-3 mb-5">
-            <h3 className="font-extrabold text-xs uppercase tracking-wider text-[#e7bd27] font-mono flex items-center gap-1.5">
-              <Compass className="w-5 h-5 flex-shrink-0 animate-spin-slow" />
-              Regional Market Expansion Intelligence Advisor
-            </h3>
-            <p className="text-[10.5px] text-slate-400 mt-0.5 font-sans">
-              Algorithmic recommendations evaluating cohort responsiveness and asset yield ratios. Fully data-informed.
-            </p>
+        <section className="bg-[#1a1a1a] text-white rounded-2xl p-5 border border-[#2a2a2a]">
+          <div className="border-b border-[#2a2a2a] pb-3 mb-5">
+            <h3 className="text-xs font-black text-[#e7bd27] font-mono uppercase tracking-wider">Regional insights</h3>
+            <p className="text-[10px] text-[#888] font-mono mt-0.5">Data-driven read on where to push and where to pull back.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            {/* Box 1: Highest Opportunity */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition-colors">
+            <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#e7bd27]/30 transition-colors">
               <div>
-                <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1">
-                  High Opportunity Segment
-                </span>
-                <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100 flex items-center gap-1">
-                  Province: {recommendations.highestOpportunity.province}
-                </h4>
-                <p className="text-[10.5px] text-slate-400 mt-2.5 leading-relaxed font-sans font-medium">
-                  With a <strong className="text-white font-bold">{recommendations.highestOpportunity.conversion.toFixed(1)}% conversion</strong> and an outstanding <strong className="text-white font-bold">${Math.round(recommendations.highestOpportunity.avgLTV12).toLocaleString()} LTV12 profile</strong>, this market displays superior localized audience purchasing power. 
+                <span className="text-[9px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1.5">Best opportunity</span>
+                <h4 className="text-xl font-black font-mono text-white">{recommendations.highestOpportunity.province}</h4>
+                <p className="text-[10.5px] text-[#888] mt-2.5 leading-relaxed">
+                  <strong className="text-white">{recommendations.highestOpportunity.conversion.toFixed(1)}% conversion</strong> and <strong className="text-white">${Math.round(recommendations.highestOpportunity.avgLTV12).toLocaleString()} avg LTV</strong> — strong ROI signal. Worth scaling event presence here.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <OpportunityIcon className="w-3.5 h-3.5 text-[#e7bd27]" /> SCALE CAMPAIGN PRESENCE
+              <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-[#888] uppercase font-mono font-bold flex items-center gap-1">
+                <TrendingUp className="w-3 h-3 text-[#e7bd27]" /> Scale up
               </div>
             </div>
 
-            {/* Box 2: Highest Efficiency */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e78a58]/30 transition-colors">
+            <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#e78a58]/30 transition-colors">
               <div>
-                <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e78a58] uppercase block mb-1">
-                  Highest ROI Efficiency
-                </span>
-                <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100">
-                  Province: {recommendations.highestEfficiency.province}
-                </h4>
-                <p className="text-[10.5px] text-slate-400 mt-2.5 leading-relaxed font-sans font-medium">
-                  This segment returns an incredible <strong className="text-white font-bold">{recommendations.highestEfficiency.efficiencyRatio.toFixed(1)}x LTV yields</strong> relative to promotional discount investments. Market exhibits low price elasticity; discount multipliers are highly optimized.
+                <span className="text-[9px] font-mono font-bold tracking-widest text-[#e78a58] uppercase block mb-1.5">Most efficient</span>
+                <h4 className="text-xl font-black font-mono text-white">{recommendations.highestEfficiency.province}</h4>
+                <p className="text-[10.5px] text-[#888] mt-2.5 leading-relaxed">
+                  Returns <strong className="text-white">{recommendations.highestEfficiency.efficiencyRatio.toFixed(1)}x LTV</strong> per dollar of discount. Low price sensitivity — discount spend here is well-optimised.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <EfficiencyIcon className="w-3.5 h-3.5 text-[#e78a58]" /> MAXIMISE BUDGET ALLOCATION
+              <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-[#888] uppercase font-mono font-bold flex items-center gap-1">
+                <Award className="w-3 h-3 text-[#e78a58]" /> Protect budget here
               </div>
             </div>
 
-            {/* Box 3: Lowest Performing */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-slate-800 transition-colors">
+            <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col justify-between transition-colors">
               <div>
-                <span className="text-[9.5px] font-mono font-bold tracking-widest text-slate-400 uppercase block mb-1">
-                  Lowest Conversion Yield
-                </span>
-                <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100">
-                  Province: {recommendations.lowestPerforming.province}
-                </h4>
-                <p className="text-[10.5px] text-slate-400 mt-2.5 leading-relaxed font-sans font-medium">
-                  This segment exhibits regional performance friction, bringing only a <strong className="text-white font-bold">{recommendations.lowestPerforming.conversion.toFixed(1)}% conversion rate</strong>. Review target demographic positioning, as customer cohorts generated here show poor lifecycle conversion.
+                <span className="text-[9px] font-mono font-bold tracking-widest text-[#888] uppercase block mb-1.5">Lowest conversion</span>
+                <h4 className="text-xl font-black font-mono text-white">{recommendations.lowestPerforming.province}</h4>
+                <p className="text-[10.5px] text-[#888] mt-2.5 leading-relaxed">
+                  Only <strong className="text-white">{recommendations.lowestPerforming.conversion.toFixed(1)}%</strong> conversion rate. Review whether events here are the right fit or if the offer needs adjustment.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <TrendingDown className="w-3.5 h-3.5 text-[#850b0b] animate-pulse" /> RE-EVALUATE EVENT REVENUE
+              <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-[#888] uppercase font-mono font-bold flex items-center gap-1">
+                <TrendingDown className="w-3 h-3 text-[#850b0b]" /> Re-evaluate
               </div>
             </div>
 
-            {/* Box 4: Further Investment */}
-            <div className="bg-slate-950/45 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-[#e7bd27]/30 transition-colors">
+            <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#e7bd27]/30 transition-colors">
               <div>
-                <span className="text-[9.5px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1">
-                  Investment Target
-                </span>
-                <h4 className="text-xl font-extrabold font-mono uppercase text-slate-100">
-                  Province: {recommendations.extraInvestment.province}
-                </h4>
-                <p className="text-[10.5px] text-slate-400 mt-2.5 leading-relaxed font-sans font-medium">
-                  Ontario commands <strong className="text-white font-bold">{recommendations.extraInvestment.totalSignups.toLocaleString()} top-of-funnel signups</strong>, yet fails to convert optimally. There is massive localized demand here. Address checkout friction or launch regional onboarding programs.
+                <span className="text-[9px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1.5">High volume, low close</span>
+                <h4 className="text-xl font-black font-mono text-white">{recommendations.extraInvestment.province}</h4>
+                <p className="text-[10.5px] text-[#888] mt-2.5 leading-relaxed">
+                  <strong className="text-white">{recommendations.extraInvestment.totalSignups.toLocaleString()} signups</strong> but conversion is under-performing. Strong top-of-funnel demand — worth investigating drop-off in onboarding.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-900 text-[9.5px] text-slate-450 uppercase font-mono font-bold flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5 text-[#e78a58] animate-bounce" /> RETUNE CHECKOUT FUNNELS
+              <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-[#888] uppercase font-mono font-bold flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3 text-[#e78a58]" /> Investigate drop-off
               </div>
             </div>
-
           </div>
         </section>
       )}

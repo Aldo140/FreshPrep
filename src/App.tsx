@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Upload, FileSpreadsheet, FileText, Download } from "lucide-react";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { useAnalysis } from "./hooks/useAnalysis";
@@ -11,6 +11,7 @@ import { useReport } from "./hooks/useReport";
 import { useCodeFormatting } from "./hooks/useCodeFormatting";
 import { useCustomerFile } from "./hooks/useCustomerFile";
 import { useCustomerData } from "./hooks/useCustomerData";
+import { useStaticSignups } from "./hooks/useStaticSignups";
 import { UploadFlow } from "./features/upload/UploadFlow";
 import { WizardFlow } from "./features/wizard/WizardFlow";
 import { ReportDashboard } from "./features/report/ReportDashboard";
@@ -31,10 +32,22 @@ export default function App(): React.ReactElement {
   });
 
   const customerFile = useCustomerFile();
-  const customerData = useCustomerData(customerFile.state.customerRows, analysis.state.rawPastedCodes);
+  const staticSignups = useStaticSignups();
 
   const { foundReports, missingCodes, summary, channelSummary } = analysis.state.reportResults;
   const { hasReportGenerated, eventName, eventDate } = analysis.state;
+
+  // Start loading static signup data as soon as the report is generated
+  useEffect(() => {
+    if (hasReportGenerated) staticSignups.load();
+  }, [hasReportGenerated]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Uploaded file takes precedence over static data
+  const effectiveCustomerRows = customerFile.state.customerRows.length > 0
+    ? customerFile.state.customerRows
+    : staticSignups.rows;
+
+  const customerData = useCustomerData(effectiveCustomerRows, analysis.state.rawPastedCodes);
 
   const handleResetWorkspace = (): void => {
     fileUpload.actions.reset();
@@ -163,8 +176,12 @@ export default function App(): React.ReactElement {
               selectedFlow={analysis.state.selectedFlow}
               editionLabels={analysis.state.editionLabels}
               customerData={customerData}
+              customerFileName={customerFile.state.customerFileName}
               isLoadingCustomer={customerFile.state.isLoadingCustomer}
               onCustomerFile={customerFile.actions.processCustomerFile}
+              onClearCustomer={customerFile.actions.resetCustomer}
+              staticLoading={staticSignups.loading}
+              staticError={staticSignups.error}
               userPersona={analysis.state.userPersona}
               eventName={eventName}
               eventDate={eventDate}

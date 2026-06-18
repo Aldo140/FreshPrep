@@ -36,7 +36,12 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
   const codeLabel = n === 1 ? "code" : "codes";
   const grade = conversionGrade(summary.blendedConversionRate);
 
-  const uniqueProvinces = new Set(foundReports.map(r => r.Province).filter(Boolean)).size;
+  const uniqueProvinceList = Array.from(
+    new Set(
+      foundReports.flatMap(r => (r.Province ?? "ON").split("+").map(p => p.trim()))
+    )
+  ).filter(Boolean).sort();
+  const uniqueProvinces = uniqueProvinceList.length;
 
   const pressMd = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.97)"; };
   const pressUp = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLButtonElement).style.transform = ""; };
@@ -65,19 +70,18 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
                   FreshPrep · Campaign Performance Report
                 </p>
                 <h2 className="text-3xl font-display font-semibold text-white leading-tight tracking-tight">
-                  {eventName || `${n} ${codeLabel} analyzed`}
+                  {eventName || (selectedFlow === "paste" ? `${n} event ${codeLabel}` : "Campaign Portfolio")}
                 </h2>
                 <p className="text-xs text-white/50 mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  {eventName && <span>{n} {codeLabel}</span>}
+                  {<span>{n} {codeLabel}</span>}
                   {formattedEventDate && <><span className="text-white/20">·</span><span>{formattedEventDate}</span></>}
                   {fileName && <><span className="text-white/20">·</span><span className="font-mono">{fileName}</span></>}
                   <span className="text-white/20">·</span>
                   <span>{dbRowCount.toLocaleString()} records</span>
                 </p>
-                {userPersona === "bd-lead" && (
+                {userPersona === "bd-lead" && uniqueProvinceList.length > 0 && (
                   <p className="text-xs text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg px-3 py-2 font-mono mt-2">
-                    Showing {foundReports.length} BD event codes across{" "}
-                    {Array.from(new Set(foundReports.map(r => r.Province ?? "ON"))).join(", ")}
+                    {n} event codes · {uniqueProvinceList.join(", ")}
                   </p>
                 )}
               </div>

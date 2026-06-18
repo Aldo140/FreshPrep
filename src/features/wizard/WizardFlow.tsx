@@ -209,21 +209,21 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
                   icon: <Clipboard className="w-4 h-4" />,
                   label: "Specific Codes",
                   sub: "Paste a list of your event codes",
-                  hint: "BD Rep",
+                  hint: null as string | null,
                 },
                 {
                   flow: "all" as const,
                   icon: <Database className="w-4 h-4" />,
                   label: "Full Dataset",
                   sub: `${fileState.uniqueDbCodes.length.toLocaleString()} unique codes`,
-                  hint: "BD Lead · Marketing",
+                  hint: null as string | null,
                 },
                 {
                   flow: "compare" as const,
                   icon: <Scale className="w-4 h-4" />,
                   label: "Compare",
                   sub: "Year-over-year event trends",
-                  hint: "Multi-edition",
+                  hint: "Multi-edition" as string | null,
                 },
               ].map(({ flow, icon, label, sub, hint }) => {
                 const active = state.selectedFlow === flow;
@@ -240,9 +240,9 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
                   >
                     <div className="flex items-start justify-between gap-1">
                       <span className={active ? "text-white/80" : "text-[#2b5346]"}>{icon}</span>
-                      <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded ${
+                      {hint && <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded ${
                         active ? "bg-white/15 text-white/70" : "bg-[#f0f0ee] text-[#a1a1a1]"
-                      }`}>{hint}</span>
+                      }`}>{hint}</span>}
                     </div>
                     <span>
                       <span className={`block text-[13px] font-bold leading-tight ${active ? "text-white" : "text-[#1a1a1a]"}`}>

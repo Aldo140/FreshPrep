@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CustomerRecord } from "../types";
+import { CustomerRecord, AnalysisFlow } from "../types";
 
 export interface CodeMonthBreakdown {
   code: string;
@@ -17,20 +17,37 @@ export interface MonthStats {
   codeBreakdown: CodeMonthBreakdown[];
 }
 
+export interface EventStats {
+  code: string;
+  eventDate: string;      // ISO "YYYY-MM-DD" — first signup date
+  eventMonth: string;     // "YYYY-MM"
+  eventDateLabel: string; // "Jul 3" (for display inside month context)
+  homeProvince: string;   // majority province
+  totalSignups: number;
+  signupsByProvince: Record<string, number>;
+}
+
 export interface CustomerDataResult {
   monthStats: MonthStats[];
   provinces: string[];
+  eventStats: EventStats[];
   hasData: boolean;
 }
 
-function toMonthKey(dateStr: string): string | null {
+function toIsoDate(dateStr: string): string | null {
   if (!dateStr) return null;
-  const normalized = dateStr.replace(/\//g, "-");
-  const d = new Date(normalized);
+  const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
   const y = d.getFullYear();
+  if (y < 2000 || y > 2100) return null;
   const m = String(d.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function toMonthKey(dateStr: string): string | null {
+  const iso = toIsoDate(dateStr);
+  return iso ? iso.slice(0, 7) : null;
 }
 
 function monthLabel(key: string): string {
@@ -44,20 +61,72 @@ function priorYearKey(key: string): string {
   return `${Number(year) - 1}-${month}`;
 }
 
+function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
+  const evRows = rows.filter(r => r.discount_code?.startsWith("EV"));
+
+  const byCode = new Map<string, CustomerRecord[]>();
+  for (const row of evRows) {
+    const code = row.discount_code!;
+    if (!byCode.has(code)) byCode.set(code, []);
+    byCode.get(code)!.push(row);
+  }
+
+  const events: EventStats[] = [];
+  for (const [code, codeRows] of byCode) {
+    const provinces: Record<string, number> = {};
+    for (const r of codeRows) {
+      const p = r.province || "??";
+      provinces[p] = (provinces[p] ?? 0) + 1;
+    }
+    const homeProvince = Object.entries(provinces).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "??";
+
+    // Group valid ISO dates by month, then pick the peak month (most signups).
+    // Using first-signup as event date places codes with early stragglers in wrong month.
+    const byMonth: Record<string, string[]> = {};
+    for (const r of codeRows) {
+      const d = toIsoDate(r.signup_date);
+      if (!d) continue;
+      const mo = d.slice(0, 7);
+      if (!byMonth[mo]) byMonth[mo] = [];
+      byMonth[mo].push(d);
+    }
+    const peakMonth = Object.entries(byMonth).sort((a, b) => b[1].length - a[1].length)[0]?.[0] ?? "";
+    const eventMonth = peakMonth;
+    const eventDate = peakMonth ? [...byMonth[peakMonth]].sort()[0] : "";
+
+    const d = eventDate ? new Date(eventDate + "T12:00:00") : null;
+    const eventDateLabel = d
+      ? d.toLocaleDateString("en-CA", { month: "short", day: "numeric" })
+      : "";
+
+    events.push({ code, eventDate, eventMonth, eventDateLabel, homeProvince, totalSignups: codeRows.length, signupsByProvince: provinces });
+  }
+
+  return events.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+}
+
 export function useCustomerData(
   customerRows: CustomerRecord[],
-  rawPastedCodes: string[]
+  rawPastedCodes: string[],
+  _selectedFlow?: AnalysisFlow,
 ): CustomerDataResult {
   return useMemo((): CustomerDataResult => {
-    if (customerRows.length === 0 || rawPastedCodes.length === 0) {
-      return { monthStats: [], provinces: [], hasData: false };
+    const evStats = deriveEventStats(customerRows);
+    const hasEvData = evStats.length > 0;
+
+    if (customerRows.length === 0) {
+      return { monthStats: [], provinces: [], eventStats: evStats, hasData: hasEvData };
+    }
+
+    if (rawPastedCodes.length === 0) {
+      return { monthStats: [], provinces: [], eventStats: evStats, hasData: hasEvData };
     }
 
     const codeSet = new Set(rawPastedCodes.map(c => c.toUpperCase()));
     const relevant = customerRows.filter(r => r.discount_code !== null && codeSet.has(r.discount_code));
 
     if (relevant.length === 0) {
-      return { monthStats: [], provinces: [], hasData: false };
+      return { monthStats: [], provinces: [], eventStats: evStats, hasData: hasEvData };
     }
 
     const monthMap: Record<string, Record<string, { signups: number; active: number; paused: number; province: Record<string, number> }>> = {};
@@ -101,7 +170,6 @@ export function useCustomerData(
       }
 
       const totalSignups = codeBreakdown.reduce((s, c) => s + c.signups, 0);
-
       const priorKey = priorYearKey(key);
       let yoyDelta: number | null = null;
       if (monthMap[priorKey]) {
@@ -112,6 +180,6 @@ export function useCustomerData(
       return { monthKey: key, label: monthLabel(key), totalSignups, signupsByProvince, yoyDelta, codeBreakdown };
     });
 
-    return { monthStats: stats.slice(0, 24), provinces: allProvinces, hasData: true };
+    return { monthStats: stats.slice(0, 24), provinces: allProvinces, eventStats: evStats, hasData: true };
   }, [customerRows, rawPastedCodes]);
 }

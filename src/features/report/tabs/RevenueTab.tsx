@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { ChevronDown, TrendingUp, BarChart2, DollarSign, Users, Target } from "lucide-react";
 import { AnalyzedCodeReport, KPIReportSummary, ChannelSummary } from "../../../types";
@@ -322,7 +322,7 @@ function PortfolioMap({ reports, summary }: { reports: AnalyzedCodeReport[]; sum
                   <div className="flex justify-between items-center mb-1.5">
                     <span className="text-[8px] text-[#c0c0c0] font-mono">vs 40% target</span>
                     <span className="text-[8.5px] font-mono font-semibold" style={{ color: hovered.report.calculatedConversion >= TARGET_CONV ? "#2b5346" : "#c87a3c" }}>
-                      {hovered.report.calculatedConversion >= TARGET_CONV ? "✓ on target" : `−${(TARGET_CONV - hovered.report.calculatedConversion).toFixed(1)}%`}
+                      {hovered.report.calculatedConversion >= TARGET_CONV ? "On target" : `−${(TARGET_CONV - hovered.report.calculatedConversion).toFixed(1)}%`}
                     </span>
                   </div>
                   <div className="h-2 bg-[#f0f0ee] rounded-full overflow-hidden">
@@ -348,9 +348,9 @@ export function RevenueTab({ summary, foundReports, channelSummary }: RevenueTab
   const [ltvOpen,      setLtvOpen]      = useState(false);
   const [revenueOpen,  setRevenueOpen]  = useState(false);
 
-  const sortedByLtv     = [...foundReports].sort((a, b) => b["Avg LTV 12"] - a["Avg LTV 12"]);
+  const sortedByLtv     = useMemo(() => [...foundReports].sort((a, b) => b["Avg LTV 12"] - a["Avg LTV 12"]), [foundReports]);
   const maxAvgLtv12     = sortedByLtv[0]?.["Avg LTV 12"] ?? 1;
-  const sortedByRevenue = [...foundReports].sort((a, b) => b["Sum LTV 12"] - a["Sum LTV 12"]);
+  const sortedByRevenue = useMemo(() => [...foundReports].sort((a, b) => b["Sum LTV 12"] - a["Sum LTV 12"]), [foundReports]);
   const maxRevenue      = sortedByRevenue[0]?.["Sum LTV 12"] ?? 1;
   const totalLtv3       = foundReports.reduce((s, r) => s + r["Sum LTV 3"], 0);
   const totalLtv6       = foundReports.reduce((s, r) => s + r["Sum LTV 6"], 0);

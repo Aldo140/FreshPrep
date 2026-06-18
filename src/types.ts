@@ -107,6 +107,8 @@ export interface CustomerRecord {
   current_status: string;
   discount_code: string | null;
   channel: string;
+  email?: string;
+  last_step?: string;
   province: string;
   first_paying_date?: string;
   days_till_paying?: number;
