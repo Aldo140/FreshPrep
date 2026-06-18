@@ -35,16 +35,18 @@ function PortfolioMap({ reports, summary }: { reports: AnalyzedCodeReport[]; sum
   const [mousePos,    setMousePos]    = useState({ x: 0, y: 0 });
   const [activeTiers, setActiveTiers] = useState<Set<string>>(() => new Set(TIER_ORDER));
 
-  if (reports.length === 0) return null;
+  const eligibleReports = reports.filter(r => r.Signups >= 5);
+
+  if (eligibleReports.length === 0) return null;
 
   const W = 700, H = 420;
   const PAD = { t: 46, r: 46, b: 62, l: 74 };
   const pw = W - PAD.l - PAD.r;  // 580
   const ph = H - PAD.t - PAD.b;  // 312
 
-  const maxConvRaw = Math.max(...reports.map(r => r.calculatedConversion));
-  const maxLtvRaw  = Math.max(...reports.map(r => r["Avg LTV 12"]));
-  const maxPaying  = Math.max(...reports.map(r => r["Paying cx"]), 1);
+  const maxConvRaw = Math.max(...eligibleReports.map(r => r.calculatedConversion));
+  const maxLtvRaw  = Math.max(...eligibleReports.map(r => r["Avg LTV 12"]));
+  const maxPaying  = Math.max(...eligibleReports.map(r => r["Paying cx"]), 1);
 
   const maxConv = Math.max(Math.ceil(maxConvRaw / 10) * 10 + 10, 50);
   const maxLtv  = Math.max(Math.ceil(maxLtvRaw  / 100) * 100 + 100, 400);
@@ -61,10 +63,10 @@ function PortfolioMap({ reports, summary }: { reports: AnalyzedCodeReport[]; sum
   const yTicks = Array.from({ length: Math.ceil(maxLtv / yInt) + 1 }, (_, i) => i * yInt).filter(v => v <= maxLtv);
 
   const topCodes = new Set(
-    [...reports].sort((a, b) => b["Paying cx"] - a["Paying cx"]).slice(0, 10).map(r => r.discount_code + (r.Province ?? ""))
+    [...eligibleReports].sort((a, b) => b["Paying cx"] - a["Paying cx"]).slice(0, 10).map(r => r.discount_code + (r.Province ?? ""))
   );
 
-  const presentTiers = TIER_ORDER.filter(t => reports.some(r => r.performanceRating === t));
+  const presentTiers = TIER_ORDER.filter(t => eligibleReports.some(r => r.performanceRating === t));
 
   function toggleTier(tier: string) {
     setActiveTiers(prev => {
@@ -79,7 +81,7 @@ function PortfolioMap({ reports, summary }: { reports: AnalyzedCodeReport[]; sum
     });
   }
 
-  const filteredReports = reports.filter(r => activeTiers.has(r.performanceRating));
+  const filteredReports = eligibleReports.filter(r => activeTiers.has(r.performanceRating));
 
   return (
     <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
