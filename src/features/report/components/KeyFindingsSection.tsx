@@ -4,16 +4,17 @@
  */
 
 import React, { useMemo } from "react";
-import { AnalyzedCodeReport, KPIReportSummary } from "../../../types";
+import { AnalyzedCodeReport, KPIReportSummary, UserPersona } from "../../../types";
 import { TrendingUp, TrendingDown, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface KeyFindingsSectionProps {
   reports: AnalyzedCodeReport[];
   summary: KPIReportSummary;
   eventDate?: string;
+  userPersona: UserPersona;
 }
 
-export default function KeyFindingsSection({ reports, summary, eventDate }: KeyFindingsSectionProps) {
+export default function KeyFindingsSection({ reports, summary, eventDate, userPersona }: KeyFindingsSectionProps) {
   const calc = useMemo(() => {
     if (reports.length === 0) return null;
 
@@ -156,6 +157,23 @@ export default function KeyFindingsSection({ reports, summary, eventDate }: KeyF
       </>,
       tone: "neutral",
     });
+  }
+
+  // BD-specific verdict
+  if (userPersona === "bd-rep") {
+    if (summary.blendedConversionRate >= 40) {
+      findings.push({
+        icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+        text: <>Strong event — recommend returning next year.</>,
+        tone: "good",
+      });
+    } else if (summary.blendedConversionRate < 20) {
+      findings.push({
+        icon: <AlertCircle className="w-3.5 h-3.5" />,
+        text: <>Below event threshold — review booth placement or offer before committing to a return.</>,
+        tone: "bad",
+      });
+    }
   }
 
   const toneColor = {

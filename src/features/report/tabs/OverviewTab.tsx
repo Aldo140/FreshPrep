@@ -1,5 +1,5 @@
 import React from "react";
-import { AnalyzedCodeReport, AnalysisFlow, KPIReportSummary, ReportPage } from "../../../types";
+import { AnalyzedCodeReport, AnalysisFlow, KPIReportSummary, ReportPage, UserPersona } from "../../../types";
 import { TAB_RELEVANCE } from "../../../config/flowRelevance";
 import { PortfolioHealth } from "../../../hooks/useAnalysis";
 import KeyFindingsSection from "../components/KeyFindingsSection";
@@ -12,6 +12,7 @@ interface OverviewTabProps {
   dbRowCount: number;
   portfolioHealth: PortfolioHealth | null;
   selectedFlow: AnalysisFlow;
+  userPersona: UserPersona;
   eventName: string;
   eventDate: string;
   onNavigate: (page: ReportPage) => void;
@@ -26,7 +27,7 @@ function conversionGrade(r: number): { label: string; color: string; bg: string 
   return                { label: "F",  color: "#850b0b", bg: "#ffd0d0" };
 }
 
-export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portfolioHealth, selectedFlow, eventName, eventDate, onNavigate }: OverviewTabProps): React.ReactElement {
+export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portfolioHealth, selectedFlow, userPersona, eventName, eventDate, onNavigate }: OverviewTabProps): React.ReactElement {
   const formattedEventDate = eventDate
     ? new Date(eventDate + "T00:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
     : null;
@@ -73,6 +74,12 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
                   <span className="text-white/20">·</span>
                   <span>{dbRowCount.toLocaleString()} records</span>
                 </p>
+                {userPersona === "bd-lead" && (
+                  <p className="text-xs text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg px-3 py-2 font-mono mt-2">
+                    Showing {foundReports.length} BD event codes across{" "}
+                    {Array.from(new Set(foundReports.map(r => r.Province ?? "ON"))).join(", ")}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -224,7 +231,7 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
           <span className="text-[9px] font-mono text-[#c0c0c0]">{n} {codeLabel} analyzed</span>
         </div>
         <div className="p-5">
-          <KeyFindingsSection reports={foundReports} summary={summary} eventDate={eventDate} />
+          <KeyFindingsSection reports={foundReports} summary={summary} eventDate={eventDate} userPersona={userPersona} />
         </div>
       </div>
 
