@@ -17,6 +17,7 @@ export const TAB_RELEVANCE: Record<ReportPage, Record<AnalysisFlow, Relevance>> 
   regional:    { all: "full", paste: "partial", compare: "partial" },
   data:        { all: "full", paste: "full",    compare: "full"    },
   issues:      { all: "full", paste: "full",    compare: "full"    },
+  comparison:  { all: "full", paste: "full",    compare: "full"    },
 };
 
 /**

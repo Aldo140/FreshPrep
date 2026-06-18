@@ -35,6 +35,7 @@ export interface AnalysisState {
   eventDate: string;
   bdFilter: boolean;
   userPersona: UserPersona;
+  editionLabels: Record<string, string>;
 }
 
 export interface AnalysisActions {
@@ -54,6 +55,7 @@ export interface AnalysisActions {
   setEventName: (name: string) => void;
   setEventDate: (date: string) => void;
   setBdFilter: (on: boolean) => void;
+  setEditionLabel: (code: string, label: string) => void;
 }
 
 export function useAnalysis(
@@ -71,6 +73,11 @@ export function useAnalysis(
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [bdFilter, setBdFilter] = useState(false);
+  const [editionLabels, setEditionLabelsState] = useState<Record<string, string>>({});
+
+  const setEditionLabel = useCallback((code: string, label: string): void => {
+    setEditionLabelsState(prev => ({ ...prev, [code]: label }));
+  }, []);
 
   const userPersona = useMemo((): UserPersona => {
     if (selectedFlow === "paste") return "bd-rep";
@@ -161,6 +168,7 @@ export function useAnalysis(
     setEventName("");
     setEventDate("");
     setBdFilter(false);
+    setEditionLabelsState({});
   }, []);
 
   // Returns to wizard without clearing inputs — codes and event name are preserved
@@ -174,7 +182,7 @@ export function useAnalysis(
       rawPastedCodes, isAnalyzing, hasReportGenerated,
       filteredCompareCodes, normalizedPastedCodes, reportResults,
       portfolioHealth, uniqueChannels, eventName, eventDate,
-      bdFilter, userPersona,
+      bdFilter, userPersona, editionLabels,
     },
     actions: {
       setSelectedFlow, setInputText, setCompareSearch, setEraseKeyword,
@@ -183,7 +191,7 @@ export function useAnalysis(
       clearCompareCodes: () => setSelectedCompareCodes([]),
       compileSpecificCodes, compilePortfolio, compileComparison,
       applyCorrections, reset, backToWizard, setEventName, setEventDate,
-      setBdFilter,
+      setBdFilter, setEditionLabel,
     },
   };
 }

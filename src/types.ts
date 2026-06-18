@@ -95,7 +95,7 @@ export interface DuplicateCodeInfo {
  */
 export type DuplicateResolution = number | 'combine';
 
-export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "data" | "issues";
+export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "data" | "issues" | "comparison";
 
 export type AnalysisFlow = "paste" | "all" | "compare";
 
