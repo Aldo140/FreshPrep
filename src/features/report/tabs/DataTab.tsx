@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AlertCircle, Database, ArrowRight, Info, ChevronDown, X, Maximize2, TrendingUp, Users, Target, Search } from "lucide-react";
-import { AnalyzedCodeReport, DiscountCodeData, AnalysisFlow } from "../../../types";
+import { AnalyzedCodeReport, DiscountCodeData, AnalysisFlow, UserPersona } from "../../../types";
 import DetailedTable from "../components/DetailedTable";
 import DataExplorer from "../components/DataExplorer";
 
@@ -11,6 +11,7 @@ interface DataTabProps {
   fileName: string | null;
   selectedFlow: AnalysisFlow;
   onSwitchToExplorer: () => void;
+  userPersona: UserPersona;
 }
 
 const TIERS = [
@@ -22,7 +23,7 @@ const TIERS = [
 ] as const;
 
 // ── Full-screen analytics overlay ────────────────────────────────────────────
-function FullscreenView({ reports, onClose }: { reports: AnalyzedCodeReport[]; onClose: () => void }) {
+function FullscreenView({ reports, onClose, userPersona }: { reports: AnalyzedCodeReport[]; onClose: () => void; userPersona: UserPersona }) {
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const tierRefs  = useRef<Record<string, HTMLDivElement | null>>({});
@@ -251,7 +252,7 @@ function FullscreenView({ reports, onClose }: { reports: AnalyzedCodeReport[]; o
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
                                 <p className="font-mono font-black text-[11px] text-[#0f0f0f] leading-tight break-all">{r.discount_code}</p>
-                                {r.Province && r.Province !== "ON" && (
+                                {userPersona !== "bd-rep" && r.Province && r.Province !== "ON" && (
                                   <span className="mt-1 inline-block text-[7.5px] font-mono px-1.5 py-0.5 rounded bg-[#f5f5f3] text-[#a0a0a0] border border-[#e8e8e8]">
                                     {r.Province}
                                   </span>
@@ -332,7 +333,7 @@ function FullscreenView({ reports, onClose }: { reports: AnalyzedCodeReport[]; o
   );
 }
 
-export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, selectedFlow, onSwitchToExplorer }: DataTabProps): React.ReactElement {
+export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, selectedFlow, onSwitchToExplorer, userPersona }: DataTabProps): React.ReactElement {
   const [expandedTier,    setExpandedTier]    = useState<string | null>(null);
   const [fullscreenOpen,  setFullscreenOpen]  = useState(false);
 
@@ -358,7 +359,7 @@ export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, select
     <div className="p-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
 
       {/* Full-screen modal */}
-      {fullscreenOpen && <FullscreenView reports={foundReports} onClose={() => setFullscreenOpen(false)} />}
+      {fullscreenOpen && <FullscreenView reports={foundReports} onClose={() => setFullscreenOpen(false)} userPersona={userPersona} />}
 
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
@@ -480,7 +481,7 @@ export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, select
                       className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#ebebeb] bg-[#fafafa]"
                     >
                       <span className="font-mono font-bold text-[12px] text-[#1a1a1a]">{r.discount_code}</span>
-                      {r.Province && r.Province !== "ON" && (
+                      {userPersona !== "bd-rep" && r.Province && r.Province !== "ON" && (
                         <span className="text-[9px] text-[#a1a1a1] font-mono bg-[#f0f0f0] px-1 rounded">{r.Province}</span>
                       )}
                       <span
