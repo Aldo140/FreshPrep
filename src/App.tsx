@@ -156,6 +156,7 @@ export default function App(): React.ReactElement {
               uniqueChannels={analysis.state.uniqueChannels}
               portfolioHealth={analysis.state.portfolioHealth}
               selectedFlow={analysis.state.selectedFlow}
+              editionLabels={analysis.state.editionLabels}
               userPersona={analysis.state.userPersona}
               eventName={eventName}
               eventDate={eventDate}

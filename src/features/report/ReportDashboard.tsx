@@ -18,6 +18,7 @@ import { RevenueTab } from "./tabs/RevenueTab";
 import { RegionalTab } from "./tabs/RegionalTab";
 import { DataTab } from "./tabs/DataTab";
 import { IssuesTab } from "./tabs/IssuesTab";
+import { ComparisonTab } from "./tabs/ComparisonTab";
 import { ContextBanner } from "./components/ContextBanner";
 
 interface ReportDashboardProps {
@@ -32,6 +33,7 @@ interface ReportDashboardProps {
   fileName: string | null;
   uniqueDbCodes: string[];
   rawPastedCodes: string[];
+  editionLabels: Record<string, string>;
   missingCodes: string[];
   uniqueChannels: string[];
   portfolioHealth: PortfolioHealth | null;
@@ -56,6 +58,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     fileName,
     uniqueDbCodes,
     rawPastedCodes,
+    editionLabels,
     missingCodes,
     uniqueChannels,
     portfolioHealth,
@@ -69,6 +72,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   } = props;
 
   const allPages: { id: ReportPage; label: string }[] = [
+    { id: "comparison", label: "Comparison" },
     { id: "overview", label: "Overview" },
     { id: "performance", label: "Performance" },
     { id: "revenue", label: "Revenue" },
@@ -82,6 +86,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
 
   const pages = allPages.filter(p => {
     if (p.id === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) return false;
+    if (p.id === "comparison" && selectedFlow !== "compare") return false;
     return true;
   });
 
@@ -90,6 +95,12 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       setReportPage("overview");
     }
   }, [userPersona, reportPage, setReportPage]);
+
+  useEffect(() => {
+    if (selectedFlow === "compare") {
+      setReportPage("comparison");
+    }
+  }, [selectedFlow]);
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col" id="report-dashboard">
@@ -156,6 +167,14 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         className="flex-1 overflow-y-auto bg-[#f8f7f5]"
         style={{ animation: "fadeIn 180ms var(--ease-out)" }}
       >
+
+        {reportPage === "comparison" && (
+          <ComparisonTab
+            foundReports={foundReports}
+            editionLabels={editionLabels}
+            rawPastedCodes={rawPastedCodes}
+          />
+        )}
 
         {reportPage === "overview" && (
           <OverviewTab
