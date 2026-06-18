@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ReportPage,
   ActiveTab,
   AnalysisFlow,
+  UserPersona,
   AnalyzedCodeReport,
   KPIReportSummary,
   ChannelSummary,
@@ -17,6 +18,7 @@ import { RevenueTab } from "./tabs/RevenueTab";
 import { RegionalTab } from "./tabs/RegionalTab";
 import { DataTab } from "./tabs/DataTab";
 import { IssuesTab } from "./tabs/IssuesTab";
+import { ContextBanner } from "./components/ContextBanner";
 
 interface ReportDashboardProps {
   reportPage: ReportPage;
@@ -34,6 +36,7 @@ interface ReportDashboardProps {
   uniqueChannels: string[];
   portfolioHealth: PortfolioHealth | null;
   selectedFlow: AnalysisFlow;
+  userPersona: UserPersona;
   eventName: string;
   eventDate: string;
   onApplyCorrections: (corrections: Record<string, string>) => void;
@@ -57,6 +60,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     uniqueChannels,
     portfolioHealth,
     selectedFlow,
+    userPersona,
     eventName,
     eventDate,
     onApplyCorrections,
@@ -64,7 +68,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     onReset,
   } = props;
 
-  const pages: { id: ReportPage; label: string }[] = [
+  const allPages: { id: ReportPage; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "performance", label: "Performance" },
     { id: "revenue", label: "Revenue" },
@@ -75,6 +79,17 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       label: `Issues${missingCodes.length > 0 ? ` (${missingCodes.length})` : ""}`,
     },
   ];
+
+  const pages = allPages.filter(p => {
+    if (p.id === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) return false;
+    return true;
+  });
+
+  useEffect(() => {
+    if (reportPage === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) {
+      setReportPage("overview");
+    }
+  }, [userPersona, reportPage, setReportPage]);
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col" id="report-dashboard">
@@ -121,6 +136,20 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </button>
       </div>
 
+      {/* Persona context banner */}
+      {(userPersona === "bd-rep" || userPersona === "bd-lead") && (
+        <div className="px-4 pt-3 max-w-6xl mx-auto w-full">
+          <ContextBanner
+            title={userPersona === "bd-rep" ? "BD Rep Mode" : "BD Lead Mode"}
+            message={
+              userPersona === "bd-rep"
+                ? "Regional tab hidden — you're viewing event-level performance for your submitted codes."
+                : "Showing BD event codes only (EV prefix). Regional tab available for province breakdown."
+            }
+          />
+        </div>
+      )}
+
       {/* Page content — key= triggers fade on page change */}
       <div
         key={reportPage}
@@ -136,6 +165,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             dbRowCount={dbRows.length}
             portfolioHealth={portfolioHealth}
             selectedFlow={selectedFlow}
+            userPersona={userPersona}
             eventName={eventName}
             eventDate={eventDate}
             onNavigate={setReportPage}
@@ -163,6 +193,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             dbRows={dbRows}
             foundReports={foundReports}
             selectedFlow={selectedFlow}
+            userPersona={userPersona}
           />
         )}
 
@@ -173,6 +204,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             dbRows={dbRows}
             fileName={fileName}
             selectedFlow={selectedFlow}
+            userPersona={userPersona}
             onSwitchToExplorer={() => setActiveTab("explorer")}
           />
         )}
