@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ReportPage,
   ActiveTab,
@@ -11,7 +11,7 @@ import {
 } from "../../types";
 import { PortfolioHealth } from "../../hooks/useAnalysis";
 import { TAB_RELEVANCE } from "../../config/flowRelevance";
-import { RefreshCw, ArrowLeft } from "lucide-react";
+import { RefreshCw, ArrowLeft, Lock } from "lucide-react";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PerformanceTab } from "./tabs/PerformanceTab";
 import { RevenueTab } from "./tabs/RevenueTab";
@@ -19,6 +19,9 @@ import { RegionalTab } from "./tabs/RegionalTab";
 import { DataTab } from "./tabs/DataTab";
 import { IssuesTab } from "./tabs/IssuesTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
+import { CalendarTab } from "./tabs/CalendarTab";
+import { CustomerUploadModal } from "./components/CustomerUploadModal";
+import { CustomerDataResult } from "../../hooks/useCustomerData";
 import { ContextBanner } from "./components/ContextBanner";
 
 interface ReportDashboardProps {
@@ -34,6 +37,9 @@ interface ReportDashboardProps {
   uniqueDbCodes: string[];
   rawPastedCodes: string[];
   editionLabels: Record<string, string>;
+  customerData: CustomerDataResult;
+  isLoadingCustomer: boolean;
+  onCustomerFile: (file: File) => void;
   missingCodes: string[];
   uniqueChannels: string[];
   portfolioHealth: PortfolioHealth | null;
@@ -59,6 +65,9 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     uniqueDbCodes,
     rawPastedCodes,
     editionLabels,
+    customerData,
+    isLoadingCustomer,
+    onCustomerFile,
     missingCodes,
     uniqueChannels,
     portfolioHealth,
@@ -71,6 +80,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     onReset,
   } = props;
 
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+
   const allPages: { id: ReportPage; label: string }[] = [
     { id: "comparison", label: "Comparison" },
     { id: "overview", label: "Overview" },
@@ -82,11 +93,13 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       id: "issues",
       label: `Issues${missingCodes.length > 0 ? ` (${missingCodes.length})` : ""}`,
     },
+    { id: "calendar", label: "Calendar" },
   ];
 
   const pages = allPages.filter(p => {
     if (p.id === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) return false;
     if (p.id === "comparison" && selectedFlow !== "compare") return false;
+    if (p.id === "calendar" && !(userPersona === "bd-rep" && customerData.hasData)) return false;
     return true;
   });
 
@@ -126,6 +139,16 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             )}
           </button>
         ))}
+        {userPersona === "bd-rep" && !customerData.hasData && (
+          <button
+            onClick={() => setShowCustomerModal(true)}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-3 text-xs font-semibold text-[#a1a1a1] cursor-pointer hover:text-[#2b5346] transition-colors"
+            title="Upload customer export to unlock Calendar tab"
+          >
+            <Lock className="w-3 h-3" />
+            <span className="hidden sm:inline">Calendar</span>
+          </button>
+        )}
         <div className="flex-1" />
         <button
           onClick={onBackToWizard}
@@ -167,6 +190,10 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         className="flex-1 overflow-y-auto bg-[#f8f7f5]"
         style={{ animation: "fadeIn 180ms var(--ease-out)" }}
       >
+
+        {reportPage === "calendar" && (
+          <CalendarTab customerData={customerData} />
+        )}
 
         {reportPage === "comparison" && (
           <ComparisonTab
@@ -248,6 +275,13 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </footer>
 
       </div>
+
+      <CustomerUploadModal
+        isOpen={showCustomerModal}
+        isLoading={isLoadingCustomer}
+        onClose={() => setShowCustomerModal(false)}
+        onFile={file => { onCustomerFile(file); setShowCustomerModal(false); }}
+      />
     </div>
   );
 }

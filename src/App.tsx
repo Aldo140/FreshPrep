@@ -9,6 +9,8 @@ import { useFileUpload } from "./hooks/useFileUpload";
 import { useAnalysis } from "./hooks/useAnalysis";
 import { useReport } from "./hooks/useReport";
 import { useCodeFormatting } from "./hooks/useCodeFormatting";
+import { useCustomerFile } from "./hooks/useCustomerFile";
+import { useCustomerData } from "./hooks/useCustomerData";
 import { UploadFlow } from "./features/upload/UploadFlow";
 import { WizardFlow } from "./features/wizard/WizardFlow";
 import { ReportDashboard } from "./features/report/ReportDashboard";
@@ -27,6 +29,9 @@ export default function App(): React.ReactElement {
     eventName: analysis.state.eventName,
     eventDate: analysis.state.eventDate,
   });
+
+  const customerFile = useCustomerFile();
+  const customerData = useCustomerData(customerFile.state.customerRows, analysis.state.rawPastedCodes);
 
   const { foundReports, missingCodes, summary, channelSummary } = analysis.state.reportResults;
   const { hasReportGenerated, eventName, eventDate } = analysis.state;
@@ -157,6 +162,9 @@ export default function App(): React.ReactElement {
               portfolioHealth={analysis.state.portfolioHealth}
               selectedFlow={analysis.state.selectedFlow}
               editionLabels={analysis.state.editionLabels}
+              customerData={customerData}
+              isLoadingCustomer={customerFile.state.isLoadingCustomer}
+              onCustomerFile={customerFile.actions.processCustomerFile}
               userPersona={analysis.state.userPersona}
               eventName={eventName}
               eventDate={eventDate}
