@@ -115,6 +115,13 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     }
   }, [selectedFlow]);
 
+  // Redirect away from comparison page when not in compare flow
+  useEffect(() => {
+    if (reportPage === "comparison" && selectedFlow !== "compare") {
+      setReportPage("overview");
+    }
+  }, [reportPage, selectedFlow, setReportPage]);
+
   return (
     <div className="flex-1 overflow-hidden flex flex-col" id="report-dashboard">
 
