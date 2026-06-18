@@ -95,10 +95,21 @@ export interface DuplicateCodeInfo {
  */
 export type DuplicateResolution = number | 'combine';
 
-export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "data" | "issues" | "comparison";
+export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "data" | "issues" | "comparison" | "calendar";
 
 export type AnalysisFlow = "paste" | "all" | "compare";
 
 export type UserPersona = "bd-rep" | "bd-lead" | "neutral" | "analyst";
+
+export interface CustomerRecord {
+  signup_date: string;
+  client_id: string;
+  current_status: string;
+  discount_code: string | null;
+  channel: string;
+  province: string;
+  first_paying_date?: string;
+  days_till_paying?: number;
+}
 
 export type ActiveTab = "report" | "explorer";
