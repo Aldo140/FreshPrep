@@ -47,6 +47,9 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
     (e.currentTarget as HTMLButtonElement).style.transform = "";
   };
 
+  const evCodes = fileState.uniqueDbCodes.filter(c => c.toUpperCase().startsWith("EV"));
+  const bdDisplayCount = state.bdFilter ? evCodes.length : fileState.uniqueDbCodes.length;
+
   return (
     <div
       className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 bg-[#f8f7f5] flex flex-col items-center gap-4"
@@ -371,10 +374,37 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
             {state.selectedFlow === "all" && (
               <div className="flex flex-col items-center py-4 gap-4" id="panel-all-flow">
                 <p className="text-sm text-[#3d3d3d] text-center max-w-sm leading-relaxed">
-                  Analyze all <strong className="text-[#1a1a1a]">{fileState.uniqueDbCodes.length.toLocaleString()} codes</strong> in your dataset. This creates a full performance profile for every code.
+                  Analyze{" "}
+                  <strong className="text-[#1a1a1a]">
+                    {bdDisplayCount.toLocaleString()} {state.bdFilter ? "BD event" : ""} codes
+                  </strong>{" "}
+                  in your dataset.
                 </p>
+
+                {/* BD filter toggle */}
+                <label className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[#e5e5e5] bg-[#f8f7f5] cursor-pointer select-none">
+                  <div
+                    onClick={() => actions.setBdFilter(!state.bdFilter)}
+                    className={`relative w-9 h-5 rounded-full transition-colors duration-150 ${
+                      state.bdFilter ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-150 ${
+                        state.bdFilter ? "translate-x-4" : "translate-x-0"
+                      }`}
+                    />
+                  </div>
+                  <span className="text-xs text-[#3d3d3d] font-medium">
+                    BD codes only
+                    <span className="block text-[10px] text-[#a1a1a1] font-normal mt-0.5">
+                      Filter to EV-prefix codes ({evCodes.length.toLocaleString()} codes)
+                    </span>
+                  </span>
+                </label>
+
                 <button
-                  onClick={() => actions.compilePortfolio(fileState.uniqueDbCodes)}
+                  onClick={() => actions.compilePortfolio(state.bdFilter ? evCodes : fileState.uniqueDbCodes)}
                   className="px-6 py-2.5 rounded-lg bg-[#2b5346] hover:bg-[#0d3a2f] text-white font-semibold text-xs shadow-sm flex items-center gap-2 cursor-pointer"
                   style={{ transition: "background-color 150ms var(--ease-out), transform 100ms var(--ease-out)" }}
                   onMouseDown={pressMd}
@@ -382,7 +412,7 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
                   onMouseLeave={pressUp}
                 >
                   <BarChart3 className="w-4 h-4" />
-                  Analyze All Codes
+                  Analyze{state.bdFilter ? " BD" : " All"} Codes
                 </button>
               </div>
             )}
