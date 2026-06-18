@@ -52,43 +52,41 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 bg-[#f8f7f5] flex flex-col items-center gap-4"
+      className="flex-1 overflow-y-auto px-4 py-8 sm:px-6 bg-[#f8f7f5] flex flex-col items-center gap-5"
       id="wizard-screen"
     >
       {/* ── Compact file bar ─────────────────────────────────────── */}
       <div
-        className="w-full max-w-4xl"
+        className="w-full max-w-xl"
         style={{ opacity: 0, animation: "slideUp 180ms var(--ease-out) forwards" }}
       >
-        <div className="flex items-center gap-3 px-1">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-md bg-[#eef4f1] flex items-center justify-center shrink-0">
-              <FileSpreadsheet className="w-3.5 h-3.5 text-[#2b5346]" />
-            </div>
-            {isValid ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#2b5346] shrink-0" />
-            ) : (
-              <XCircle className="w-3.5 h-3.5 text-[#850b0b] shrink-0" />
-            )}
-            <span className="text-sm font-medium text-[#1a1a1a] font-mono truncate">
-              {fileState.fileName}
-            </span>
-            <span className="text-[#e5e5e5]">·</span>
-            <span className="text-xs text-[#a1a1a1] shrink-0">
-              {fileState.dbRows.length.toLocaleString()} records
-            </span>
-            <button
-              onClick={() => setShowColumns(v => !v)}
-              className="text-[10px] font-mono text-[#2b5346] hover:underline shrink-0 flex items-center gap-0.5 cursor-pointer"
-            >
-              {totalDetected} columns
-              {showColumns ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
+        <div className="flex items-center gap-3 bg-white border border-[#e5e5e5] rounded-xl px-4 py-3 shadow-sm">
+          <div className="w-8 h-8 rounded-lg bg-[#eef4f1] flex items-center justify-center shrink-0">
+            <FileSpreadsheet className="w-4 h-4 text-[#2b5346]" />
           </div>
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {isValid
+                ? <CheckCircle2 className="w-3 h-3 text-[#2b5346] shrink-0" />
+                : <XCircle className="w-3 h-3 text-[#850b0b] shrink-0" />
+              }
+              <span className="text-sm font-semibold text-[#1a1a1a] font-mono truncate">{fileState.fileName}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[10px] text-[#a1a1a1] font-mono">{fileState.dbRows.length.toLocaleString()} records</span>
+              <span className="text-[#e5e5e5]">·</span>
+              <button
+                onClick={() => setShowColumns(v => !v)}
+                className="text-[10px] font-mono text-[#2b5346] hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                {totalDetected} columns
+                {showColumns ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+              </button>
+            </div>
+          </div>
           <button
             onClick={onReset}
-            className="shrink-0 flex items-center gap-1.5 text-xs text-[#a1a1a1] hover:text-[#1a1a1a] cursor-pointer font-medium"
+            className="shrink-0 flex items-center gap-1.5 text-[11px] text-[#a1a1a1] hover:text-[#1a1a1a] cursor-pointer font-medium px-2.5 py-1.5 rounded-lg hover:bg-[#f8f7f5]"
             style={{ transition: "color 150ms var(--ease-out)" }}
           >
             <RefreshCw className="w-3 h-3" />
@@ -166,7 +164,7 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
       {/* ── Main workspace card ───────────────────────────────────── */}
       {isValid && (
         <div
-          className="w-full max-w-4xl bg-white rounded-2xl border border-[#e5e5e5] shadow-sm overflow-hidden"
+          className="w-full max-w-xl bg-white rounded-2xl border border-[#e5e5e5] shadow-sm overflow-hidden"
           style={{ opacity: 0, animation: "slideUp 200ms var(--ease-out) 60ms forwards" }}
         >
 
@@ -204,47 +202,53 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
             <p className="text-[10px] font-semibold text-[#a1a1a1] uppercase tracking-wider font-mono mb-3">
               Choose your analysis
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {[
                 {
                   flow: "paste" as const,
                   icon: <Clipboard className="w-4 h-4" />,
                   label: "Specific Codes",
-                  sub: "Analyze a custom list you paste in",
+                  sub: "Paste a list of your event codes",
+                  hint: "BD Rep",
                 },
                 {
                   flow: "all" as const,
                   icon: <Database className="w-4 h-4" />,
                   label: "Full Dataset",
-                  sub: `All ${fileState.uniqueDbCodes.length.toLocaleString()} unique codes`,
+                  sub: `${fileState.uniqueDbCodes.length.toLocaleString()} unique codes`,
+                  hint: "BD Lead · Marketing",
                 },
                 {
                   flow: "compare" as const,
                   icon: <Scale className="w-4 h-4" />,
-                  label: "Compare Codes",
-                  sub: "Side-by-side comparison",
+                  label: "Compare",
+                  sub: "Year-over-year event trends",
+                  hint: "Multi-edition",
                 },
-              ].map(({ flow, icon, label, sub }) => {
+              ].map(({ flow, icon, label, sub, hint }) => {
                 const active = state.selectedFlow === flow;
                 return (
                   <button
                     key={flow}
                     onClick={() => actions.setSelectedFlow(flow)}
-                    className={`text-left px-4 py-3.5 rounded-xl border cursor-pointer flex items-center gap-3 ${
+                    className={`text-left px-4 py-4 rounded-xl border cursor-pointer flex flex-col gap-2.5 ${
                       active
                         ? "bg-[#2b5346] border-[#2b5346] shadow-md"
                         : "bg-[#f8f7f5] border-[#e5e5e5] hover:border-[#2b5346]/40 hover:bg-white"
                     }`}
                     style={{ transition: "background-color 150ms var(--ease-out), border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out)" }}
                   >
-                    <span className={active ? "text-white/80" : "text-[#2b5346]"}>
-                      {icon}
-                    </span>
+                    <div className="flex items-start justify-between gap-1">
+                      <span className={active ? "text-white/80" : "text-[#2b5346]"}>{icon}</span>
+                      <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded ${
+                        active ? "bg-white/15 text-white/70" : "bg-[#f0f0ee] text-[#a1a1a1]"
+                      }`}>{hint}</span>
+                    </div>
                     <span>
-                      <span className={`block text-xs font-semibold ${active ? "text-white" : "text-[#1a1a1a]"}`}>
+                      <span className={`block text-[13px] font-bold leading-tight ${active ? "text-white" : "text-[#1a1a1a]"}`}>
                         {label}
                       </span>
-                      <span className={`block text-[10px] mt-0.5 ${active ? "text-white/60" : "text-[#a1a1a1]"}`}>
+                      <span className={`block text-[10px] mt-0.5 leading-snug ${active ? "text-white/60" : "text-[#a1a1a1]"}`}>
                         {sub}
                       </span>
                     </span>
@@ -420,98 +424,120 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
             {/* COMPARE flow */}
             {state.selectedFlow === "compare" && (
               <div className="space-y-4" id="panel-compare-flow">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <p className="text-sm text-[#3d3d3d]">
-                    Select 2 or more codes to compare side-by-side.
-                  </p>
-                  <div className="relative w-full sm:w-56">
-                    <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-[#a1a1a1]" />
-                    <input
-                      type="text"
-                      value={state.compareSearch}
-                      onChange={e => actions.setCompareSearch(e.target.value)}
-                      placeholder="Filter codes…"
-                      className="w-full pl-8 pr-3 py-2 text-xs bg-[#f8f7f5] border border-[#e5e5e5] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346]"
-                    />
-                  </div>
+                {/* Purpose copy */}
+                <p className="text-[11px] text-[#a1a1a1] font-mono leading-relaxed">
+                  Pick multiple editions of the same event — label each year, then compare conversion, volume, and LTV trends.
+                </p>
+
+                {/* Search — full width */}
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#a1a1a1]" />
+                  <input
+                    type="text"
+                    value={state.compareSearch}
+                    onChange={e => actions.setCompareSearch(e.target.value)}
+                    placeholder="Search codes…"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-[#f8f7f5] border border-[#e5e5e5] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] focus:bg-white"
+                    style={{ transition: "background-color 150ms var(--ease-out)" }}
+                  />
                 </div>
 
-                <div className="border border-[#e5e5e5] rounded-xl bg-[#f8f7f5]/50 p-3">
-                  <div className="flex items-center gap-3 mb-2.5 font-mono text-[10px] font-bold">
-                    <button onClick={() => actions.selectAllCompareCodes(fileState.uniqueDbCodes)} className="text-[#2b5346] hover:underline cursor-pointer">
+                {/* Code grid */}
+                <div className="border border-[#e5e5e5] rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-3 px-3 py-2 border-b border-[#f0f0ee] bg-[#fafafa]">
+                    <button onClick={() => actions.selectAllCompareCodes(fileState.uniqueDbCodes)} className="text-[10px] font-semibold font-mono text-[#2b5346] hover:underline cursor-pointer">
                       Select all
                     </button>
-                    <button onClick={() => actions.clearCompareCodes()} className="text-[#a1a1a1] hover:underline cursor-pointer">
+                    <button onClick={() => actions.clearCompareCodes()} className="text-[10px] font-mono text-[#a1a1a1] hover:underline cursor-pointer">
                       Clear
                     </button>
-                    <span className="text-[#a1a1a1] ml-auto normal-case font-normal">
-                      {state.filteredCompareCodes.length} of {fileState.uniqueDbCodes.length} shown
+                    <span className="text-[10px] font-mono text-[#c8c8c8] ml-auto">
+                      {state.filteredCompareCodes.length.toLocaleString()} of {fileState.uniqueDbCodes.length.toLocaleString()} shown
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-[#f0f0f0] max-h-52 overflow-y-auto">
                     {state.filteredCompareCodes.map(code => {
-                      const checked = state.selectedCompareCodes.includes(code);
+                      const selIdx = state.selectedCompareCodes.indexOf(code);
+                      const checked = selIdx !== -1;
                       return (
-                        <label
+                        <button
                           key={code}
-                          className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-xs cursor-pointer select-none ${
+                          onClick={() => actions.toggleCompareCode(code)}
+                          className={`text-left px-3 py-2.5 text-[11px] font-mono cursor-pointer flex items-center gap-2 select-none ${
                             checked
-                              ? "bg-[#eef4f1] border-[#2b5346] text-[#1a1a1a] font-semibold font-mono"
-                              : "bg-white border-[#e5e5e5] text-[#3d3d3d] font-mono hover:border-[#2b5346]/30"
+                              ? "bg-[#eef4f1] text-[#1a1a1a] font-semibold"
+                              : "bg-white text-[#3d3d3d] hover:bg-[#f8f7f5]"
                           }`}
-                          style={{ transition: "border-color 100ms var(--ease-out), background-color 100ms var(--ease-out)" }}
+                          style={{ transition: "background-color 100ms var(--ease-out)" }}
                         >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => actions.toggleCompareCode(code)}
-                            className="accent-[#2b5346] w-3.5 h-3.5 shrink-0"
-                          />
+                          {checked ? (
+                            <span className="w-4 h-4 rounded-full bg-[#2b5346] text-white text-[8px] font-bold flex items-center justify-center shrink-0">
+                              {selIdx + 1}
+                            </span>
+                          ) : (
+                            <span className="w-4 h-4 rounded-full border border-[#d4d4d4] shrink-0" />
+                          )}
                           <span className="truncate">{code}</span>
-                        </label>
+                        </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Edition labels — shown when ≥2 codes selected */}
-                {state.selectedCompareCodes.length >= 2 && (
-                  <div className="border border-[#e5e5e5] rounded-xl bg-[#f8f7f5]/50 p-4 space-y-3">
+                {/* Selected editions + labels — unified */}
+                {state.selectedCompareCodes.length > 0 && (
+                  <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-[#a1a1a1] uppercase tracking-wider font-mono">
-                        Label each edition
+                      <span className="text-[10px] font-semibold text-[#3d3d3d] uppercase tracking-wider font-mono">
+                        {state.selectedCompareCodes.length} edition{state.selectedCompareCodes.length !== 1 ? "s" : ""} selected
                       </span>
-                      <span className="text-[10px] text-[#a1a1a1] font-mono">— used for chart axes</span>
+                      {state.selectedCompareCodes.length >= 2 && (
+                        <span className="text-[9px] font-mono text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 px-1.5 py-0.5 rounded">
+                          ready
+                        </span>
+                      )}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {state.selectedCompareCodes.map(code => (
-                        <div key={code} className="flex items-center gap-2">
-                          <span className="font-mono text-[10.5px] text-[#3d3d3d] shrink-0 w-28 truncate">{code}</span>
-                          <span className="text-[#c8c8c8] shrink-0 text-xs">→</span>
-                          <input
-                            type="text"
-                            value={state.editionLabels[code] ?? code}
-                            onChange={e => actions.setEditionLabel(code, e.target.value)}
-                            placeholder={code}
-                            className="flex-1 px-2.5 py-1.5 text-xs border border-[#e5e5e5] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] font-mono"
-                          />
-                        </div>
-                      ))}
-                    </div>
+                    {state.selectedCompareCodes.map((code, idx) => (
+                      <div key={code} className="flex items-center gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-[#2b5346] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span className="font-mono text-[10.5px] text-[#3d3d3d] shrink-0 w-28 truncate">{code}</span>
+                        <span className="text-[#d4d4d4] shrink-0 text-xs">→</span>
+                        <input
+                          type="text"
+                          value={state.editionLabels[code] ?? code}
+                          onChange={e => actions.setEditionLabel(code, e.target.value)}
+                          placeholder="e.g. 2022, Year 1, TELUS BC"
+                          className="flex-1 px-2.5 py-1.5 text-xs border border-[#e5e5e5] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#2b5346] focus:border-[#2b5346] font-mono"
+                        />
+                        <button
+                          onClick={() => actions.toggleCompareCode(code)}
+                          className="text-[#c8c8c8] hover:text-[#850b0b] cursor-pointer shrink-0"
+                          title="Remove"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
 
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-[#a1a1a1] font-mono">
-                    {state.selectedCompareCodes.length} selected — need at least 2
+                {/* Action bar */}
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <span className="text-[10px] font-mono text-[#a1a1a1]">
+                    {state.selectedCompareCodes.length < 2
+                      ? `select ${Math.max(0, 2 - state.selectedCompareCodes.length)} more to compare`
+                      : `${state.selectedCompareCodes.length} editions · ready`
+                    }
                   </span>
                   <button
                     onClick={actions.compileComparison}
                     disabled={state.selectedCompareCodes.length < 2}
-                    className={`px-5 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-5 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-1.5 cursor-pointer ${
                       state.selectedCompareCodes.length >= 2
                         ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-sm"
-                        : "bg-[#e5e5e5] text-[#a1a1a1] cursor-not-allowed"
+                        : "bg-[#f0f0ee] text-[#c8c8c8] cursor-not-allowed"
                     }`}
                     style={{ transition: "background-color 150ms var(--ease-out), transform 100ms var(--ease-out)" }}
                     onMouseDown={pressMd}
@@ -519,7 +545,7 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
                     onMouseLeave={pressUp}
                   >
                     <Scale className="w-3.5 h-3.5" />
-                    Compare Codes
+                    Compare
                   </button>
                 </div>
               </div>
@@ -532,7 +558,7 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
       {/* Invalid file state */}
       {!isValid && fileState.fileValidation && (
         <div
-          className="w-full max-w-4xl bg-white rounded-2xl border border-[#e5e5e5] shadow-sm px-6 py-8 text-center"
+          className="w-full max-w-xl bg-white rounded-2xl border border-[#e5e5e5] shadow-sm px-6 py-8 text-center"
           style={{ opacity: 0, animation: "slideUp 200ms var(--ease-out) 60ms forwards" }}
         >
           <XCircle className="w-8 h-8 text-[#850b0b] mx-auto mb-3" />
