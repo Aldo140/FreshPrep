@@ -700,7 +700,17 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow }:
                     const fyData = volume.byYear[fy];
                     return (
                       <React.Fragment key={fy}>
-                        <td className="text-right px-3 py-3 font-mono text-[10px] font-bold text-[#0f0f0f] border-l border-[#e8e8e8]">{fyData?.events ?? 0}</td>
+                        <td
+                          className={`text-right px-3 py-3 font-mono text-[10px] font-bold border-l border-[#e8e8e8] ${
+                            (fyData?.events ?? 0) > 0
+                              ? "text-[#2b5346] underline decoration-dotted cursor-pointer hover:text-[#1a3d2f]"
+                              : "text-[#0f0f0f]"
+                          }`}
+                          onClick={() => (fyData?.events ?? 0) > 0 && openModal(fy, null)}
+                          title={(fyData?.events ?? 0) > 0 ? `See all ${fyData?.events} events in ${fy}` : undefined}
+                        >
+                          {fyData?.events ?? 0}
+                        </td>
                         <td className="text-right px-3 py-3 font-mono text-[11px] font-black text-[#0f0f0f]">{(fyData?.signups ?? 0).toLocaleString()}</td>
                       </React.Fragment>
                     );
