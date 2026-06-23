@@ -142,31 +142,8 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   const [modalSearch, setModalSearch] = useState("");
   const [topPerfView, setTopPerfView] = useState<"volume" | "conversion" | "ltv">("volume");
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [evPrefixOnly, setEvPrefixOnly] = useState(false);
-
-  const nonEvCodeCount = useMemo(
-    () => new Set([
-      ...eventStats
-        .filter(e => !e.code.trim().toUpperCase().startsWith("EV"))
-        .map(e => e.code.trim().toUpperCase()),
-      ...foundReports
-        .filter(r => !r.discount_code.trim().toUpperCase().startsWith("EV"))
-        .map(r => r.discount_code.trim().toUpperCase()),
-    ]).size,
-    [eventStats, foundReports],
-  );
-  const visibleEventStats = useMemo(
-    () => evPrefixOnly
-      ? eventStats.filter(e => e.code.trim().toUpperCase().startsWith("EV"))
-      : eventStats,
-    [eventStats, evPrefixOnly],
-  );
-  const visibleReports = useMemo(
-    () => evPrefixOnly
-      ? foundReports.filter(r => r.discount_code.trim().toUpperCase().startsWith("EV"))
-      : foundReports,
-    [foundReports, evPrefixOnly],
-  );
+  const visibleEventStats = eventStats;
+  const visibleReports = foundReports;
 
   function openModal(fy: string, prov: string | null) {
     setEventModal({ fy, prov });
@@ -463,47 +440,6 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
           </button>
         </div>
       </div>
-
-      {/* ── Event code scope ─────────────────────────────────────── */}
-      {nonEvCodeCount > 0 && (
-        <div className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3 shadow-sm flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Event code scope</p>
-            <p className="text-[9.5px] font-mono text-[#888] mt-0.5">
-              {evPrefixOnly
-                ? `Showing EV-prefix codes only · ${nonEvCodeCount} non-EV code${nonEvCodeCount !== 1 ? "s" : ""} excluded`
-                : "Showing EV-prefix and verified BusinessDevelopment codes"}
-            </p>
-            <p className="text-[9px] text-[#9b4a1c] mt-1">
-              EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 select-none shrink-0">
-            <span className="text-[10px] font-mono font-semibold text-[#3d3d3d]">EV-prefix only</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={evPrefixOnly}
-              onClick={() => {
-                setEvPrefixOnly(value => !value);
-                setEventModal(null);
-                setModalProvFilter(null);
-                setModalSearch("");
-              }}
-              className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
-                evPrefixOnly ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
-              }`}
-              aria-label="Show EV-prefix event codes only"
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-                  evPrefixOnly ? "translate-x-4" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Section 1: Volume KPIs ────────────────────────────────── */}
       <Section title="Event Volume" sub="from event signup data">

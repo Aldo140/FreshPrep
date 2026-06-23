@@ -128,7 +128,6 @@ export function CalendarTab({
   const [showUpload, setShowUpload]         = useState(false);
   const [isDragOver, setIsDragOver]         = useState(false);
   const [pasteOnly, setPasteOnly]           = useState(false);
-  const [evPrefixOnly, setEvPrefixOnly]     = useState(false);
   const [calView, setCalView]               = useState<"heatmap" | "families">("heatmap");
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
   const [familyFilter, setFamilyFilter]     = useState<"all" | "recurring">("recurring");
@@ -149,6 +148,9 @@ export function CalendarTab({
   const { eventStats } = customerData;
   const isCustomData = !!customerFileName;
   const hasClientLtvUpload = foundReports.length > 0;
+  const eventScopeLabel = eventStats.some(e => !e.code.trim().toUpperCase().startsWith("EV"))
+    ? "EV-prefix + verified BusinessDevelopment codes"
+    : "EV-prefix codes only";
 
   const reportByCode = useMemo(() => {
     const m = new Map<string, AnalyzedCodeReport>();
@@ -163,20 +165,13 @@ export function CalendarTab({
 
   const isFilteredPaste = selectedFlow === "paste" && pastedSet.size > 0;
 
-  const nonEvEventCount = useMemo(
-    () => eventStats.filter(e => !e.code.trim().toUpperCase().startsWith("EV")).length,
-    [eventStats],
-  );
-
   const visibleStats = useMemo(() => {
-    let stats = evPrefixOnly
-      ? eventStats.filter(e => e.code.trim().toUpperCase().startsWith("EV"))
-      : eventStats;
+    let stats = eventStats;
     if (pasteOnly && isFilteredPaste) {
       stats = stats.filter(e => pastedSet.has(e.code.toUpperCase()));
     }
     return stats;
-  }, [eventStats, evPrefixOnly, pastedSet, pasteOnly, isFilteredPaste]);
+  }, [eventStats, pastedSet, pasteOnly, isFilteredPaste]);
 
   // ── Month range ───────────────────────────────────────────────
 
@@ -528,46 +523,6 @@ export function CalendarTab({
         </div>
       </div>
 
-      {/* ── Event code scope ─────────────────────────────────────── */}
-      {nonEvEventCount > 0 && (
-        <div className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3 shadow-sm flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Event code scope</p>
-            <p className="text-[9.5px] font-mono text-[#888] mt-0.5">
-              {evPrefixOnly
-                ? `Showing EV-prefix codes only · ${nonEvEventCount} non-EV code${nonEvEventCount !== 1 ? "s" : ""} excluded`
-                : "Showing EV-prefix and verified BusinessDevelopment codes"}
-            </p>
-            <p className="text-[9px] text-[#9b4a1c] mt-1">
-              EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 select-none shrink-0">
-            <span className="text-[10px] font-mono font-semibold text-[#3d3d3d]">EV-prefix only</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={evPrefixOnly}
-              onClick={() => {
-                setEvPrefixOnly(v => !v);
-                setSelected(null);
-                setPinned(null);
-              }}
-              className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
-                evPrefixOnly ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
-              }`}
-              aria-label="Show EV-prefix event codes only"
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-                  evPrefixOnly ? "translate-x-4" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ── BD Summary banner (BD-only mode) ─────────────────────── */}
       {foundReports.length === 0 && allProvs.length > 0 && (() => {
         const currentYear = String(new Date().getFullYear());
@@ -726,15 +681,13 @@ export function CalendarTab({
             <>
               <span className="text-[11px] font-semibold text-[#1a1a1a] font-mono truncate">{customerFileName}</span>
               <span className="text-[9px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full shrink-0">your data</span>
-              <span className="text-[9px] font-mono text-[#a1a1a1]">BD codes = EV-prefix + BusinessDevelopment channel</span>
+              <span className="text-[9px] font-mono text-[#a1a1a1]">BD codes = {eventScopeLabel}</span>
             </>
           ) : (
             <>
               <span className="text-[11px] font-mono text-[#3d3d3d]">Built-in dataset</span>
               <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e8e8e8] px-2 py-0.5 rounded-full shrink-0">{dateRangeLabel}</span>
-              <span className="text-[9px] font-mono text-[#a1a1a1]">
-                {evPrefixOnly ? "EV-prefix codes only" : "EV-prefix + verified BusinessDevelopment codes"}
-              </span>
+              <span className="text-[9px] font-mono text-[#a1a1a1]">{eventScopeLabel}</span>
             </>
           )}
         </div>

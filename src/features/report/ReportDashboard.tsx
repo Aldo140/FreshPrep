@@ -29,6 +29,63 @@ const CHIP_PROV_COLOR: Record<string, string> = {
   NS: "#5a5a5a", NB: "#888",
 };
 const chipProvColor = (p: string) => CHIP_PROV_COLOR[p] ?? "#888";
+const isEvCode = (code: string): boolean => code.trim().toUpperCase().startsWith("EV");
+
+function summarizeReports(reports: AnalyzedCodeReport[], numCodesMissing = 0): KPIReportSummary {
+  const totalSignups = reports.reduce((sum, report) => sum + report.Signups, 0);
+  const totalPayingCustomers = reports.reduce((sum, report) => sum + report["Paying cx"], 0);
+  const totalLTV3 = reports.reduce((sum, report) => sum + report["Sum LTV 3"], 0);
+  const totalLTV6 = reports.reduce((sum, report) => sum + report["Sum LTV 6"], 0);
+  const totalLTV12 = reports.reduce((sum, report) => sum + report["Sum LTV 12"], 0);
+  const topByConversion = [...reports].sort((a, b) => b.calculatedConversion - a.calculatedConversion)[0];
+  const topByScore = [...reports].sort((a, b) => b.overallScore - a.overallScore)[0];
+
+  return {
+    totalSignups,
+    totalPayingCustomers,
+    blendedConversionRate: totalSignups > 0 ? (totalPayingCustomers / totalSignups) * 100 : 0,
+    totalLTV3,
+    totalLTV6,
+    totalLTV12,
+    averageLTV12: reports.length > 0
+      ? reports.reduce((sum, report) => sum + report["Avg LTV 12"], 0) / reports.length
+      : 0,
+    averageConversionRate: reports.length > 0
+      ? reports.reduce((sum, report) => sum + report.calculatedConversion, 0) / reports.length
+      : 0,
+    numCodesFound: reports.length,
+    numCodesMissing,
+    topPerformingCodeCode: topByConversion?.discount_code ?? "",
+    topPerformingCodeVal: topByConversion?.calculatedConversion ?? 0,
+    bestOverallScoreCode: topByScore?.discount_code ?? "",
+    bestOverallScoreVal: topByScore?.overallScore ?? 0,
+  };
+}
+
+function summarizeChannels(reports: AnalyzedCodeReport[]): ChannelSummary[] {
+  const byChannel = new Map<string, AnalyzedCodeReport[]>();
+  for (const report of reports) {
+    const channel = report.channel || "Direct / Unknown";
+    byChannel.set(channel, [...(byChannel.get(channel) ?? []), report]);
+  }
+  return [...byChannel.entries()]
+    .map(([channel, items]) => {
+      const totalSignups = items.reduce((sum, report) => sum + report.Signups, 0);
+      const totalPayingCustomers = items.reduce((sum, report) => sum + report["Paying cx"], 0);
+      return {
+        channel,
+        codeCount: items.length,
+        totalSignups,
+        totalPayingCustomers,
+        averageConversion: items.length > 0
+          ? items.reduce((sum, report) => sum + report.calculatedConversion, 0) / items.length
+          : 0,
+        totalDiscount: items.reduce((sum, report) => sum + report.total_discount_used, 0),
+        totalLTV12: items.reduce((sum, report) => sum + report["Sum LTV 12"], 0),
+      };
+    })
+    .sort((a, b) => b.totalSignups - a.totalSignups);
+}
 
 interface ReportDashboardProps {
   reportPage: ReportPage;
@@ -101,25 +158,122 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   } = props;
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
-
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
+  const [evPrefixOnly, setEvPrefixOnly] = useState(false);
+
+  const nonEvCodeCount = useMemo(() => {
+    const codes = new Set<string>();
+    for (const report of foundReports) {
+      const code = report.discount_code.trim().toUpperCase();
+      if (code && !isEvCode(code)) codes.add(code);
+    }
+    for (const row of dbRows) {
+      const code = row.discount_code.trim().toUpperCase();
+      if (code && !isEvCode(code)) codes.add(code);
+    }
+    for (const stat of customerData.eventStats) {
+      const code = stat.code.trim().toUpperCase();
+      if (code && !isEvCode(code)) codes.add(code);
+    }
+    return codes.size;
+  }, [foundReports, dbRows, customerData.eventStats]);
+
+  useEffect(() => {
+    if (nonEvCodeCount === 0 && evPrefixOnly) {
+      setEvPrefixOnly(false);
+    }
+  }, [nonEvCodeCount, evPrefixOnly]);
+
+  const scopedFoundReports = useMemo(
+    () => evPrefixOnly ? foundReports.filter(report => isEvCode(report.discount_code)) : foundReports,
+    [foundReports, evPrefixOnly],
+  );
+
+  const scopedDbRows = useMemo(
+    () => evPrefixOnly ? dbRows.filter(row => isEvCode(row.discount_code)) : dbRows,
+    [dbRows, evPrefixOnly],
+  );
+
+  const scopedMissingCodes = useMemo(
+    () => evPrefixOnly ? missingCodes.filter(code => isEvCode(code)) : missingCodes,
+    [missingCodes, evPrefixOnly],
+  );
+
+  const scopedRawPastedCodes = useMemo(
+    () => evPrefixOnly ? rawPastedCodes.filter(code => isEvCode(code)) : rawPastedCodes,
+    [rawPastedCodes, evPrefixOnly],
+  );
+
+  const scopedEventStats = useMemo(
+    () => evPrefixOnly ? customerData.eventStats.filter(stat => isEvCode(stat.code)) : customerData.eventStats,
+    [customerData.eventStats, evPrefixOnly],
+  );
+
+  const scopedCustomerData = useMemo<CustomerDataResult>(() => {
+    const provinces = Array.from(new Set(
+      scopedEventStats.flatMap(stat => Object.keys(stat.signupsByProvince)),
+    )).sort();
+    return {
+      ...customerData,
+      eventStats: scopedEventStats,
+      provinces,
+      hasData: customerData.hasData && scopedEventStats.length > 0,
+    };
+  }, [customerData, scopedEventStats]);
+
+  const scopedSummary = useMemo(
+    () => evPrefixOnly ? summarizeReports(scopedFoundReports, scopedMissingCodes.length) : summary,
+    [evPrefixOnly, scopedFoundReports, scopedMissingCodes.length, summary],
+  );
+
+  const scopedChannelSummary = useMemo(
+    () => evPrefixOnly ? summarizeChannels(scopedFoundReports) : channelSummary,
+    [evPrefixOnly, scopedFoundReports, channelSummary],
+  );
+
+  const scopedUniqueChannels = useMemo(
+    () => Array.from(new Set(scopedFoundReports.map(report => report.channel || "Direct / Unknown"))).sort(),
+    [scopedFoundReports],
+  );
+
+  const scopedUniqueDbCodes = useMemo(
+    () => evPrefixOnly ? uniqueDbCodes.filter(code => isEvCode(code)) : uniqueDbCodes,
+    [evPrefixOnly, uniqueDbCodes],
+  );
+
+  const scopedBusinessDevelopmentCodes = useMemo(
+    () => evPrefixOnly ? businessDevelopmentCodes.filter(code => isEvCode(code)) : businessDevelopmentCodes,
+    [businessDevelopmentCodes, evPrefixOnly],
+  );
+
+  const scopedPortfolioHealth = useMemo<PortfolioHealth | null>(() => {
+    if (!evPrefixOnly) return portfolioHealth;
+    if (scopedFoundReports.length === 0) return null;
+    return scopedFoundReports.reduce<PortfolioHealth>((acc, report) => {
+      acc.total += 1;
+      if (report.calculatedConversion >= 40) acc.strong += 1;
+      else if (report.calculatedConversion >= 20) acc.average += 1;
+      else acc.weak += 1;
+      return acc;
+    }, { total: 0, strong: 0, average: 0, weak: 0 });
+  }, [evPrefixOnly, portfolioHealth, scopedFoundReports]);
 
   const chipProvinces = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const e of customerData.eventStats) {
+    for (const e of scopedCustomerData.eventStats) {
       if (!e.homeProvince || e.homeProvince === "??") continue;
       counts[e.homeProvince] = (counts[e.homeProvince] ?? 0) + e.totalSignups;
     }
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([p]) => p);
-  }, [customerData.eventStats]);
+  }, [scopedCustomerData.eventStats]);
 
   const dataThrough = useMemo(() => {
-    const months = customerData.eventStats.map(e => e.eventMonth).filter(Boolean);
+    const months = scopedCustomerData.eventStats.map(e => e.eventMonth).filter(Boolean);
     if (!months.length) return null;
     return months.reduce((a, b) => a > b ? a : b);
-  }, [customerData.eventStats]);
+  }, [scopedCustomerData.eventStats]);
 
   const dataAgeMonths = useMemo(() => {
     if (!dataThrough) return 0;
@@ -195,9 +349,9 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             style={{ transition: "color 150ms var(--ease-out), border-color 150ms var(--ease-out), background-color 150ms var(--ease-out)" }}
           >
             {page.label}
-            {page.id === "data" && missingCodes.length > 0 && (
+            {page.id === "data" && scopedMissingCodes.length > 0 && (
               <span className="min-w-[16px] h-4 px-1 bg-[#850b0b] text-white text-[8px] font-bold rounded-full flex items-center justify-center font-mono shrink-0">
-                {missingCodes.length}
+                {scopedMissingCodes.length}
               </span>
             )}
             {TAB_RELEVANCE[page.id][selectedFlow] === "partial" && (
@@ -227,6 +381,47 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
           <span className="hidden sm:inline">New dataset</span>
         </button>
       </div>
+
+      {/* Event-code scope — shared by every report page */}
+      {nonEvCodeCount > 0 && (
+        <div className="shrink-0 px-4 py-2 bg-white border-b border-[#ececec]">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Event code scope</p>
+              <p className="text-[9.5px] font-mono text-[#888] mt-0.5">
+                {evPrefixOnly
+                  ? `Showing EV-prefix codes only · ${nonEvCodeCount} non-EV code${nonEvCodeCount !== 1 ? "s" : ""} excluded`
+                  : "Showing EV-prefix and verified BusinessDevelopment codes"}
+              </p>
+              <p className="text-[9px] text-[#9b4a1c] mt-1">
+                EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 select-none shrink-0">
+              <span className="text-[10px] font-mono font-semibold text-[#3d3d3d]">EV-prefix only</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={evPrefixOnly}
+                onClick={() => {
+                  setEvPrefixOnly(value => !value);
+                  setActiveProvince(null);
+                }}
+                className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
+                  evPrefixOnly ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
+                }`}
+                aria-label="Show EV-prefix event codes only"
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                    evPrefixOnly ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Province chip — visible only on Calendar, Fiscal, Regional */}
       {["calendar", "fiscal", "regional"].includes(reportPage) && chipProvinces.length > 0 && (
@@ -276,7 +471,9 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
                   {dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
                 </span>
               )}
-              <span className="text-[9px] font-mono text-[#a1a1a1]">BD events: EV-prefix + BusinessDevelopment channel</span>
+              <span className="text-[9px] font-mono text-[#a1a1a1]">
+                BD events: {evPrefixOnly ? "EV-prefix only" : "EV-prefix + BusinessDevelopment channel"}
+              </span>
               <button
                 onClick={onClearCustomer}
                 className="ml-1 text-[9px] font-mono text-[#a1a1a1] hover:text-[#850b0b] cursor-pointer flex items-center gap-1"
@@ -299,6 +496,9 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
                   {dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
                 </span>
               )}
+              <span className="text-[9px] font-mono text-[#a1a1a1]">
+                {evPrefixOnly ? "EV-prefix only" : "EV-prefix + verified BusinessDevelopment codes"}
+              </span>
             </>
           )}
           {["calendar", "fiscal"].includes(reportPage) && (
@@ -325,9 +525,9 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
 
         {reportPage === "fiscal" && (
           <FiscalTab
-            foundReports={foundReports}
-            summary={summary}
-            customerData={customerData}
+            foundReports={scopedFoundReports}
+            summary={scopedSummary}
+            customerData={scopedCustomerData}
             selectedFlow={selectedFlow}
             activeProvince={activeProvince}
             onProvinceChange={setActiveProvince}
@@ -336,9 +536,9 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
 
         {reportPage === "calendar" && (
           <CalendarTab
-            customerData={customerData}
-            rawPastedCodes={rawPastedCodes}
-            foundReports={foundReports}
+            customerData={scopedCustomerData}
+            rawPastedCodes={scopedRawPastedCodes}
+            foundReports={scopedFoundReports}
             selectedFlow={selectedFlow}
             staticLoading={staticLoading}
             staticError={staticError}
@@ -354,23 +554,23 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
 
         {reportPage === "comparison" && (
           <ComparisonTab
-            foundReports={foundReports}
+            foundReports={scopedFoundReports}
             editionLabels={editionLabels}
-            rawPastedCodes={rawPastedCodes}
-            eventStats={customerData.eventStats}
+            rawPastedCodes={scopedRawPastedCodes}
+            eventStats={scopedCustomerData.eventStats}
           />
         )}
 
         {reportPage === "overview" && (
           <OverviewTab
-            foundReports={foundReports}
-            summary={summary}
+            foundReports={scopedFoundReports}
+            summary={scopedSummary}
             fileName={fileName}
-            dbRowCount={dbRows.length}
-            portfolioHealth={portfolioHealth}
+            dbRowCount={scopedDbRows.length}
+            portfolioHealth={scopedPortfolioHealth}
             selectedFlow={selectedFlow}
             userPersona={userPersona}
-            businessDevelopmentCodes={businessDevelopmentCodes}
+            businessDevelopmentCodes={scopedBusinessDevelopmentCodes}
             eventName={eventName}
             eventDate={eventDate}
             onNavigate={setReportPage}
@@ -379,27 +579,27 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
 
         {reportPage === "performance" && (
           <PerformanceTab
-            foundReports={foundReports}
-            summary={summary}
-            channelSummary={channelSummary}
+            foundReports={scopedFoundReports}
+            summary={scopedSummary}
+            channelSummary={scopedChannelSummary}
           />
         )}
 
         {reportPage === "revenue" && (
           <RevenueTab
-            summary={summary}
-            foundReports={foundReports}
-            channelSummary={channelSummary}
+            summary={scopedSummary}
+            foundReports={scopedFoundReports}
+            channelSummary={scopedChannelSummary}
           />
         )}
 
         {reportPage === "regional" && (
           <RegionalTab
-            dbRows={dbRows}
-            foundReports={foundReports}
+            dbRows={scopedDbRows}
+            foundReports={scopedFoundReports}
             selectedFlow={selectedFlow}
             userPersona={userPersona}
-            eventStats={customerData.eventStats}
+            eventStats={scopedCustomerData.eventStats}
             onUploadLooker={foundReports.length === 0 ? (onResetToLookerUpload ?? onReset) : undefined}
             activeProvince={activeProvince}
             onNavigate={setReportPage}
@@ -408,15 +608,15 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
 
         {reportPage === "data" && (
           <DataTab
-            foundReports={foundReports}
-            uniqueChannels={uniqueChannels}
-            dbRows={dbRows}
+            foundReports={scopedFoundReports}
+            uniqueChannels={scopedUniqueChannels}
+            dbRows={scopedDbRows}
             fileName={fileName}
             selectedFlow={selectedFlow}
             onSwitchToExplorer={() => setActiveTab("explorer")}
-            missingCodes={missingCodes}
-            uniqueDbCodes={uniqueDbCodes}
-            rawPastedCodes={rawPastedCodes}
+            missingCodes={scopedMissingCodes}
+            uniqueDbCodes={scopedUniqueDbCodes}
+            rawPastedCodes={scopedRawPastedCodes}
             onApplyCorrections={onApplyCorrections}
           />
         )}
