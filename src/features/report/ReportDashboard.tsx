@@ -140,10 +140,10 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     { id: "overview", label: "Overview" },
     { id: "performance", label: "Performance" },
     { id: "revenue", label: "Revenue" },
-    { id: "regional", label: "Regional" },
-    { id: "data", label: "All Codes" },
     { id: "calendar", label: "Calendar" },
+    { id: "regional", label: "Regional" },
     { id: "fiscal",   label: "BD Fiscal" },
+    { id: "data", label: "All Codes" },
   ];
 
   const pages = allPages.filter(p => {
