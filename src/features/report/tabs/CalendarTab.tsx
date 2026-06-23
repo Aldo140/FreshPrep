@@ -517,20 +517,21 @@ export function CalendarTab({
 
       {/* ── BD Summary banner (BD-only mode) ─────────────────────── */}
       {foundReports.length === 0 && allProvs.length > 0 && (() => {
-        const ys = coverageStats.years;
-        const cur = ys[ys.length - 1];
-        const prev = ys[ys.length - 2];
-        const curSig = cur ? (coverageStats.byYear[cur]?.signups ?? 0) : 0;
-        const prevSig = prev ? (coverageStats.byYear[prev]?.signups ?? 0) : 0;
-        const yoyPct = prevSig > 0 ? ((curSig - prevSig) / prevSig) * 100 : null;
-        const topProv = allProvs[0];
+        const currentYear = String(new Date().getFullYear());
+        const completedYears = coverageStats.years.filter(y => y !== currentYear);
+        const prevY = completedYears[completedYears.length - 1];
+        const prevPrevY = completedYears[completedYears.length - 2];
+        const prevSig = prevY ? (coverageStats.byYear[prevY]?.signups ?? 0) : 0;
+        const prevPrevSig = prevPrevY ? (coverageStats.byYear[prevPrevY]?.signups ?? 0) : 0;
+        const yoyPct = prevSig > 0 && prevPrevSig > 0
+          ? ((prevSig - prevPrevSig) / prevPrevSig) * 100
+          : null;
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Total Events",  value: visibleEventCount.toString(),        sub: `${coverageStats.years.length} fiscal yr${coverageStats.years.length !== 1 ? "s" : ""}` },
-              { label: "Total Signups", value: totalSignups.toLocaleString(),        sub: "across all events" },
-              { label: "Top Province",  value: topProv,                              sub: `${((coverageStats.byYear[cur]?.signups ?? 0) > 0 ? "leading region" : "by events")}`, accent: provColor(topProv) },
-              { label: "YoY Growth",    value: yoyPct !== null ? `${yoyPct >= 0 ? "+" : ""}${yoyPct.toFixed(0)}%` : "—", sub: prev && cur ? `${prev} → ${cur}` : "year over year", accent: yoyPct !== null ? (yoyPct >= 0 ? "#2b5346" : "#850b0b") : undefined },
+              { label: "Total Events",  value: visibleEventCount.toString(),   sub: `${coverageStats.years.length} yr${coverageStats.years.length !== 1 ? "s" : ""} of data` },
+              { label: "Total Signups", value: totalSignups.toLocaleString(),   sub: "across all events" },
+              { label: "YoY Growth",    value: yoyPct !== null ? `${yoyPct >= 0 ? "+" : ""}${yoyPct.toFixed(0)}%` : "—", sub: prevPrevY && prevY ? `${prevPrevY} → ${prevY} (completed yrs)` : "insufficient data", accent: yoyPct !== null ? (yoyPct >= 0 ? "#2b5346" : "#850b0b") : undefined },
             ].map((stat, i) => (
               <div key={i} className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3.5 shadow-sm">
                 <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-1">{stat.label}</p>
