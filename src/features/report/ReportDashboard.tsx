@@ -184,8 +184,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             } ${
               foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id)
                 ? reportPage === page.id
-                  ? "bg-[#2b5346] border-[#2b5346] text-white"
-                  : "bg-[#eef4f1] border-transparent text-[#2b5346] hover:bg-[#dfece7]"
+                  ? "bg-[#1a3d2f] border-[#e7bd27] text-white"
+                  : "bg-[#2b5346] border-[#2b5346] text-white hover:bg-[#1f4739]"
                 : reportPage === page.id
                   ? "border-[#2b5346] text-[#2b5346]"
                   : "border-transparent text-[#3d3d3d] hover:text-[#1a1a1a]"
