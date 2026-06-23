@@ -19,6 +19,7 @@ export const TAB_RELEVANCE: Record<ReportPage, Record<AnalysisFlow, Relevance>> 
   issues:      { all: "full", paste: "full",    compare: "full"    },
   comparison:  { all: "full", paste: "full",    compare: "full"    },
   calendar:    { all: "full", paste: "full",    compare: "full"    },
+  fiscal:      { all: "full", paste: "partial", compare: "full"    },
 };
 
 /**

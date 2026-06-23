@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   RefreshCw,
   FileText,
@@ -28,9 +28,10 @@ interface WizardFlowProps {
   analysis: { state: AnalysisState; actions: AnalysisActions };
   formatting: CodeFormattingActions;
   onReset: () => void;
+  staticNonEvBdCodes?: string[];
 }
 
-export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardFlowProps): React.ReactElement {
+export function WizardFlow({ fileState, analysis, formatting, onReset, staticNonEvBdCodes = [] }: WizardFlowProps): React.ReactElement {
   const { state, actions } = analysis;
   const [showColumns, setShowColumns] = useState(false);
   const [showTextTools, setShowTextTools] = useState(false);
@@ -47,8 +48,42 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
     (e.currentTarget as HTMLButtonElement).style.transform = "";
   };
 
-  const evCodes = fileState.uniqueDbCodes.filter(c => c.toUpperCase().startsWith("EV"));
-  const bdDisplayCount = state.bdFilter ? evCodes.length : fileState.uniqueDbCodes.length;
+  // Static non-EV BD codes as a lookup set for cross-referencing file codes that
+  // lack a channel column (the Looker export never includes channel).
+  const staticNonEvBdSet = useMemo(
+    () => new Set(staticNonEvBdCodes.map(c => c.toUpperCase())),
+    [staticNonEvBdCodes],
+  );
+
+  // BD codes in the uploaded file: EV-prefix OR explicitly verified by the
+  // built-in database. Never trust the uploaded file's channel for this.
+  const bdCodeSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of fileState.dbRows) {
+      const code = r.discount_code.trim().toUpperCase();
+      if (code.startsWith("EV") || staticNonEvBdSet.has(code)) {
+        s.add(code);
+      }
+    }
+    return s;
+  }, [fileState.dbRows, staticNonEvBdSet]);
+
+  const bdCodes = useMemo(
+    () => fileState.uniqueDbCodes.filter(c => bdCodeSet.has(c.toUpperCase())),
+    [fileState.uniqueDbCodes, bdCodeSet],
+  );
+
+  // Static-only BD codes: in the static DB but not in the uploaded file
+  const fileCodeSet = useMemo(
+    () => new Set(fileState.uniqueDbCodes.map(c => c.toUpperCase())),
+    [fileState.uniqueDbCodes],
+  );
+  const staticOnlyBdCodes = useMemo(
+    () => staticNonEvBdCodes.filter(c => !fileCodeSet.has(c.toUpperCase())),
+    [staticNonEvBdCodes, fileCodeSet],
+  );
+
+  const bdDisplayCount = state.bdFilter ? bdCodes.length : fileState.uniqueDbCodes.length;
 
   return (
     <div
@@ -381,7 +416,10 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
                   Analyze{" "}
                   <strong className="text-[#1a1a1a]">
                     {bdDisplayCount.toLocaleString()} {state.bdFilter ? "BD event" : ""} codes
-                  </strong>{" "}
+                  </strong>
+                  {state.bdFilter && staticOnlyBdCodes.length > 0 && (
+                    <> + <strong className="text-[#1a1a1a]">{staticOnlyBdCodes.length.toLocaleString()} built-in BD codes</strong></>
+                  )}{" "}
                   in your dataset.
                 </p>
 
@@ -402,13 +440,17 @@ export function WizardFlow({ fileState, analysis, formatting, onReset }: WizardF
                   <span className="text-xs text-[#3d3d3d] font-medium">
                     BD codes only
                     <span className="block text-[10px] text-[#a1a1a1] font-normal mt-0.5">
-                      Filter to EV-prefix codes ({evCodes.length.toLocaleString()} codes)
+                      EV-prefix + BusinessDevelopment channel ({bdCodes.length.toLocaleString()} codes)
                     </span>
                   </span>
                 </label>
 
                 <button
-                  onClick={() => actions.compilePortfolio(state.bdFilter ? evCodes : fileState.uniqueDbCodes)}
+                  onClick={() => actions.compilePortfolio(
+                    state.bdFilter
+                      ? bdCodes
+                      : fileState.uniqueDbCodes
+                  )}
                   className="px-6 py-2.5 rounded-lg bg-[#2b5346] hover:bg-[#0d3a2f] text-white font-semibold text-xs shadow-sm flex items-center gap-2 cursor-pointer"
                   style={{ transition: "background-color 150ms var(--ease-out), transform 100ms var(--ease-out)" }}
                   onMouseDown={pressMd}

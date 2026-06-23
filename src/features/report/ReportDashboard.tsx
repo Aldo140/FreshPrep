@@ -11,7 +11,7 @@ import {
 } from "../../types";
 import { PortfolioHealth } from "../../hooks/useAnalysis";
 import { TAB_RELEVANCE } from "../../config/flowRelevance";
-import { RefreshCw, ArrowLeft } from "lucide-react";
+import { RefreshCw, ArrowLeft, Database, Upload, X } from "lucide-react";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PerformanceTab } from "./tabs/PerformanceTab";
 import { RevenueTab } from "./tabs/RevenueTab";
@@ -20,9 +20,9 @@ import { DataTab } from "./tabs/DataTab";
 import { IssuesTab } from "./tabs/IssuesTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
 import { CalendarTab } from "./tabs/CalendarTab";
+import { FiscalTab } from "./tabs/FiscalTab";
 import { CustomerUploadModal } from "./components/CustomerUploadModal";
 import { CustomerDataResult } from "../../hooks/useCustomerData";
-import { ContextBanner } from "./components/ContextBanner";
 
 interface ReportDashboardProps {
   reportPage: ReportPage;
@@ -49,11 +49,13 @@ interface ReportDashboardProps {
   portfolioHealth: PortfolioHealth | null;
   selectedFlow: AnalysisFlow;
   userPersona: UserPersona;
+  businessDevelopmentCodes: string[];
   eventName: string;
   eventDate: string;
   onApplyCorrections: (corrections: Record<string, string>) => void;
   onBackToWizard: () => void;
   onReset: () => void;
+  onResetToLookerUpload?: () => void;
 }
 
 export function ReportDashboard(props: ReportDashboardProps): React.ReactElement {
@@ -81,11 +83,13 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     portfolioHealth,
     selectedFlow,
     userPersona,
+    businessDevelopmentCodes,
     eventName,
     eventDate,
     onApplyCorrections,
     onBackToWizard,
     onReset,
+    onResetToLookerUpload,
   } = props;
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -102,14 +106,28 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       label: `Issues${missingCodes.length > 0 ? ` (${missingCodes.length})` : ""}`,
     },
     { id: "calendar", label: "Calendar" },
+    { id: "fiscal",   label: "Fiscal" },
   ];
 
   const pages = allPages.filter(p => {
+    const needsLooker = ["overview", "performance", "revenue", "data", "issues"].includes(p.id);
+    if (needsLooker && foundReports.length === 0) return false;
     if (p.id === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) return false;
     if (p.id === "comparison" && selectedFlow !== "compare") return false;
     if (p.id === "calendar" && selectedFlow === "compare") return false;
+    if (p.id === "fiscal"   && selectedFlow === "compare") return false;
+    // Calendar/Fiscal belong to the built-in BD events DB view only.
+    // Once a Looker file is uploaded those tabs are redundant — hide them.
+    if ((p.id === "calendar" || p.id === "fiscal") && foundReports.length > 0) return false;
     return true;
   });
+
+  // In BD-only mode (no foundReports), default to calendar
+  useEffect(() => {
+    if (foundReports.length === 0 && !["calendar", "fiscal", "regional"].includes(reportPage)) {
+      setReportPage("calendar");
+    }
+  }, [foundReports.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (reportPage === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) {
@@ -122,6 +140,13 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       setReportPage("comparison");
     }
   }, [selectedFlow]);
+
+  // Redirect away from Calendar/Fiscal when a Looker file is uploaded
+  useEffect(() => {
+    if (foundReports.length > 0 && (reportPage === "calendar" || reportPage === "fiscal")) {
+      setReportPage("overview");
+    }
+  }, [foundReports.length, reportPage, setReportPage]);
 
   // Redirect away from comparison page when not in compare flow
   useEffect(() => {
@@ -175,15 +200,42 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </button>
       </div>
 
-      {/* BD events filter active — quiet scope note */}
-      {userPersona === "bd-lead" && (
-        <div className="px-4 pt-3 max-w-6xl mx-auto w-full">
-          <ContextBanner
-            title="Filtered to event codes"
-            message="Showing EV-prefix codes only. Switch to Full Dataset in the wizard to include all codes."
-          />
+      {/* Data source bar — only relevant in BD-only mode (Calendar/Fiscal visible) */}
+      {foundReports.length === 0 && <div className="shrink-0 px-4 py-2 bg-[#f8f7f5] border-b border-[#ececec]">
+        <div className="max-w-6xl mx-auto flex items-center gap-3 flex-wrap">
+          <Database className="w-3.5 h-3.5 shrink-0 text-[#a1a1a1]" />
+          {customerFileName ? (
+            <>
+              <span className="text-[10.5px] font-semibold font-mono text-[#1a1a1a]">{customerFileName}</span>
+              <span className="text-[8.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full">your data</span>
+              <span className="text-[9px] font-mono text-[#a1a1a1]">BD events: EV-prefix + BusinessDevelopment channel</span>
+              <button
+                onClick={onClearCustomer}
+                className="ml-1 text-[9px] font-mono text-[#a1a1a1] hover:text-[#850b0b] cursor-pointer flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> Revert to built-in
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="text-[10.5px] font-mono text-[#3d3d3d]">Built-in BD Events DB</span>
+              <span className="text-[8.5px] font-mono text-[#c9a000] bg-[#fffbeb] border border-[#f5e09a] px-2 py-0.5 rounded-full shrink-0">
+                Jul 2024 – Jun 19, 2026
+              </span>
+              <span className="text-[9px] font-mono text-[#a1a1a1]">
+                Events after Jun 19 won't appear — upload a fresh export to get current data
+              </span>
+            </>
+          )}
+          <button
+            onClick={() => setShowCustomerModal(true)}
+            className="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all bg-white text-[#2b5346] border-[#d0e8e2] hover:bg-[#eef4f1]"
+          >
+            <Upload className="w-3 h-3" />
+            {customerFileName ? "Change data file" : "Upload newer data"}
+          </button>
         </div>
-      )}
+      </div>}
 
       {/* Page content — key= triggers fade on page change */}
       <div
@@ -191,6 +243,15 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         className="flex-1 overflow-y-auto bg-[#f8f7f5]"
         style={{ animation: "fadeIn 180ms var(--ease-out)" }}
       >
+
+        {reportPage === "fiscal" && (
+          <FiscalTab
+            foundReports={foundReports}
+            summary={summary}
+            customerData={customerData}
+            selectedFlow={selectedFlow}
+          />
+        )}
 
         {reportPage === "calendar" && (
           <CalendarTab
@@ -212,6 +273,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             foundReports={foundReports}
             editionLabels={editionLabels}
             rawPastedCodes={rawPastedCodes}
+            eventStats={customerData.eventStats}
           />
         )}
 
@@ -224,6 +286,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             portfolioHealth={portfolioHealth}
             selectedFlow={selectedFlow}
             userPersona={userPersona}
+            businessDevelopmentCodes={businessDevelopmentCodes}
             eventName={eventName}
             eventDate={eventDate}
             onNavigate={setReportPage}
@@ -252,6 +315,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             foundReports={foundReports}
             selectedFlow={selectedFlow}
             userPersona={userPersona}
+            eventStats={customerData.eventStats}
+            onUploadLooker={foundReports.length === 0 ? (onResetToLookerUpload ?? onReset) : undefined}
           />
         )}
 

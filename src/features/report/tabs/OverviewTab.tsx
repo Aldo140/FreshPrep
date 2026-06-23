@@ -13,6 +13,7 @@ interface OverviewTabProps {
   portfolioHealth: PortfolioHealth | null;
   selectedFlow: AnalysisFlow;
   userPersona: UserPersona;
+  businessDevelopmentCodes: string[];
   eventName: string;
   eventDate: string;
   onNavigate: (page: ReportPage) => void;
@@ -27,13 +28,23 @@ function conversionGrade(r: number): { label: string; color: string; bg: string 
   return                { label: "F",  color: "#850b0b", bg: "#ffd0d0" };
 }
 
-export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portfolioHealth, selectedFlow, userPersona, eventName, eventDate, onNavigate }: OverviewTabProps): React.ReactElement {
+export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portfolioHealth, selectedFlow, userPersona, businessDevelopmentCodes, eventName, eventDate, onNavigate }: OverviewTabProps): React.ReactElement {
   const formattedEventDate = eventDate
     ? new Date(eventDate + "T00:00:00").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })
     : null;
 
   const n = foundReports.length;
   const codeLabel = n === 1 ? "code" : "codes";
+  const eventCodeCount = foundReports.filter(r =>
+    r.discount_code.trim().toUpperCase().startsWith("EV")
+  ).length;
+  const verifiedBusinessDevelopmentSet = new Set(
+    businessDevelopmentCodes.map(code => code.trim().toUpperCase()),
+  );
+  const businessDevelopmentCodeCount = foundReports.filter(r => {
+    const code = r.discount_code.trim().toUpperCase();
+    return !code.startsWith("EV") && verifiedBusinessDevelopmentSet.has(code);
+  }).length;
   const grade = conversionGrade(summary.blendedConversionRate);
 
   const uniqueProvinceList = Array.from(
@@ -81,7 +92,20 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
                 </p>
                 {userPersona === "bd-lead" && uniqueProvinceList.length > 0 && (
                   <p className="text-xs text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 rounded-lg px-3 py-2 font-mono mt-2">
-                    {n} event codes · {uniqueProvinceList.join(", ")}
+                    {eventCodeCount > 0 && (
+                      <span>
+                        {eventCodeCount.toLocaleString()} {eventCodeCount === 1 ? "Event" : "Events"}
+                      </span>
+                    )}
+                    {eventCodeCount > 0 && businessDevelopmentCodeCount > 0 && (
+                      <span> · </span>
+                    )}
+                    {businessDevelopmentCodeCount > 0 && (
+                      <span>
+                        {businessDevelopmentCodeCount.toLocaleString()} Business Development {businessDevelopmentCodeCount === 1 ? "code" : "codes"}
+                      </span>
+                    )}
+                    <span> · {uniqueProvinceList.join(", ")}</span>
                   </p>
                 )}
               </div>

@@ -33,6 +33,7 @@ export interface AnalyzedCodeReport extends DiscountCodeData {
   overallScore: number;        // formula-calculated out of 100
   performanceGrade: string;    // A+, A, B, C, D, F based on Conversion
   overallScoreBadge: string;   // Elite, Strong, Good, Average, Weak based on overallScore
+  isStaticOnly?: boolean;       // synthesized from built-in BD DB; LTV fields are 0
 }
 
 export interface KPIReportSummary {
@@ -95,7 +96,7 @@ export interface DuplicateCodeInfo {
  */
 export type DuplicateResolution = number | 'combine';
 
-export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "data" | "issues" | "comparison" | "calendar";
+export type ReportPage = "overview" | "performance" | "revenue" | "regional" | "data" | "issues" | "comparison" | "calendar" | "fiscal";
 
 export type AnalysisFlow = "paste" | "all" | "compare";
 

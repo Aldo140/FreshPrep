@@ -61,8 +61,15 @@ function priorYearKey(key: string): string {
   return `${Number(year) - 1}-${month}`;
 }
 
+function isBdRow(r: CustomerRecord): boolean {
+  if (r.discount_code?.startsWith("EV")) return true;
+  // Also capture non-EV codes that came through the BusinessDevelopment channel
+  const ch = r.channel?.replace(/[\s_-]/g, "").toLowerCase() ?? "";
+  return ch === "businessdevelopment" && r.discount_code !== null;
+}
+
 function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
-  const evRows = rows.filter(r => r.discount_code?.startsWith("EV"));
+  const evRows = rows.filter(isBdRow);
 
   const byCode = new Map<string, CustomerRecord[]>();
   for (const row of evRows) {

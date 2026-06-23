@@ -1,11 +1,13 @@
 import React from "react";
 import { AnalyzedCodeReport } from "../../../types";
-import { TrendingUp, TrendingDown, Minus, ArrowRight } from "lucide-react";
+import { EventStats } from "../../../hooks/useCustomerData";
+import { TrendingUp, TrendingDown, Minus, ArrowRight, CalendarDays } from "lucide-react";
 
 interface ComparisonTabProps {
   foundReports: AnalyzedCodeReport[];
   editionLabels: Record<string, string>;
   rawPastedCodes: string[];
+  eventStats: EventStats[];
 }
 
 interface Edition {
@@ -50,7 +52,21 @@ const VPAD = { t: 16, r: 28, b: 36, l: 60 };
 const VPW = VW - VPAD.l - VPAD.r;
 const VPH = VH - VPAD.t - VPAD.b;
 
-export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: ComparisonTabProps): React.ReactElement {
+const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtMonth(mk: string): string {
+  const [y, m] = mk.split("-");
+  return `${MONTH_ABBR[Number(m) - 1]} ${y}`;
+}
+
+export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eventStats }: ComparisonTabProps): React.ReactElement {
+  // Build date context from eventStats (from static CSV or uploaded file)
+  const dateByCode = new Map<string, { label: string; month: string }>();
+  for (const e of eventStats) {
+    if (e.eventDateLabel && e.eventMonth) {
+      dateByCode.set(e.code, { label: e.eventDateLabel, month: e.eventMonth });
+    }
+  }
+
   const editions: Edition[] = rawPastedCodes
     .map(code => {
       const report = foundReports.find(r => r.discount_code === code);
@@ -110,7 +126,7 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: C
 
       {/* Header */}
       <div>
-        <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Comparison Analysis</p>
+        <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Comparison Analysis · BD Events</p>
         <h2 className="text-[20px] font-black text-[#0f0f0f] leading-tight flex flex-wrap items-center gap-1">
           {editions.map((e, i) => (
             <span key={e.code} className="flex items-center gap-1">
@@ -119,9 +135,32 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: C
             </span>
           ))}
         </h2>
-        <p className="text-xs text-[#a1a1a1] font-mono mt-1">
-          {editions.length} edition{editions.length !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+          <p className="text-xs text-[#a1a1a1] font-mono">
+            {editions.length} edition{editions.length !== 1 ? "s" : ""}
+          </p>
+          {/* Date context chips when static data has matching event info */}
+          {editions.some(e => dateByCode.has(e.code)) && (
+            <>
+              <span className="text-[#e5e5e5] font-mono">·</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <CalendarDays className="w-3 h-3 text-[#b0b0b0]" />
+                {editions.map((e, i) => {
+                  const dc = dateByCode.get(e.code);
+                  if (!dc) return null;
+                  return (
+                    <span key={e.code} className="flex items-center gap-1">
+                      {i > 0 && <span className="text-[#d8d8d8] font-mono text-[10px]">→</span>}
+                      <span className="text-[10px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-0.5 rounded">
+                        <span className="text-[#a1a1a1]">{e.label}: </span>{fmtMonth(dc.month)}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Verdict */}
@@ -169,7 +208,12 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: C
                     fill={below ? "#850b0b" : "#2b5346"} fontFamily="monospace">
                     {e.report.calculatedConversion.toFixed(1)}%
                   </text>
-                  <text x={cx} y={TH - 8} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
+                  <text x={cx} y={TH - 18} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
+                  {dateByCode.has(e.code) && (
+                    <text x={cx} y={TH - 6} textAnchor="middle" fontSize="8" fill="#b8b8b8" fontFamily="monospace">
+                      {fmtMonth(dateByCode.get(e.code)!.month)}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -198,7 +242,12 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: C
                   <rect x={px} y={py} width={barW} height={ph} fill="#2b5346" rx="2" />
                   <text x={sx + barW / 2} y={sy - 3} textAnchor="middle" fontSize="8" fill="#86b09e" fontFamily="monospace">{e.report.Signups}</text>
                   <text x={px + barW / 2} y={py - 3} textAnchor="middle" fontSize="8" fill="#2b5346" fontFamily="monospace">{e.report["Paying cx"]}</text>
-                  <text x={cx} y={VH - 6} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
+                  <text x={cx} y={VH - 18} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
+                  {dateByCode.has(e.code) && (
+                    <text x={cx} y={VH - 6} textAnchor="middle" fontSize="8" fill="#b8b8b8" fontFamily="monospace">
+                      {fmtMonth(dateByCode.get(e.code)!.month)}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -231,7 +280,12 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: C
                   fontSize="10" fontWeight="700" fill="#c9a000" fontFamily="monospace">
                   ${e.report["Avg LTV 12"].toFixed(0)}
                 </text>
-                <text x={xPos(i)} y={TH - 8} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
+                <text x={xPos(i)} y={TH - 18} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
+                {dateByCode.has(e.code) && (
+                  <text x={xPos(i)} y={TH - 6} textAnchor="middle" fontSize="8" fill="#b8b8b8" fontFamily="monospace">
+                    {fmtMonth(dateByCode.get(e.code)!.month)}
+                  </text>
+                )}
               </g>
             ))}
           </svg>
@@ -245,8 +299,8 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: C
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-[#f0f0ee] bg-[#fafafa]">
-                {["Edition", "Code", "Signups", "Paying", "Conversion", "Avg LTV 12", "Grade"].map((h, i) => (
-                  <th key={h} className={`px-4 py-2.5 font-semibold text-[#a1a1a1] font-mono uppercase tracking-wide text-[9px]${i >= 2 && i <= 5 ? " text-right" : i === 6 ? " text-center" : ""}`}>{h}</th>
+                {["Edition", "Code", "Event Date", "Signups", "Paying", "Conversion", "Avg LTV 12", "Grade"].map((h, i) => (
+                  <th key={h} className={`px-4 py-2.5 font-semibold text-[#a1a1a1] font-mono uppercase tracking-wide text-[9px]${i >= 3 && i <= 6 ? " text-right" : i === 7 ? " text-center" : ""}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -255,6 +309,17 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes }: C
                 <tr key={e.code} className="hover:bg-[#fafafa] transition-colors">
                   <td className="px-4 py-3 font-semibold text-[#1a1a1a]">{e.label}</td>
                   <td className="px-4 py-3 font-mono text-[10.5px] text-[#3d3d3d]">{e.code}</td>
+                  <td className="px-4 py-3">
+                    {dateByCode.has(e.code) ? (
+                      <div className="flex items-center gap-1.5">
+                        <CalendarDays className="w-3 h-3 text-[#b0b0b0] shrink-0" />
+                        <span className="font-mono text-[10.5px] text-[#3d3d3d]">{fmtMonth(dateByCode.get(e.code)!.month)}</span>
+                        <span className="font-mono text-[9px] text-[#b8b8b8]">{dateByCode.get(e.code)!.label}</span>
+                      </div>
+                    ) : (
+                      <span className="font-mono text-[10px] text-[#d0d0d0]">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-mono text-right text-[#1a1a1a]">{e.report.Signups.toLocaleString()}</td>
                   <td className="px-4 py-3 font-mono text-right text-[#1a1a1a]">{e.report["Paying cx"].toLocaleString()}</td>
                   <td className="px-4 py-3 font-mono text-right font-semibold" style={{ color: e.report.calculatedConversion >= 40 ? "#2b5346" : "#850b0b" }}>

@@ -142,6 +142,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow }:
     setModalSort({ by: "month", dir: "asc" });
     setModalProvFilter(null);
     setModalSearch("");
+    setCopied(false);
   }
 
   function toggleSort(col: "code" | "month" | "signups") {
