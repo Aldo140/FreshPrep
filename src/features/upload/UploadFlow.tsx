@@ -14,12 +14,13 @@ interface UploadFlowProps {
 export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }: UploadFlowProps): React.ReactElement {
   const { isDragOver, fileInputRef } = state;
   const { handleDragOver, handleDragLeave, handleDrop, handleFileChange, triggerBrowsingInput } = actions;
-  const [showLooker, setShowLooker] = useState(true);
+  const [showLooker, setShowLooker] = useState(autoOpenLooker);
 
   // Scroll the Looker section into view when auto-opened
   const lookerRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     if (autoOpenLooker && lookerRef.current) {
+      setShowLooker(true);
       setTimeout(() => lookerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
