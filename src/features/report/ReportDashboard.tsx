@@ -179,7 +179,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             onClick={() => setReportPage(page.id)}
             className={`shrink-0 px-4 py-3 text-xs font-semibold border-b-2 cursor-pointer flex items-center gap-1.5 ${
               foundReports.length > 0 && page.id === "calendar"
-                ? "ml-2 border-l border-l-[#b9d3c8]"
+                ? "border-l border-l-[#b9d3c8]"
                 : ""
             } ${
               foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id)
