@@ -150,6 +150,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     const needsLooker = ["overview", "performance", "revenue", "data"].includes(p.id);
     if (needsLooker && foundReports.length === 0) return false;
     if (p.id === "comparison" && selectedFlow !== "compare") return false;
+    if (p.id === "regional" && selectedFlow === "paste") return false;
     return true;
   });
 
@@ -177,11 +178,19 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             key={page.id}
             onClick={() => setReportPage(page.id)}
             className={`shrink-0 px-4 py-3 text-xs font-semibold border-b-2 cursor-pointer flex items-center gap-1.5 ${
-              reportPage === page.id
-                ? "border-[#2b5346] text-[#2b5346]"
-                : "border-transparent text-[#3d3d3d] hover:text-[#1a1a1a]"
+              foundReports.length > 0 && page.id === "calendar"
+                ? "ml-2 border-l border-l-[#b9d3c8]"
+                : ""
+            } ${
+              foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id)
+                ? reportPage === page.id
+                  ? "bg-[#2b5346] border-[#2b5346] text-white"
+                  : "bg-[#eef4f1] border-transparent text-[#2b5346] hover:bg-[#dfece7]"
+                : reportPage === page.id
+                  ? "border-[#2b5346] text-[#2b5346]"
+                  : "border-transparent text-[#3d3d3d] hover:text-[#1a1a1a]"
             }`}
-            style={{ transition: "color 150ms var(--ease-out), border-color 150ms var(--ease-out)" }}
+            style={{ transition: "color 150ms var(--ease-out), border-color 150ms var(--ease-out), background-color 150ms var(--ease-out)" }}
           >
             {page.label}
             {page.id === "data" && missingCodes.length > 0 && (
@@ -289,6 +298,11 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
                 </span>
               )}
             </>
+          )}
+          {["calendar", "fiscal"].includes(reportPage) && (
+            <span className="text-[9px] font-mono text-[#888]">
+              Calendar and Fiscal use the Exportable Client List—a separate file from Client LTV.
+            </span>
           )}
           <button
             onClick={() => setShowCustomerModal(true)}

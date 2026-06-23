@@ -19,15 +19,11 @@ import { ReportDashboard } from "./features/report/ReportDashboard";
 import { PrintPreview } from "./features/report/PrintPreview";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import {
-  aggregateNonEvBusinessDevelopmentRows,
+  aggregateBusinessDevelopmentRows,
   mergeBusinessDevelopmentFallbacks,
 } from "./utils/bdFallback";
-import {
-  calculatePerformanceRating,
-  calculatePerformanceGrade,
-  calculateOverallScore,
-} from "./utils/fileParser";
-import type { AnalyzedCodeReport, KPIReportSummary } from "./types";
+import { toCanonicalCode } from "./utils/fileParser";
+import type { KPIReportSummary } from "./types";
 
 const EMPTY_SUMMARY = {
   totalSignups: 0, totalPayingCustomers: 0, blendedConversionRate: 0,
@@ -42,7 +38,7 @@ export default function App(): React.ReactElement {
   const staticSignups = useStaticSignups();
 
   const fallbackBusinessDevelopmentRows = useMemo(
-    () => aggregateNonEvBusinessDevelopmentRows(staticSignups.rows),
+    () => aggregateBusinessDevelopmentRows(staticSignups.rows),
     [staticSignups.rows],
   );
 
@@ -115,70 +111,36 @@ export default function App(): React.ReactElement {
 
   const customerData = useCustomerData(effectiveCustomerRows, effectiveRawPastedCodes);
 
-  // All unique non-EV BD codes from the built-in static DB (channel=businessdevelopment).
-  // Passed to WizardFlow so it can identify file codes that are BD even when the file
-  // lacks a channel column.
-  const staticNonEvBdCodes = useMemo((): string[] => {
-    return fallbackBusinessDevelopmentRows.map(row => row.discount_code);
-  }, [fallbackBusinessDevelopmentRows]);
+  const allStaticBdCodes = useMemo((): string[] =>
+    Array.from(new Set(fallbackBusinessDevelopmentRows.map(row => row.discount_code))),
+  [fallbackBusinessDevelopmentRows]);
+  const staticBdCodeSet = useMemo(
+    () => new Set(allStaticBdCodes.map(toCanonicalCode)),
+    [allStaticBdCodes],
+  );
 
   // BD codes that exist in the static DB but are absent from the uploaded Looker file.
   // These are real BD events — they just weren't in the user's Looker export date range.
   const staticOnlyBdCodes = useMemo(() => {
     const fileCodeSet = new Set(fileUpload.state.uniqueDbCodes.map(c => c.toUpperCase()));
-    return staticNonEvBdCodes.filter(c => !fileCodeSet.has(c.toUpperCase()));
-  }, [staticNonEvBdCodes, fileUpload.state.uniqueDbCodes]);
+    return allStaticBdCodes.filter(c => !fileCodeSet.has(c.toUpperCase()));
+  }, [allStaticBdCodes, fileUpload.state.uniqueDbCodes]);
 
-  // Synthetic AnalyzedCodeReport entries built from the static DB for static-only BD codes.
-  // Only generated when a BD-filtered analysis has been run. LTV fields are 0 (unknown),
-  // but signups and conversion are real — derived from the built-in signup records.
-  // isStaticOnly=true lets any tab exclude them from LTV-based averages.
-  const syntheticFoundReports = useMemo((): AnalyzedCodeReport[] => {
-    if (!hasReportGenerated || foundReports.length === 0) return [];
-    if (!analysis.state.bdFilter) return [];
-    const staticOnlySet = new Set(staticOnlyBdCodes.map(c => c.toUpperCase()));
-    return fallbackBusinessDevelopmentRows
-      .filter(row => staticOnlySet.has(row.discount_code.toUpperCase()))
-      .map(row => {
-        const conv = row.Signups > 0 ? (row["Paying cx"] / row.Signups) * 100 : 0;
-        const { score, badge } = calculateOverallScore(conv, 0, row.Signups, 0, false);
-        return {
-          ...row,
-          Province: row.Province || "?",
-          calculatedConversion: conv,
-          performanceRating: calculatePerformanceRating(conv),
-          efficiencyRatio: 0,
-          overallScore: score,
-          performanceGrade: calculatePerformanceGrade(conv),
-          overallScoreBadge: badge,
-          isStaticOnly: true,
-        };
-      });
-  }, [hasReportGenerated, foundReports.length, analysis.state.bdFilter, fallbackBusinessDevelopmentRows, staticOnlyBdCodes]);
-
-  // Merge Looker-based reports with synthetic built-in BD entries.
-  // Summary KPIs are intentionally left unchanged (synthetic codes contribute no LTV).
-  const augmentedFoundReports = useMemo(
-    () => [...foundReports, ...syntheticFoundReports],
-    [foundReports, syntheticFoundReports],
-  );
-
-  // Globally restrict to BD-only codes: EV-prefix, static BD DB entries, or BusinessDevelopment channel.
-  // Non-BD codes (OGSALE50, FPFREEMEALS, etc.) must never reach any tab.
+  // Globally restrict to BD-only codes. Looker exports commonly omit channel,
+  // so the preloaded BD code registry is authoritative for known event codes.
   const isBdCode = useMemo(() => {
-    const bdSet = new Set(staticNonEvBdCodes.map(c => c.toUpperCase()));
     return (code: string, channel: string, isStaticOnly?: boolean): boolean => {
-      const upper = code.toUpperCase();
+      const upper = code.trim().toUpperCase();
       if (upper.startsWith("EV")) return true;
       if (isStaticOnly) return true;
-      if (bdSet.has(upper)) return true;
+      if (staticBdCodeSet.has(toCanonicalCode(code))) return true;
       return channel.replace(/[\s_-]/g, "").toLowerCase() === "businessdevelopment";
     };
-  }, [staticNonEvBdCodes]);
+  }, [staticBdCodeSet]);
 
   const bdFilteredReports = useMemo(() =>
-    augmentedFoundReports.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly)),
-  [augmentedFoundReports, isBdCode]);
+    foundReports.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly)),
+  [foundReports, isBdCode]);
 
   // Recompute KPI summary from BD-filtered reports so Overview/Performance/Revenue KPIs
   // reflect only BD codes, not the full Looker portfolio.
@@ -219,10 +181,11 @@ export default function App(): React.ReactElement {
   }, [bdFilteredReports, missingCodes.length, summary]);
 
   // Filter raw Looker rows to BD-only so Regional's ProvinceIntelligence
-  // and DataExplorer never see non-BD records.
+  // and DataExplorer never see non-BD records. Use the merged dataset so codes
+  // outside the uploaded Looker date range remain available in Regional.
   const bdFilteredDbRows = useMemo(() =>
-    fileUpload.state.dbRows.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "")),
-  [fileUpload.state.dbRows, isBdCode]);
+    effectiveDbRows.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly)),
+  [effectiveDbRows, isBdCode]);
 
   const handleResetWorkspace = (openLooker = false): void => {
     fileUpload.actions.reset();
@@ -326,7 +289,7 @@ export default function App(): React.ReactElement {
             analysis={analysis}
             formatting={formatting}
             onReset={handleResetWorkspace}
-            staticNonEvBdCodes={staticNonEvBdCodes}
+            staticBdCodes={allStaticBdCodes}
           />
         )}
         {hasReportGenerated && !bdOnlyMode && foundReports.length === 0 && (
@@ -373,7 +336,7 @@ export default function App(): React.ReactElement {
               staticLoading={staticSignups.loading}
               staticError={staticSignups.error}
               userPersona={bdOnlyMode && !hasReportGenerated ? "bd-lead" : analysis.state.userPersona}
-              businessDevelopmentCodes={staticNonEvBdCodes}
+              businessDevelopmentCodes={allStaticBdCodes}
               eventName={eventName}
               eventDate={eventDate}
               onApplyCorrections={analysis.actions.applyCorrections}

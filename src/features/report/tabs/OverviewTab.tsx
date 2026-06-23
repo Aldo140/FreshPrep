@@ -277,7 +277,7 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
             previewColor: "#3d3d3d",
             hoverBorder: "#3d3d3d",
           },
-        ].filter(() => true).map(item => {
+        ].filter(item => !(selectedFlow === "paste" && item.page === "regional")).map(item => {
           const isPartial = TAB_RELEVANCE[item.page][selectedFlow] === "partial";
           return (
             <button

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { DiscountCodeData, AnalyzedCodeReport } from "../../../types";
 import {
   Users, DollarSign, TrendingUp, AlertTriangle,
-  Award, TrendingDown, LineChart, Info,
+  Award, TrendingDown, Info, Search, X, ChevronRight,
 } from "lucide-react";
 
 interface ProvinceIntelligenceProps {
@@ -40,6 +40,11 @@ const GRADE_DESC: Record<string, string> = {
 export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceIntelligenceProps) {
   const [dataSource, setDataSource] = useState<"audited" | "full">("audited");
   const [sortBy, setSortBy] = useState<"paying" | "conversion" | "ltv" | "signups" | "score">("paying");
+  const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
+  const [eventSearch, setEventSearch] = useState("");
+  const [eventChannel, setEventChannel] = useState("all");
+  const [eventConversion, setEventConversion] = useState<"all" | "high" | "medium" | "low">("all");
+  const [eventMinSignups, setEventMinSignups] = useState("0");
 
   const activeDataset = useMemo(() => {
     if (dataSource === "audited") {
@@ -140,6 +145,48 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
     if (sortBy === "score")      return b.metricScore - a.metricScore;
     return b.totalPayingCustomers - a.totalPayingCustomers;
   }), [provinceMetrics, sortBy]);
+
+  const provinceEvents = useMemo(() => {
+    if (!selectedProvince) return [];
+    return activeDataset.filter(row =>
+      ((row.Province || "").trim().toUpperCase() || "ON") === selectedProvince
+    );
+  }, [activeDataset, selectedProvince]);
+
+  const eventChannels = useMemo(() =>
+    Array.from(new Set(provinceEvents.map(row => row.channel || "Unspecified"))).sort(),
+    [provinceEvents],
+  );
+
+  const filteredProvinceEvents = useMemo(() => {
+    const query = eventSearch.trim().toLowerCase();
+    const minSignups = Math.max(0, Number(eventMinSignups) || 0);
+
+    return provinceEvents
+      .filter(row => {
+        const conversion = row.Signups > 0 ? (row["Paying cx"] / row.Signups) * 100 : 0;
+        const matchesSearch = !query
+          || row.discount_code.toLowerCase().includes(query)
+          || (row.channel || "").toLowerCase().includes(query);
+        const matchesChannel = eventChannel === "all" || (row.channel || "Unspecified") === eventChannel;
+        const matchesConversion = eventConversion === "all"
+          || (eventConversion === "high" && conversion >= 40)
+          || (eventConversion === "medium" && conversion >= 20 && conversion < 40)
+          || (eventConversion === "low" && conversion < 20);
+        return matchesSearch && matchesChannel && matchesConversion && row.Signups >= minSignups;
+      })
+      .sort((a, b) => b.Signups - a.Signups);
+  }, [provinceEvents, eventSearch, eventChannel, eventConversion, eventMinSignups]);
+
+  const openProvinceEvents = (province: string) => {
+    setSelectedProvince(province);
+    setEventSearch("");
+    setEventChannel("all");
+    setEventConversion("all");
+    setEventMinSignups("0");
+  };
+
+  const selectedProvinceMetric = provinceMetrics.find(row => row.province === selectedProvince);
 
   const maxStats = useMemo(() => {
     let maxSignups = 1, maxLtv = 1, maxPaying = 1;
@@ -287,7 +334,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
           <div className="border-b border-[#f5f5f3] pb-3">
             <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Comparison</p>
             <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5">Province metrics</h3>
-            <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Signups, conversion rate, and avg LTV — relative to the top province.</p>
+            <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Signups, conversion rate, and avg LTV — relative to the top province. Click a province to view its events.</p>
           </div>
 
           <div className="flex flex-col gap-3 overflow-y-auto max-h-[380px] pr-0.5">
@@ -297,13 +344,19 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               const relConv    = Math.min(100, row.conversion);
 
               return (
-                <div key={row.province} className="border border-[#f0f0ee] p-3 rounded-xl bg-[#fafafa] flex flex-col gap-2">
+                <button
+                  key={row.province}
+                  type="button"
+                  onClick={() => openProvinceEvents(row.province)}
+                  className="w-full text-left border border-[#f0f0ee] p-3 rounded-xl bg-[#fafafa] flex flex-col gap-2 cursor-pointer hover:border-[#2b5346]/30 hover:bg-[#f7faf8] transition-colors"
+                >
                   <div className="flex items-center justify-between">
                     <span className="font-black text-xs text-[#0f0f0f] font-mono bg-[#f0f0ee] px-2 py-0.5 rounded border border-[#e5e5e5]">
                       {row.province}
                     </span>
-                    <span className="text-[10px] font-mono text-[#888]">
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-[#888]">
                       Score <span className="font-black text-[#2b5346]">{row.metricScore}</span>/100
+                      <ChevronRight className="w-3 h-3" />
                     </span>
                   </div>
                   <div className="flex flex-col gap-1.5 text-[9.5px]">
@@ -323,7 +376,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                       </div>
                     ))}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -389,7 +442,12 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 {sortedLeaderboard.map((row, i) => {
                   const gs = GRADE_STYLE[row.grade];
                   return (
-                    <tr key={row.province} className="hover:bg-[#fafafa]">
+                    <tr
+                      key={row.province}
+                      onClick={() => openProvinceEvents(row.province)}
+                      className="hover:bg-[#fafafa] cursor-pointer"
+                      title={`View ${row.province} events`}
+                    >
                       <td className="py-2.5 px-4 text-center text-[#c0c0c0] font-mono text-[10.5px]">{i + 1}</td>
                       <td className="py-2.5 px-4 font-black text-[#0f0f0f] font-mono">{row.province}</td>
                       <td className="py-2.5 px-4 text-right font-mono">{row.totalSignups.toLocaleString()}</td>
@@ -477,6 +535,149 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
             </div>
           </div>
         </section>
+      )}
+
+      {/* ── Province event drill-down ───────────────────────── */}
+      {selectedProvince && selectedProvinceMetric && (
+        <div
+          className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-0 sm:p-5"
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) setSelectedProvince(null);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedProvince} events`}
+            className="bg-white w-full sm:max-w-5xl max-h-[92vh] rounded-t-2xl sm:rounded-2xl border border-[#e5e5e5] shadow-2xl overflow-hidden flex flex-col"
+          >
+            <header className="px-5 py-4 border-b border-[#ececec] bg-[#fafafa] flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black font-mono px-2 py-0.5 rounded bg-[#eef4f1] text-[#2b5346] border border-[#2b5346]/20">
+                    {selectedProvince}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">Province events</span>
+                </div>
+                <h3 className="text-lg font-black text-[#0f0f0f] mt-1">
+                  {provinceEvents.length.toLocaleString()} event{provinceEvents.length !== 1 ? "s" : ""} in {selectedProvince}
+                </h3>
+                <p className="text-[10px] font-mono text-[#888] mt-0.5">
+                  {selectedProvinceMetric.totalSignups.toLocaleString()} signups · {selectedProvinceMetric.conversion.toFixed(1)}% conversion · ${Math.round(selectedProvinceMetric.avgLTV12).toLocaleString()} avg LTV
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedProvince(null)}
+                className="w-8 h-8 rounded-lg border border-[#e5e5e5] bg-white text-[#888] hover:text-[#1a1a1a] hover:border-[#c8c8c8] flex items-center justify-center cursor-pointer"
+                aria-label="Close province events"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </header>
+
+            <div className="px-5 py-3 border-b border-[#ececec] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(220px,1fr)_180px_170px_140px] gap-2 bg-white">
+              <label className="relative">
+                <Search className="w-3.5 h-3.5 text-[#a1a1a1] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={eventSearch}
+                  onChange={e => setEventSearch(e.target.value)}
+                  placeholder="Search code or channel…"
+                  className="w-full h-9 pl-9 pr-3 rounded-lg border border-[#e5e5e5] text-xs outline-none focus:border-[#2b5346] bg-[#fafafa]"
+                  autoFocus
+                />
+              </label>
+              <select
+                value={eventChannel}
+                onChange={e => setEventChannel(e.target.value)}
+                className="h-9 px-3 rounded-lg border border-[#e5e5e5] text-xs text-[#3d3d3d] bg-[#fafafa] outline-none focus:border-[#2b5346]"
+                aria-label="Filter by channel"
+              >
+                <option value="all">All channels</option>
+                {eventChannels.map(channel => <option key={channel} value={channel}>{channel}</option>)}
+              </select>
+              <select
+                value={eventConversion}
+                onChange={e => setEventConversion(e.target.value as "all" | "high" | "medium" | "low")}
+                className="h-9 px-3 rounded-lg border border-[#e5e5e5] text-xs text-[#3d3d3d] bg-[#fafafa] outline-none focus:border-[#2b5346]"
+                aria-label="Filter by conversion"
+              >
+                <option value="all">All conversion rates</option>
+                <option value="high">High · 40%+</option>
+                <option value="medium">Medium · 20–39.9%</option>
+                <option value="low">Low · under 20%</option>
+              </select>
+              <select
+                value={eventMinSignups}
+                onChange={e => setEventMinSignups(e.target.value)}
+                className="h-9 px-3 rounded-lg border border-[#e5e5e5] text-xs text-[#3d3d3d] bg-[#fafafa] outline-none focus:border-[#2b5346]"
+                aria-label="Filter by minimum signups"
+              >
+                <option value="0">Any signups</option>
+                <option value="10">10+ signups</option>
+                <option value="25">25+ signups</option>
+                <option value="50">50+ signups</option>
+                <option value="100">100+ signups</option>
+              </select>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              <table className="w-full min-w-[760px] text-left border-collapse text-xs">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-[#fafafa] border-b border-[#e5e5e5] text-[#a1a1a1] font-semibold font-mono uppercase text-[9px]">
+                    <th className="py-2.5 px-5">Event code</th>
+                    <th className="py-2.5 px-4">Channel</th>
+                    <th className="py-2.5 px-4 text-right">Signups</th>
+                    <th className="py-2.5 px-4 text-right">Paying cx</th>
+                    <th className="py-2.5 px-4 text-right">Conversion</th>
+                    <th className="py-2.5 px-4 text-right">Avg LTV 12m</th>
+                    <th className="py-2.5 px-5 text-right">Total LTV 12m</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f3f3f1]">
+                  {filteredProvinceEvents.map((row, index) => {
+                    const conversion = row.Signups > 0 ? (row["Paying cx"] / row.Signups) * 100 : 0;
+                    const avgLtv = row["Paying cx"] > 0 ? row["Sum LTV 12"] / row["Paying cx"] : 0;
+                    return (
+                      <tr key={`${row.discount_code}-${row.channel}-${index}`} className="hover:bg-[#fafafa]">
+                        <td className="py-3 px-5 font-black font-mono text-[#0f0f0f]">{row.discount_code}</td>
+                        <td className="py-3 px-4 text-[#666]">{row.channel || "Unspecified"}</td>
+                        <td className="py-3 px-4 text-right font-mono">{row.Signups.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-right font-mono">{row["Paying cx"].toLocaleString()}</td>
+                        <td className="py-3 px-4 text-right font-mono font-bold text-[#2b5346]">{conversion.toFixed(1)}%</td>
+                        <td className="py-3 px-4 text-right font-mono">${Math.round(avgLtv).toLocaleString()}</td>
+                        <td className="py-3 px-5 text-right font-mono text-[#888]">${Math.round(row["Sum LTV 12"]).toLocaleString()}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {filteredProvinceEvents.length === 0 && (
+                <div className="py-14 px-5 text-center">
+                  <p className="text-sm font-semibold text-[#3d3d3d]">No events match these filters.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEventSearch("");
+                      setEventChannel("all");
+                      setEventConversion("all");
+                      setEventMinSignups("0");
+                    }}
+                    className="mt-2 text-xs font-semibold text-[#2b5346] cursor-pointer hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <footer className="px-5 py-3 border-t border-[#ececec] bg-[#fafafa] flex items-center justify-between text-[10px] font-mono text-[#888]">
+              <span>{filteredProvinceEvents.length.toLocaleString()} of {provinceEvents.length.toLocaleString()} events shown</span>
+              <span>{filteredProvinceEvents.reduce((sum, row) => sum + row.Signups, 0).toLocaleString()} signups in filtered view</span>
+            </footer>
+          </section>
+        </div>
       )}
 
     </div>

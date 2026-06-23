@@ -97,11 +97,11 @@ export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }:
                     <span className="text-[8.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full">recommended</span>
                   </div>
                   <p className="text-xs text-[#3d3d3d] mt-1 leading-relaxed">
-                    Checking historical events before Jun 19, 2026? Use this. Calendar heatmap, fiscal year breakdown, and province analysis are pre-loaded — no upload needed. Browse all events, or filter to specific codes.
+                    Explore historical events from Jul 1, 2024 through Jun 22, 2026. Calendar heatmap, fiscal year breakdown, province analysis, and code lookup are pre-loaded — no upload needed.
                   </p>
                   <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                     <span className="text-[9px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-1 rounded-lg">Jul 2024 – Jun 2026</span>
-                    <span className="text-[9px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-1 rounded-lg">580+ event codes</span>
+                    <span className="text-[9px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-1 rounded-lg">705 event codes</span>
                     <span className="text-[9px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-1 rounded-lg">2 fiscal years</span>
                   </div>
                 </div>
@@ -109,7 +109,7 @@ export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }:
 
               <div className="mt-3 flex items-center gap-1.5 text-[9px] font-mono text-[#c9a000]">
                 <AlertCircle className="w-3 h-3 shrink-0" />
-                <span>Data ends Jun 19, 2026 — upload a newer export anytime to get current data</span>
+                <span>Data ends Jun 22, 2026 — upload a newer export anytime to get current data</span>
               </div>
             </div>
 
@@ -130,7 +130,7 @@ export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }:
           {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-[#e5e5e5]" />
-            <span className="text-[10px] font-mono text-[#a1a1a1] shrink-0">checking a new event or need data after Jun 19?</span>
+            <span className="text-[10px] font-mono text-[#a1a1a1] shrink-0">checking a new event or need data after Jun 22?</span>
             <div className="flex-1 h-px bg-[#e5e5e5]" />
           </div>
 
@@ -147,7 +147,7 @@ export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }:
                 <div>
                   <p className="text-sm font-semibold text-[#1a1a1a]">Upload Your Own Data File</p>
                   <p className="text-xs text-[#888] mt-0.5">
-                    For new events or data after Jun 19, 2026 — export from Looker and upload below
+                    For new events, current conversion/LTV, or data after Jun 22, 2026 — export the Client LTV table from Looker Studio
                   </p>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }:
                 <div className="rounded-xl border border-[#2b5346]/15 bg-[#eef4f1] p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[#2b5346] text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
-                    <p className="text-xs font-semibold text-[#1a1a1a] uppercase tracking-wide">Export from Looker Studios</p>
+                    <p className="text-xs font-semibold text-[#1a1a1a] uppercase tracking-wide">Where to get the file</p>
                   </div>
                   <a
                     href={LOOKER_URL}
@@ -172,14 +172,18 @@ export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }:
                     className="flex items-center gap-2 text-xs font-semibold text-[#2b5346] hover:underline w-fit"
                   >
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                    Signup Flow Evaluation Dashboard
+                    Open the Signup Flow Evaluation Dashboard
                   </a>
                   <ol className="space-y-1.5 text-xs text-[#3d3d3d] leading-relaxed list-none pl-1">
                     {[
-                      ["a.", "Open the dashboard using the link above"],
-                      ["b.", "Select your date range — narrower ranges export faster"],
-                      ["c.", <>Navigate to the <strong className="font-semibold text-[#1a1a1a]">Client LTV</strong> section</>],
-                      ["d.", <>Export the table as <span className="font-mono font-semibold">CSV</span>, then upload below</>],
+                      ["a.", <>Open the <strong className="font-semibold text-[#1a1a1a]">Signup Flow Evaluation Dashboard</strong> using the link above and sign in with your Fresh Prep Google account</>],
+                      ["b.", <>Go to the dashboard page or section labelled <strong className="font-semibold text-[#1a1a1a]">Signup to Paying Customer Conversion</strong></>],
+                      ["c.", <>At the top of that page, set the date filter to the <strong className="font-semibold text-[#1a1a1a]">period you want to analyze</strong>. Start before the event or campaign began and extend the end date far enough to include later conversions</>],
+                      ["d.", <>Scroll until you reach the table labelled <strong className="font-semibold text-[#1a1a1a]">Client LTV</strong>. Do not use the Exportable Client List for this upload—the Client LTV table contains the aggregated signup, paying-customer, conversion, discount, and LTV metrics this analysis needs</>],
+                      ["e.", <>Move your cursor over the <strong className="font-semibold text-[#1a1a1a]">Client LTV table</strong>. In the table’s top-right corner, click the <strong className="font-semibold text-[#1a1a1a]">three-dot menu (⋮)</strong></>],
+                      ["f.", <>Select <strong className="font-semibold text-[#1a1a1a]">Export → CSV</strong>. Export the table itself—not the entire dashboard or a PDF</>],
+                      ["g.", <>Wait for the download to finish. The CSV will normally be saved in your computer’s <strong className="font-semibold text-[#1a1a1a]">Downloads</strong> folder</>],
+                      ["h.", "Return here and drag the downloaded CSV into the upload box below, or click the box and select it from Downloads"],
                     ].map(([label, text]) => (
                       <li key={String(label)} className="flex items-start gap-2">
                         <span className="text-[#2b5346] font-bold font-mono mt-px shrink-0">{label}</span>

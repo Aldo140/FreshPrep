@@ -18,8 +18,8 @@ export const TAB_RELEVANCE: Record<ReportPage, Record<AnalysisFlow, Relevance>> 
   data:        { all: "full", paste: "full",    compare: "full"    },
   issues:      { all: "full", paste: "full",    compare: "full"    },
   comparison:  { all: "full", paste: "full",    compare: "full"    },
-  calendar:    { all: "full", paste: "partial", compare: "partial" },
-  fiscal:      { all: "full", paste: "partial", compare: "partial" },
+  calendar:    { all: "full", paste: "full",    compare: "full"    },
+  fiscal:      { all: "full", paste: "full",    compare: "full"    },
 };
 
 /**
@@ -29,8 +29,4 @@ export const TAB_RELEVANCE: Record<ReportPage, Record<AnalysisFlow, Relevance>> 
 export const PARTIAL_REASON: Partial<Record<ReportPage, string>> = {
   regional:
     "Regional data is most useful when analyzing your full dataset — it shows where signups are coming from across all campaigns. For a complete provincial view, go back and choose Full Dataset.",
-  calendar:
-    "Calendar shows all events in the dataset. When analyzing specific codes only, some families may have limited or no data.",
-  fiscal:
-    "Fiscal summary covers all events. When analyzing specific codes only, volume figures reflect your codes only.",
 };

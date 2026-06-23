@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Database, Upload } from "lucide-react";
+import { CalendarDays, Database, MapPin, Search, Upload, Users, X } from "lucide-react";
 import { AnalyzedCodeReport, AnalysisFlow, DiscountCodeData, UserPersona, ReportPage } from "../../../types";
 import { EventStats } from "../../../hooks/useCustomerData";
 import ProvinceIntelligence from "../components/ProvinceIntelligence";
@@ -21,6 +21,12 @@ function fyRange(fy: string): string {
   const end = Number(fy.slice(2));
   return `Jul ${end - 1} – Jun ${end}`;
 }
+function formatIsoDate(date: string): string {
+  if (!date) return "Unknown";
+  const parsed = new Date(`${date}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" });
+}
 
 interface RegionalTabProps {
   dbRows: DiscountCodeData[];
@@ -36,6 +42,8 @@ interface RegionalTabProps {
 export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker, activeProvince, onNavigate }: RegionalTabProps): React.ReactElement {
   const relevance = TAB_RELEVANCE.regional[selectedFlow];
   const bdOnly = dbRows.length === 0 && foundReports.length === 0;
+  const [codeLookupQuery, setCodeLookupQuery] = useState("");
+  const [selectedLookupCode, setSelectedLookupCode] = useState<string | null>(null);
 
   // Dynamic date range from eventStats
   const dbDateRange = useMemo(() => {
@@ -152,6 +160,34 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
     [foundReports, activeProvinces],
   );
 
+  const codeLookupMatches = useMemo(() => {
+    const query = codeLookupQuery.trim().toUpperCase();
+    if (!query) return [];
+    return eventStats
+      .filter(event => event.code.toUpperCase().includes(query))
+      .sort((a, b) => {
+        const aStarts = a.code.toUpperCase().startsWith(query) ? 1 : 0;
+        const bStarts = b.code.toUpperCase().startsWith(query) ? 1 : 0;
+        return bStarts - aStarts || b.totalSignups - a.totalSignups || a.code.localeCompare(b.code);
+      })
+      .slice(0, 12);
+  }, [codeLookupQuery, eventStats]);
+
+  const selectedLookupEvent = useMemo(() => {
+    if (selectedLookupCode) {
+      return eventStats.find(event => event.code === selectedLookupCode) ?? null;
+    }
+    const query = codeLookupQuery.trim().toUpperCase();
+    return eventStats.find(event => event.code.toUpperCase() === query) ?? null;
+  }, [selectedLookupCode, codeLookupQuery, eventStats]);
+
+  const lookupProvinceRows = useMemo(() => {
+    if (!selectedLookupEvent) return [];
+    return Object.entries(selectedLookupEvent.signupsByProvince)
+      .filter(([province]) => province && province !== "??")
+      .sort((a, b) => b[1] - a[1]);
+  }, [selectedLookupEvent]);
+
   // Scope copy
   const isSelected = selectedFlow === "paste";
   const scopeLabel = isSelected
@@ -203,6 +239,160 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
             </button>
           )}
         </div>
+
+        {/* Code lookup */}
+        <section className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f0f0ee] bg-[#fafafa]">
+            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Code lookup</p>
+            <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5">Find any BD event code</h3>
+            <p className="text-[10px] font-mono text-[#888] mt-0.5">
+              Search all {eventStats.length.toLocaleString()} codes for timing, signup volume, and province distribution.
+            </p>
+          </div>
+
+          <div className="p-5">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a1a1a1]" />
+              <input
+                type="text"
+                value={codeLookupQuery}
+                onChange={event => {
+                  setCodeLookupQuery(event.target.value);
+                  setSelectedLookupCode(null);
+                }}
+                placeholder="Search a code, e.g. BDCFTELUSHEALTH or EVSTAMPEDE…"
+                className="w-full h-11 pl-10 pr-10 rounded-xl border border-[#e5e5e5] bg-[#fafafa] text-sm font-mono text-[#1a1a1a] outline-none focus:border-[#2b5346] focus:bg-white"
+              />
+              {codeLookupQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeLookupQuery("");
+                    setSelectedLookupCode(null);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-[#a1a1a1] hover:text-[#1a1a1a] cursor-pointer"
+                  aria-label="Clear code lookup"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {codeLookupQuery.trim() && !selectedLookupEvent && (
+              <div className="mt-2 border border-[#e8e8e8] rounded-xl overflow-hidden">
+                {codeLookupMatches.length > 0 ? (
+                  <div className="divide-y divide-[#f3f3f1] max-h-72 overflow-y-auto">
+                    {codeLookupMatches.map(event => (
+                      <button
+                        key={event.code}
+                        type="button"
+                        onClick={() => {
+                          setSelectedLookupCode(event.code);
+                          setCodeLookupQuery(event.code);
+                        }}
+                        className="w-full px-4 py-3 flex items-center justify-between gap-4 text-left hover:bg-[#f7faf8] cursor-pointer"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-black font-mono text-[#0f0f0f] truncate">{event.code}</p>
+                          <p className="text-[9px] font-mono text-[#a1a1a1] mt-0.5">
+                            {event.code.startsWith("EV") ? "EV-prefix event" : "BD partnership"} · {event.eventMonth || "date unavailable"}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-black font-mono text-[#2b5346]">{event.totalSignups.toLocaleString()}</p>
+                          <p className="text-[8px] font-mono uppercase tracking-wide text-[#a1a1a1]">signups</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-4 py-8 text-center">
+                    <p className="text-xs font-semibold text-[#3d3d3d]">No matching BD event code.</p>
+                    <p className="text-[9px] font-mono text-[#a1a1a1] mt-1">Try a shorter part of the code.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {selectedLookupEvent && (
+              <div className="mt-4 border border-[#dce9e4] rounded-xl overflow-hidden">
+                <div className="px-4 py-3 bg-[#eef4f1] border-b border-[#dce9e4] flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-sm font-black font-mono text-[#0f0f0f]">{selectedLookupEvent.code}</h4>
+                      <span className="text-[8.5px] font-black font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-[#2b5346]/20 text-[#2b5346] bg-white">
+                        {selectedLookupEvent.code.startsWith("EV") ? "EV-prefix event" : "BD partnership"}
+                      </span>
+                    </div>
+                    <p className="text-[9px] font-mono text-[#668176] mt-1">
+                      Complete record from the built-in BD Events DB
+                    </p>
+                  </div>
+                  <span className="text-[9px] font-mono font-semibold px-2 py-1 rounded border bg-white"
+                    style={{ color: provColor(selectedLookupEvent.homeProvince), borderColor: provColor(selectedLookupEvent.homeProvince) + "40" }}>
+                    Home: {selectedLookupEvent.homeProvince}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#f0f0ee]">
+                  <div className="p-4 flex items-center gap-3">
+                    <Users className="w-4 h-4 text-[#2b5346] shrink-0" />
+                    <div>
+                      <p className="text-lg font-black font-mono text-[#1a1a1a]">{selectedLookupEvent.totalSignups.toLocaleString()}</p>
+                      <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">total signups</p>
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center gap-3">
+                    <CalendarDays className="w-4 h-4 text-[#c9a000] shrink-0" />
+                    <div>
+                      <p className="text-sm font-black font-mono text-[#1a1a1a]">{formatIsoDate(selectedLookupEvent.firstSignupDate)}</p>
+                      <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">first signup date</p>
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center gap-3">
+                    <CalendarDays className="w-4 h-4 text-[#9b4a1c] shrink-0" />
+                    <div>
+                      <p className="text-sm font-black font-mono text-[#1a1a1a]">{formatIsoDate(selectedLookupEvent.lastSignupDate)}</p>
+                      <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">last signup date</p>
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center gap-3">
+                    <MapPin className="w-4 h-4 shrink-0" style={{ color: provColor(selectedLookupEvent.homeProvince) }} />
+                    <div>
+                      <p className="text-sm font-black font-mono text-[#1a1a1a]">{lookupProvinceRows.length}</p>
+                      <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">signup provinces</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-4 py-4 border-t border-[#f0f0ee]">
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-3">Province distribution</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {lookupProvinceRows.map(([province, signups]) => {
+                      const share = selectedLookupEvent.totalSignups > 0
+                        ? (signups / selectedLookupEvent.totalSignups) * 100
+                        : 0;
+                      return (
+                        <div key={province}>
+                          <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                            <span className="font-black" style={{ color: provColor(province) }}>{province}</span>
+                            <span className="text-[#3d3d3d]">{signups.toLocaleString()} · {share.toFixed(0)}%</span>
+                          </div>
+                          <div className="h-1.5 bg-[#eee] rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${share}%`, backgroundColor: provColor(province) }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[8.5px] font-mono text-[#b0b0b0] mt-3">
+                    Peak signup month: {selectedLookupEvent.eventMonth || "unknown"}. Upload Looker LTV data to add conversion and customer value metrics.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Province signups grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

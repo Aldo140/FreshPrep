@@ -17,22 +17,25 @@ import {
   Scale,
   ChevronDown,
   ChevronUp,
+  Sparkles,
 } from "lucide-react";
 import { FileUploadState } from "../../hooks/useFileUpload";
 import { AnalysisState, AnalysisActions } from "../../hooks/useAnalysis";
 import { CodeFormattingActions } from "../../hooks/useCodeFormatting";
+import { CodeFixerModal, scanCodeInput } from "./components/CodeFixerModal";
 
 interface WizardFlowProps {
   fileState: FileUploadState;
   analysis: { state: AnalysisState; actions: AnalysisActions };
   formatting: CodeFormattingActions;
   onReset: () => void;
-  staticNonEvBdCodes?: string[];
+  staticBdCodes?: string[];
 }
 
-export function WizardFlow({ fileState, analysis, formatting, onReset, staticNonEvBdCodes = [] }: WizardFlowProps): React.ReactElement {
+export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdCodes = [] }: WizardFlowProps): React.ReactElement {
   const { state, actions } = analysis;
   const [showColumns, setShowColumns] = useState(false);
+  const [showCodeFixer, setShowCodeFixer] = useState(false);
 
   const isValid = fileState.fileValidation?.isValid;
   const requiredFound = fileState.fileValidation?.requiredFound ?? [];
@@ -46,11 +49,11 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
     (e.currentTarget as HTMLButtonElement).style.transform = "";
   };
 
-  // Static non-EV BD codes as a lookup set for cross-referencing file codes that
+  // Static BD codes as a lookup set for cross-referencing file codes that
   // lack a channel column (the Looker export never includes channel).
-  const staticNonEvBdSet = useMemo(
-    () => new Set(staticNonEvBdCodes.map(c => c.toUpperCase())),
-    [staticNonEvBdCodes],
+  const staticBdSet = useMemo(
+    () => new Set(staticBdCodes.map(c => c.toUpperCase())),
+    [staticBdCodes],
   );
 
   // BD codes in the uploaded file: EV-prefix OR explicitly verified by the
@@ -59,12 +62,12 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
     const s = new Set<string>();
     for (const r of fileState.dbRows) {
       const code = r.discount_code.trim().toUpperCase();
-      if (code.startsWith("EV") || staticNonEvBdSet.has(code)) {
+      if (code.startsWith("EV") || staticBdSet.has(code)) {
         s.add(code);
       }
     }
     return s;
-  }, [fileState.dbRows, staticNonEvBdSet]);
+  }, [fileState.dbRows, staticBdSet]);
 
   const bdCodes = useMemo(
     () => fileState.uniqueDbCodes.filter(c => bdCodeSet.has(c.toUpperCase())),
@@ -77,9 +80,29 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
     [fileState.uniqueDbCodes],
   );
   const staticOnlyBdCodes = useMemo(
-    () => staticNonEvBdCodes.filter(c => !fileCodeSet.has(c.toUpperCase())),
-    [staticNonEvBdCodes, fileCodeSet],
+    () => staticBdCodes.filter(c => !fileCodeSet.has(c.toUpperCase())),
+    [staticBdCodes, fileCodeSet],
   );
+  const allLookupCodes = useMemo(
+    () => Array.from(new Set([...fileState.uniqueDbCodes, ...staticBdCodes])).sort(),
+    [fileState.uniqueDbCodes, staticBdCodes],
+  );
+  const inputScan = useMemo(
+    () => scanCodeInput(state.inputText, allLookupCodes),
+    [state.inputText, allLookupCodes],
+  );
+
+  const handleAnalyzeSpecificCodes = () => {
+    if (inputScan.entries.length === 0) {
+      alert("Please enter or paste at least one discount code to analyze.");
+      return;
+    }
+    if (inputScan.hasIssues) {
+      setShowCodeFixer(true);
+      return;
+    }
+    actions.compileSpecificCodes(inputScan.entries.map(entry => entry.resolved!).filter(Boolean));
+  };
 
   const bdDisplayCount = state.bdFilter ? bdCodes.length : fileState.uniqueDbCodes.length;
 
@@ -297,20 +320,45 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
             {/* PASTE flow */}
             {state.selectedFlow === "paste" && (
               <div className="space-y-4" id="panel-paste-flow">
-                <textarea
-                  value={state.inputText}
-                  onChange={e => actions.setInputText(e.target.value)}
-                  placeholder={"Paste promo codes here — one per line\n\nFPFREEMEALS\nGA75BRAND18\nEVSHIPYARDS20"}
-                  className="w-full h-40 font-mono text-sm border border-[#e5e5e5] rounded-xl p-4 bg-[#f8f7f5] focus:outline-none focus:ring-2 focus:ring-[#2b5346] focus:border-transparent focus:bg-white resize-none placeholder:text-[#c8c8c8]"
-                  style={{ transition: "background-color 150ms var(--ease-out)" }}
-                />
+                <div className="relative">
+                  <textarea
+                    value={state.inputText}
+                    onChange={e => actions.setInputText(e.target.value)}
+                    placeholder={"Paste promo codes here — one code per line\n\nFPFREEMEALS\nGA75BRAND18\nEVSHIPYARDS20"}
+                    className="w-full h-44 font-mono text-sm border border-[#e5e5e5] rounded-xl p-4 pr-14 bg-[#f8f7f5] focus:outline-none focus:ring-2 focus:ring-[#2b5346] focus:border-transparent focus:bg-white resize-none placeholder:text-[#c8c8c8]"
+                    style={{ transition: "background-color 150ms var(--ease-out)" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => state.inputText.trim() && setShowCodeFixer(true)}
+                    disabled={!state.inputText.trim()}
+                    className="absolute right-3 top-3 w-9 h-9 rounded-lg border border-[#d0e8e2] bg-white text-[#2b5346] flex items-center justify-center cursor-pointer hover:bg-[#eef4f1] disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Scan and fix pasted codes"
+                    aria-label="Scan and fix pasted codes"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                  <p className="absolute right-3 bottom-3 text-[8.5px] font-mono text-[#a1a1a1]">one per line</p>
+                </div>
 
                 <div className="flex items-center justify-between gap-3">
                   {/* Code count + tools toggle */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-semibold text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 px-2.5 py-1 rounded font-mono">
-                      {state.normalizedPastedCodes.length} {state.normalizedPastedCodes.length === 1 ? "code" : "codes"}
+                      {inputScan.entries.length} {inputScan.entries.length === 1 ? "code" : "codes"}
                     </span>
+                    <span className="text-[9px] font-mono text-[#a1a1a1]">
+                      {inputScan.nonEmptyLines} line{inputScan.nonEmptyLines !== 1 ? "s" : ""}
+                    </span>
+                    {inputScan.hasIssues && state.inputText.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setShowCodeFixer(true)}
+                        className="text-[9px] font-mono font-semibold text-[#9b4a1c] bg-[#fff8f4] border border-[#f0d1c1] px-2 py-1 rounded-lg cursor-pointer"
+                      >
+                        Review {inputScan.missing.length > 0 ? `${inputScan.missing.length} unmatched` : "cleanup"}
+                      </button>
+                    )}
                   </div>
 
                   {/* Action buttons */}
@@ -325,10 +373,10 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
                       </button>
                     )}
                     <button
-                      onClick={actions.compileSpecificCodes}
-                      disabled={state.normalizedPastedCodes.length === 0}
+                      onClick={handleAnalyzeSpecificCodes}
+                      disabled={inputScan.entries.length === 0}
                       className={`px-5 py-2 rounded-lg font-semibold text-xs cursor-pointer inline-flex items-center gap-2 ${
-                        state.normalizedPastedCodes.length > 0
+                        inputScan.entries.length > 0
                           ? "bg-[#2b5346] hover:bg-[#0d3a2f] text-white shadow-sm"
                           : "bg-[#e5e5e5] text-[#a1a1a1] cursor-not-allowed"
                       }`}
@@ -385,7 +433,7 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
                 <button
                   onClick={() => actions.compilePortfolio(
                     state.bdFilter
-                      ? bdCodes
+                      ? Array.from(new Set([...bdCodes, ...staticOnlyBdCodes]))
                       : fileState.uniqueDbCodes
                   )}
                   className="px-6 py-2.5 rounded-lg bg-[#2b5346] hover:bg-[#0d3a2f] text-white font-semibold text-xs shadow-sm flex items-center gap-2 cursor-pointer"
@@ -554,6 +602,19 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
             Upload a different file
           </button>
         </div>
+      )}
+
+      {showCodeFixer && (
+        <CodeFixerModal
+          rawText={state.inputText}
+          allCodes={allLookupCodes}
+          onClose={() => setShowCodeFixer(false)}
+          onApply={(codes, analyze) => {
+            actions.setInputText(codes.join("\n"));
+            setShowCodeFixer(false);
+            if (analyze) actions.compileSpecificCodes(codes);
+          }}
+        />
       )}
 
     </div>

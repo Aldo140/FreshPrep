@@ -1,5 +1,7 @@
 import React, { useRef, useState } from "react";
-import { Upload, X } from "lucide-react";
+import { ExternalLink, Upload, X } from "lucide-react";
+
+const LOOKER_URL = "https://datastudio.google.com/u/1/reporting/025f0337-0db3-4d63-8659-8b52ba3c4b6f/page/p_g8t621xt5c";
 
 interface CustomerUploadModalProps {
   isOpen: boolean;
@@ -49,7 +51,7 @@ export function CustomerUploadModal({ isOpen, isLoading, onClose, onFile }: Cust
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-xl border border-[#e5e5e5] w-full max-w-lg p-6 flex flex-col gap-5"
+        className="bg-white rounded-2xl shadow-xl border border-[#e5e5e5] w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 flex flex-col gap-5"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -57,7 +59,7 @@ export function CustomerUploadModal({ isOpen, isLoading, onClose, onFile }: Cust
           <div>
             <h3 className="text-[15px] font-black text-[#0f0f0f]">Upload custom signup data</h3>
             <p className="text-xs text-[#a1a1a1] font-mono mt-0.5 leading-relaxed">
-              The calendar uses the built-in Jan 2025 – Jun 2026 dataset by default.
+              The calendar uses the built-in Jul 1, 2024 – Jun 22, 2026 dataset by default.
               Upload a newer export to override it.
             </p>
           </div>
@@ -66,15 +68,37 @@ export function CustomerUploadModal({ isOpen, isLoading, onClose, onFile }: Cust
           </button>
         </div>
 
-        {/* Source hint */}
-        <div className="bg-[#f8f7f5] rounded-xl border border-[#e5e5e5] px-4 py-3">
-          <p className="text-[10px] font-semibold text-[#3d3d3d] font-mono uppercase tracking-wide mb-1">
+        {/* Source instructions */}
+        <div className="bg-[#eef4f1] rounded-xl border border-[#2b5346]/15 px-4 py-4">
+          <p className="text-[10px] font-semibold text-[#3d3d3d] font-mono uppercase tracking-wide mb-2">
             Where to get this file
           </p>
-          <p className="text-[11px] text-[#3d3d3d] leading-relaxed">
-            Export the <strong>Signup Flow Evaluation Dashboard</strong> from Looker — the
-            "Signup to Paying Customer" table. Filter to your date range and download as CSV.
-          </p>
+          <a
+            href={LOOKER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#2b5346] hover:underline mb-3"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Open the Signup Flow Evaluation Dashboard
+          </a>
+          <ol className="space-y-2 text-[11px] text-[#3d3d3d] leading-relaxed">
+            {[
+              ["a.", <>Open the <strong>Signup Flow Evaluation Dashboard</strong> using the link above and sign in with your Fresh Prep Google account.</>],
+              ["b.", <>Go to the dashboard page or section labelled <strong>Signup to Paying Customer Conversion</strong>.</>],
+              ["c.", <>At the top of that page, set the date filter to the <strong>period you want to analyze</strong>. Start before the event or campaign began and extend the end date far enough to capture later conversions.</>],
+              ["d.", <>Scroll until you find the table labelled <strong>Exportable Client List</strong>. It contains individual signup records with status, discount code, province, first paying date, and days until paying.</>],
+              ["e.", <>Move your cursor over the <strong>Exportable Client List</strong>. Click the <strong>three-dot menu (⋮)</strong> in the table’s top-right corner.</>],
+              ["f.", <>Choose <strong>Export → CSV</strong>. Export the table itself—not the full dashboard or a PDF.</>],
+              ["g.", <>Wait for the download to finish. The CSV will normally appear in your computer’s <strong>Downloads</strong> folder.</>],
+              ["h.", "Return here and drag the downloaded CSV into the upload box below, or click the box and select it from Downloads."],
+            ].map(([label, text]) => (
+              <li key={String(label)} className="flex items-start gap-2">
+                <span className="font-bold font-mono text-[#2b5346] shrink-0">{label}</span>
+                <span>{text}</span>
+              </li>
+            ))}
+          </ol>
         </div>
 
         {/* Drop zone */}

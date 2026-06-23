@@ -134,6 +134,7 @@ function Section({ title, sub, children }: SectionProps) {
 export function FiscalTab({ foundReports, summary, customerData, selectedFlow, activeProvince, onProvinceChange }: FiscalTabProps): React.ReactElement {
   const { eventStats } = customerData;
   const hasLookerData = foundReports.length > 0;
+  const hasClientLtvUpload = hasLookerData;
   const [eventModal, setEventModal] = useState<{ fy: string; prov: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
   const [modalSort, setModalSort] = useState<{ by: "code" | "month" | "signups"; dir: "asc" | "desc" }>({ by: "month", dir: "asc" });
@@ -141,6 +142,31 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   const [modalSearch, setModalSearch] = useState("");
   const [topPerfView, setTopPerfView] = useState<"volume" | "conversion" | "ltv">("volume");
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [evPrefixOnly, setEvPrefixOnly] = useState(false);
+
+  const nonEvCodeCount = useMemo(
+    () => new Set([
+      ...eventStats
+        .filter(e => !e.code.trim().toUpperCase().startsWith("EV"))
+        .map(e => e.code.trim().toUpperCase()),
+      ...foundReports
+        .filter(r => !r.discount_code.trim().toUpperCase().startsWith("EV"))
+        .map(r => r.discount_code.trim().toUpperCase()),
+    ]).size,
+    [eventStats, foundReports],
+  );
+  const visibleEventStats = useMemo(
+    () => evPrefixOnly
+      ? eventStats.filter(e => e.code.trim().toUpperCase().startsWith("EV"))
+      : eventStats,
+    [eventStats, evPrefixOnly],
+  );
+  const visibleReports = useMemo(
+    () => evPrefixOnly
+      ? foundReports.filter(r => r.discount_code.trim().toUpperCase().startsWith("EV"))
+      : foundReports,
+    [foundReports, evPrefixOnly],
+  );
 
   function openModal(fy: string, prov: string | null) {
     setEventModal({ fy, prov });
@@ -185,7 +211,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       return m >= 7 ? m - 6 : m + 6;
     })();
 
-    for (const e of eventStats) {
+    for (const e of visibleEventStats) {
       if (!e.eventMonth) continue;
       eventMonths.add(e.eventMonth);
       const yr = fiscalYear(e.eventMonth);
@@ -227,8 +253,8 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
     const years = Object.keys(byYear).sort();
     const latestYear = years[years.length - 1] ?? currentFY;
     const prevYear = years.length >= 2 ? years[years.length - 2] : null;
-    const totalEvents = eventStats.length;
-    const totalSignups = eventStats.reduce((s, e) => s + e.totalSignups, 0);
+    const totalEvents = visibleEventStats.length;
+    const totalSignups = visibleEventStats.reduce((s, e) => s + e.totalSignups, 0);
 
     // Coverage per FY: how many of the 12 months have event data
     const coverage: Record<string, { covered: number; total: 12; status: "full" | "partial" | "none" }> = {};
@@ -250,29 +276,33 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       eventListByFY,
       ytdSignupsByFY,
     };
-  }, [eventStats]);
+  }, [visibleEventStats]);
 
   // ── Financial metrics from foundReports ───────────────────────
 
   const financials = useMemo(() => {
-    if (!hasLookerData) return null;
-    const totalSignups     = summary.totalSignups;
-    const totalPaying      = summary.totalPayingCustomers;
-    const blendedConv      = summary.blendedConversionRate;
-    const totalLTV12       = summary.totalLTV12;
-    const avgLTV12         = summary.averageLTV12;
-    const avgConv          = summary.averageConversionRate;
+    if (!hasLookerData || visibleReports.length === 0) return null;
+    const totalSignups = visibleReports.reduce((sum, report) => sum + report.Signups, 0);
+    const totalPaying = visibleReports.reduce((sum, report) => sum + report["Paying cx"], 0);
+    const blendedConv = totalSignups > 0 ? (totalPaying / totalSignups) * 100 : 0;
+    const totalLTV12 = visibleReports.reduce((sum, report) => sum + report["Sum LTV 12"], 0);
+    const avgLTV12 = visibleReports.length > 0
+      ? visibleReports.reduce((sum, report) => sum + report["Avg LTV 12"], 0) / visibleReports.length
+      : 0;
+    const avgConv = visibleReports.length > 0
+      ? visibleReports.reduce((sum, report) => sum + report.calculatedConversion, 0) / visibleReports.length
+      : 0;
 
-    const hasCost = foundReports.some(r => (r["Total Spend"] ?? 0) > 0);
-    const totalSpend    = foundReports.reduce((s, r) => s + (r["Total Spend"]  ?? 0), 0);
-    const eventSpend    = foundReports.reduce((s, r) => s + (r["Event Spend"]  ?? 0), 0);
-    const staffSpend    = foundReports.reduce((s, r) => s + (r["Staff Spend"]  ?? 0), 0);
+    const hasCost = visibleReports.some(r => (r["Total Spend"] ?? 0) > 0);
+    const totalSpend    = visibleReports.reduce((s, r) => s + (r["Total Spend"]  ?? 0), 0);
+    const eventSpend    = visibleReports.reduce((s, r) => s + (r["Event Spend"]  ?? 0), 0);
+    const staffSpend    = visibleReports.reduce((s, r) => s + (r["Staff Spend"]  ?? 0), 0);
     const cpaSignup     = hasCost && totalSignups  > 0 ? totalSpend / totalSignups  : null;
     const cpaPaying     = hasCost && totalPaying   > 0 ? totalSpend / totalPaying   : null;
     const revToSpend    = hasCost && totalSpend    > 0 ? totalLTV12  / totalSpend   : null;
 
     // Top performers — BD codes only (EV prefix or BusinessDevelopment channel)
-    const bdReports = foundReports.filter(r => {
+    const bdReports = visibleReports.filter(r => {
       if (r.discount_code?.startsWith("EV")) return true;
       const ch = (r.channel ?? "").replace(/[\s_-]/g, "").toLowerCase();
       return ch === "businessdevelopment";
@@ -283,7 +313,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
 
     // Province breakdown from foundReports (split compound province strings)
     const provMap: Record<string, { paying: number; ltv12: number; spend: number; codes: number }> = {};
-    for (const r of foundReports) {
+    for (const r of visibleReports) {
       const provs = (r.Province ?? "ON").split("+").map(p => p.trim()).filter(Boolean);
       const div = provs.length;
       for (const prov of provs) {
@@ -304,7 +334,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       topLTV: byLTV.slice(0, 3),
       provMap,
     };
-  }, [foundReports, summary, hasLookerData]);
+  }, [visibleReports, hasLookerData]);
 
   // ── All provinces seen across both data sources ───────────────
 
@@ -366,14 +396,14 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   // ── Date range label ──────────────────────────────────────────
 
   const dateRangeLabel = useMemo(() => {
-    const months = eventStats.map(e => e.eventMonth).filter(Boolean);
+    const months = visibleEventStats.map(e => e.eventMonth).filter(Boolean);
     if (!months.length) return "All Events";
     const min = months.reduce((a, b) => a < b ? a : b);
     const max = months.reduce((a, b) => a > b ? a : b);
     const ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const fmt = (mk: string) => `${ABBR[Number(mk.slice(5)) - 1]} ${mk.slice(0, 4)}`;
     return min === max ? fmt(min) : `${fmt(min)} – ${fmt(max)}`;
-  }, [eventStats]);
+  }, [visibleEventStats]);
 
   if (!eventStats.length && !hasLookerData) {
     return (
@@ -388,15 +418,19 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
     <div className="px-5 py-7 max-w-6xl mx-auto flex flex-col gap-8 w-full">
 
       {/* ── Header ────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className={`flex items-start justify-between gap-4 flex-wrap ${
+        hasClientLtvUpload ? "bg-[#2b5346] rounded-2xl px-5 py-4 shadow-sm" : ""
+      }`}>
         <div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#a1a1a1] mb-1">Business Development · Fiscal Year Jul 1 – Jun 30</p>
-          <h2 className="text-[24px] font-black text-[#0f0f0f]">BD Fiscal</h2>
+          <p className={`text-[9px] font-mono uppercase tracking-[0.22em] mb-1 ${hasClientLtvUpload ? "text-white/60" : "text-[#a1a1a1]"}`}>Business Development · Fiscal Year Jul 1 – Jun 30</p>
+          <h2 className={`text-[24px] font-black ${hasClientLtvUpload ? "text-white" : "text-[#0f0f0f]"}`}>BD Fiscal</h2>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            <p className="text-[11px] font-mono text-[#a1a1a1]">{dateRangeLabel}</p>
-            <span className="text-[9px] font-mono text-[#c0c0c0]">·</span>
-            <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e8e8e8] px-2 py-0.5 rounded-full">
-              {customerData.eventStats.length > 0 && customerData.eventStats.some(e => !/^EV/i.test(e.code))
+            <p className={`text-[11px] font-mono ${hasClientLtvUpload ? "text-white/70" : "text-[#a1a1a1]"}`}>{dateRangeLabel}</p>
+            <span className={`text-[9px] font-mono ${hasClientLtvUpload ? "text-white/30" : "text-[#c0c0c0]"}`}>·</span>
+            <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full border ${
+              hasClientLtvUpload ? "text-white/75 bg-white/10 border-white/15" : "text-[#a1a1a1] bg-[#f8f7f5] border-[#e8e8e8]"
+            }`}>
+              {visibleEventStats.length > 0 && visibleEventStats.some(e => !/^EV/i.test(e.code))
                 ? "EV-prefix + BusinessDevelopment channel"
                 : "EV-prefix codes only"}
             </span>
@@ -404,8 +438,10 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
           {/* Next fiscal year starts banner */}
           {volume.nextFYStart && (
             <div className="mt-3 flex items-center gap-2">
-              <div className="h-px flex-1 bg-[#f0f0ee] max-w-12" />
-              <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e8e8e8] px-2.5 py-1 rounded-full">
+              <div className={`h-px flex-1 max-w-12 ${hasClientLtvUpload ? "bg-white/20" : "bg-[#f0f0ee]"}`} />
+              <span className={`text-[9px] font-mono px-2.5 py-1 rounded-full border ${
+                hasClientLtvUpload ? "text-white/70 bg-white/10 border-white/15" : "text-[#a1a1a1] bg-[#f8f7f5] border-[#e8e8e8]"
+              }`}>
                 {volume.nextFY} begins {volume.nextFYStart}
               </span>
             </div>
@@ -428,6 +464,47 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         </div>
       </div>
 
+      {/* ── Event code scope ─────────────────────────────────────── */}
+      {nonEvCodeCount > 0 && (
+        <div className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Event code scope</p>
+            <p className="text-[9.5px] font-mono text-[#888] mt-0.5">
+              {evPrefixOnly
+                ? `Showing EV-prefix codes only · ${nonEvCodeCount} non-EV code${nonEvCodeCount !== 1 ? "s" : ""} excluded`
+                : "Showing EV-prefix and verified BusinessDevelopment codes"}
+            </p>
+            <p className="text-[9px] text-[#9b4a1c] mt-1">
+              EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 select-none shrink-0">
+            <span className="text-[10px] font-mono font-semibold text-[#3d3d3d]">EV-prefix only</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={evPrefixOnly}
+              onClick={() => {
+                setEvPrefixOnly(value => !value);
+                setEventModal(null);
+                setModalProvFilter(null);
+                setModalSearch("");
+              }}
+              className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
+                evPrefixOnly ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
+              }`}
+              aria-label="Show EV-prefix event codes only"
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                  evPrefixOnly ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Section 1: Volume KPIs ────────────────────────────────── */}
       <Section title="Event Volume" sub="from event signup data">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -435,8 +512,8 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
             label="Unique Event Codes"
             value={volume.totalEvents.toLocaleString()}
             sub={`${volume.years.length} fiscal year${volume.years.length !== 1 ? "s" : ""} · signup data`}
-            note={hasLookerData && foundReports.length !== volume.totalEvents
-              ? `${foundReports.length} of ${volume.totalEvents} have Looker data`
+            note={hasLookerData && visibleReports.length !== volume.totalEvents
+              ? `${visibleReports.length} of ${volume.totalEvents} have Looker data`
               : undefined}
             accent="#2b5346"
             icon={<CalendarDays className="w-4 h-4" />}
@@ -507,9 +584,9 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
             />
             <KpiCard
               label="Looker Codes"
-              value={financials.totalSignups > 0 ? String(foundReports.length) : "—"}
+              value={financials.totalSignups > 0 ? String(visibleReports.length) : "—"}
               sub={selectedFlow === "paste" ? "your pasted codes" : "full dataset"}
-              note={volume.totalEvents > 0 && volume.totalEvents !== foundReports.length
+              note={volume.totalEvents > 0 && volume.totalEvents !== visibleReports.length
                 ? `${volume.totalEvents} unique codes in signups`
                 : undefined}
               accent="#d0d0d0"

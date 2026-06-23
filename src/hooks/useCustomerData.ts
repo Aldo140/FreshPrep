@@ -19,9 +19,11 @@ export interface MonthStats {
 
 export interface EventStats {
   code: string;
-  eventDate: string;      // ISO "YYYY-MM-DD" — first signup date
+  eventDate: string;      // ISO "YYYY-MM-DD" — first signup date within peak month
   eventMonth: string;     // "YYYY-MM"
   eventDateLabel: string; // "Jul 3" (for display inside month context)
+  firstSignupDate: string; // ISO "YYYY-MM-DD" — earliest signup using this code
+  lastSignupDate: string;  // ISO "YYYY-MM-DD" — latest signup using this code
   homeProvince: string;   // majority province
   totalSignups: number;
   signupsByProvince: Record<string, number>;
@@ -90,9 +92,11 @@ function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
     // Group valid ISO dates by month, then pick the peak month (most signups).
     // Using first-signup as event date places codes with early stragglers in wrong month.
     const byMonth: Record<string, string[]> = {};
+    const allSignupDates: string[] = [];
     for (const r of codeRows) {
       const d = toIsoDate(r.signup_date);
       if (!d) continue;
+      allSignupDates.push(d);
       const mo = d.slice(0, 7);
       if (!byMonth[mo]) byMonth[mo] = [];
       byMonth[mo].push(d);
@@ -100,13 +104,19 @@ function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
     const peakMonth = Object.entries(byMonth).sort((a, b) => b[1].length - a[1].length)[0]?.[0] ?? "";
     const eventMonth = peakMonth;
     const eventDate = peakMonth ? [...byMonth[peakMonth]].sort()[0] : "";
+    allSignupDates.sort();
+    const firstSignupDate = allSignupDates[0] ?? "";
+    const lastSignupDate = allSignupDates[allSignupDates.length - 1] ?? "";
 
     const d = eventDate ? new Date(eventDate + "T12:00:00") : null;
     const eventDateLabel = d
       ? d.toLocaleDateString("en-CA", { month: "short", day: "numeric" })
       : "";
 
-    events.push({ code, eventDate, eventMonth, eventDateLabel, homeProvince, totalSignups: codeRows.length, signupsByProvince: provinces });
+    events.push({
+      code, eventDate, eventMonth, eventDateLabel, firstSignupDate, lastSignupDate,
+      homeProvince, totalSignups: codeRows.length, signupsByProvince: provinces,
+    });
   }
 
   return events.sort((a, b) => a.eventDate.localeCompare(b.eventDate));

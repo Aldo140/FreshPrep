@@ -46,7 +46,7 @@ export interface AnalysisActions {
   toggleCompareCode: (code: string) => void;
   selectAllCompareCodes: (codes: string[]) => void;
   clearCompareCodes: () => void;
-  compileSpecificCodes: () => void;
+  compileSpecificCodes: (codesOverride?: string[]) => void;
   compilePortfolio: (allCodes: string[]) => void;
   compileComparison: () => void;
   applyCorrections: (corrections: Record<string, string>) => void;
@@ -124,12 +124,15 @@ export function useAnalysis(
     }, 450);
   }, []);
 
-  const compileSpecificCodes = useCallback((): void => {
-    if (normalizedPastedCodes.length === 0) {
+  const compileSpecificCodes = useCallback((codesOverride?: string[]): void => {
+    const codes = codesOverride ?? normalizedPastedCodes;
+    if (codes.length === 0) {
       alert("Please enter or paste at least one discount code to analyze.");
       return;
     }
-    runWithLoading(normalizedPastedCodes);
+    const uniqueCodes = Array.from(new Set(codes.map(code => code.trim().toUpperCase()).filter(Boolean)));
+    setInputText(uniqueCodes.join("\n"));
+    runWithLoading(uniqueCodes);
   }, [normalizedPastedCodes, runWithLoading]);
 
   const compilePortfolio = useCallback((allCodes: string[]): void => {

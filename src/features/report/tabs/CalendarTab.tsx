@@ -93,9 +93,10 @@ interface CellKey { prov: string; month: string }
 
 const LOOKER_STEPS = [
   { step: "01", title: "Open Looker Studio", body: "Go to Looker Studio and open the FreshPrep analytics workspace. Navigate to the Signup Flow Evaluation Dashboard." },
-  { step: "02", title: "Find the Exportable Client List", body: 'Look for the section or table labelled "Exportable Client List". This view includes every signup with email, status, province, first paying date, and days till paying.' },
-  { step: "03", title: "Set your date range", body: "Use the date filter at the top of the dashboard. Set the start date to when your oldest event ran and the end date to today — or beyond to capture late conversions." },
-  { step: "04", title: "Export as CSV", body: "Click the three-dot menu (⋮) in the top-right corner of the table → Export → CSV. Save the file to your machine, then drop it below." },
+  { step: "02", title: "Open Signup to Paying Customer Conversion", body: 'Go to the dashboard page or section labelled "Signup to Paying Customer Conversion".' },
+  { step: "03", title: "Set your date range", body: "Use the date filter at the top of that page. Start before the event or campaign began and extend the end date far enough to capture later conversions." },
+  { step: "04", title: "Find the Exportable Client List", body: 'Scroll to the table labelled "Exportable Client List". This view includes every signup with status, discount code, province, first paying date, and days till paying.' },
+  { step: "05", title: "Export as CSV", body: "Move over the table, click its top-right three-dot menu (⋮), then choose Export → CSV. Upload the downloaded file below." },
 ];
 
 const EXPECTED_COLS = [
@@ -127,6 +128,7 @@ export function CalendarTab({
   const [showUpload, setShowUpload]         = useState(false);
   const [isDragOver, setIsDragOver]         = useState(false);
   const [pasteOnly, setPasteOnly]           = useState(false);
+  const [evPrefixOnly, setEvPrefixOnly]     = useState(false);
   const [calView, setCalView]               = useState<"heatmap" | "families">("heatmap");
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
   const [familyFilter, setFamilyFilter]     = useState<"all" | "recurring">("recurring");
@@ -146,6 +148,7 @@ export function CalendarTab({
 
   const { eventStats } = customerData;
   const isCustomData = !!customerFileName;
+  const hasClientLtvUpload = foundReports.length > 0;
 
   const reportByCode = useMemo(() => {
     const m = new Map<string, AnalyzedCodeReport>();
@@ -160,12 +163,20 @@ export function CalendarTab({
 
   const isFilteredPaste = selectedFlow === "paste" && pastedSet.size > 0;
 
-  const visibleStats = useMemo(() =>
-    pasteOnly && isFilteredPaste
-      ? eventStats.filter(e => pastedSet.has(e.code))
-      : eventStats,
-    [eventStats, pastedSet, pasteOnly, isFilteredPaste],
+  const nonEvEventCount = useMemo(
+    () => eventStats.filter(e => !e.code.trim().toUpperCase().startsWith("EV")).length,
+    [eventStats],
   );
+
+  const visibleStats = useMemo(() => {
+    let stats = evPrefixOnly
+      ? eventStats.filter(e => e.code.trim().toUpperCase().startsWith("EV"))
+      : eventStats;
+    if (pasteOnly && isFilteredPaste) {
+      stats = stats.filter(e => pastedSet.has(e.code.toUpperCase()));
+    }
+    return stats;
+  }, [eventStats, evPrefixOnly, pastedSet, pasteOnly, isFilteredPaste]);
 
   // ── Month range ───────────────────────────────────────────────
 
@@ -493,11 +504,13 @@ export function CalendarTab({
     <div className="px-5 py-7 max-w-7xl mx-auto flex flex-col gap-5 w-full">
 
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className={`flex items-start justify-between gap-4 flex-wrap ${
+        hasClientLtvUpload ? "bg-[#2b5346] rounded-2xl px-5 py-4 shadow-sm" : ""
+      }`}>
         <div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Event Calendar</p>
-          <h2 className="text-[20px] font-black text-[#0f0f0f]">BD Events · {dateRangeLabel}</h2>
-          <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">
+          <p className={`text-[9px] font-mono uppercase tracking-[0.2em] mb-1 ${hasClientLtvUpload ? "text-white/60" : "text-[#a1a1a1]"}`}>Event Calendar</p>
+          <h2 className={`text-[20px] font-black ${hasClientLtvUpload ? "text-white" : "text-[#0f0f0f]"}`}>BD Events · {dateRangeLabel}</h2>
+          <p className={`text-[10px] font-mono mt-1 ${hasClientLtvUpload ? "text-white/65" : "text-[#a1a1a1]"}`}>
             {calView === "heatmap"
               ? "Each cell = total signups for that province × month. Click any cell to drill in."
               : "Events grouped by recurring family. Expand any row to compare instances."}
@@ -505,15 +518,55 @@ export function CalendarTab({
         </div>
         <div className="flex items-center gap-5 shrink-0 flex-wrap">
           <div className="text-right">
-            <p className="text-2xl font-black font-mono text-[#2b5346]">{visibleEventCount}</p>
-            <p className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">events</p>
+            <p className={`text-2xl font-black font-mono ${hasClientLtvUpload ? "text-[#e7bd27]" : "text-[#2b5346]"}`}>{visibleEventCount}</p>
+            <p className={`text-[9px] font-mono uppercase tracking-wide ${hasClientLtvUpload ? "text-white/55" : "text-[#a1a1a1]"}`}>events</p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-black font-mono text-[#1a1a1a]">{totalSignups.toLocaleString()}</p>
-            <p className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">signups</p>
+            <p className={`text-2xl font-black font-mono ${hasClientLtvUpload ? "text-white" : "text-[#1a1a1a]"}`}>{totalSignups.toLocaleString()}</p>
+            <p className={`text-[9px] font-mono uppercase tracking-wide ${hasClientLtvUpload ? "text-white/55" : "text-[#a1a1a1]"}`}>signups</p>
           </div>
         </div>
       </div>
+
+      {/* ── Event code scope ─────────────────────────────────────── */}
+      {nonEvEventCount > 0 && (
+        <div className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Event code scope</p>
+            <p className="text-[9.5px] font-mono text-[#888] mt-0.5">
+              {evPrefixOnly
+                ? `Showing EV-prefix codes only · ${nonEvEventCount} non-EV code${nonEvEventCount !== 1 ? "s" : ""} excluded`
+                : "Showing EV-prefix and verified BusinessDevelopment codes"}
+            </p>
+            <p className="text-[9px] text-[#9b4a1c] mt-1">
+              EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 select-none shrink-0">
+            <span className="text-[10px] font-mono font-semibold text-[#3d3d3d]">EV-prefix only</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={evPrefixOnly}
+              onClick={() => {
+                setEvPrefixOnly(v => !v);
+                setSelected(null);
+                setPinned(null);
+              }}
+              className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
+                evPrefixOnly ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
+              }`}
+              aria-label="Show EV-prefix event codes only"
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                  evPrefixOnly ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── BD Summary banner (BD-only mode) ─────────────────────── */}
       {foundReports.length === 0 && allProvs.length > 0 && (() => {
@@ -565,7 +618,7 @@ export function CalendarTab({
               </div>
             );
           })}
-          {coverageStats.years.length >= 2 && (() => {
+          {coverageStats.years.length >= 2 && !coverageStats.isYTD && (() => {
             const yrs = coverageStats.years;
             const prev = coverageStats.byYear[yrs[yrs.length - 2]];
             const curr = coverageStats.byYear[yrs[yrs.length - 1]];
@@ -623,7 +676,9 @@ export function CalendarTab({
                       const yIdx = provinceYearStats.years.indexOf(y);
                       const prevY = yIdx > 0 ? provinceYearStats.years[yIdx - 1] : null;
                       const prevN = prevY ? (row.byYear[prevY] ?? 0) : null;
-                      const delta = prevN !== null && prevN > 0 ? Math.round(((n - prevN) / prevN) * 100) : null;
+                      // Suppress YoY arrow for the current YTD year — partial year vs full year is misleading
+                      const delta = prevN !== null && prevN > 0 && !(isLatest && coverageStats.isYTD)
+                        ? Math.round(((n - prevN) / prevN) * 100) : null;
                       return (
                         <div key={y} className="text-right">
                           {n > 0 ? (
@@ -677,7 +732,9 @@ export function CalendarTab({
             <>
               <span className="text-[11px] font-mono text-[#3d3d3d]">Built-in dataset</span>
               <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e8e8e8] px-2 py-0.5 rounded-full shrink-0">{dateRangeLabel}</span>
-              <span className="text-[9px] font-mono text-[#a1a1a1]">EV-prefix codes only</span>
+              <span className="text-[9px] font-mono text-[#a1a1a1]">
+                {evPrefixOnly ? "EV-prefix codes only" : "EV-prefix + verified BusinessDevelopment codes"}
+              </span>
             </>
           )}
         </div>

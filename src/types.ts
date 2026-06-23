@@ -6,6 +6,7 @@
 export interface DiscountCodeData {
   discount_code: string;
   channel: string;
+  isStaticOnly?: boolean; // derived from the preloaded signup DB, not the uploaded Looker export
   Province?: string; // added to support regional operations
   Signups: number;
   "Paying cx": number;
