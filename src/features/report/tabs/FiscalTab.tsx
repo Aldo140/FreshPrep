@@ -173,7 +173,14 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
     const signupsByProvByFY: Record<string, Record<string, number>> = {};
     const eventsByProvYTD: Record<string, number> = {};
     const signupsByProvYTD: Record<string, number> = {};
+    const ytdSignupsByFY: Record<string, number> = {};
     const eventMonths = new Set<string>();
+
+    // FY month position: Jul=1, Aug=2, ..., Jun=12
+    const nowFYPos = (() => {
+      const m = Number(nowMk.slice(5, 7));
+      return m >= 7 ? m - 6 : m + 6;
+    })();
 
     for (const e of eventStats) {
       if (!e.eventMonth) continue;
@@ -184,6 +191,13 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       byYear[yr].signups += e.totalSignups;
       if (!eventListByFY[yr]) eventListByFY[yr] = [];
       eventListByFY[yr].push(e);
+
+      // YTD: include this event if its FY-month position ≤ today's FY-month position
+      const eM = Number(e.eventMonth.slice(5, 7));
+      const eFYPos = eM >= 7 ? eM - 6 : eM + 6;
+      if (eFYPos <= nowFYPos) {
+        ytdSignupsByFY[yr] = (ytdSignupsByFY[yr] ?? 0) + e.totalSignups;
+      }
 
       if (e.homeProvince && e.homeProvince !== "??") {
         eventsByProv[e.homeProvince] = (eventsByProv[e.homeProvince] ?? 0) + 1;
@@ -231,6 +245,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       eventsByProvYTD, signupsByProvYTD,
       years, latestYear, prevYear, totalEvents, totalSignups, coverage, nextFY, nextFYStart,
       eventListByFY,
+      ytdSignupsByFY,
     };
   }, [eventStats]);
 
@@ -610,6 +625,46 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                     </tr>
                   );
                 })}
+                {/* YTD same-period comparison row — only when current FY is in the data and not yet complete */}
+                {showYTD && volume.latestYear === currentFY && (() => {
+                  const vals = volume.years.map(yr => volume.ytdSignupsByFY[yr] ?? 0);
+                  const prev = vals.length >= 2 ? vals[vals.length - 2] : null;
+                  const curr = vals[vals.length - 1] ?? null;
+                  const d = prev !== null && curr !== null && prev > 0 ? delta(curr, prev) : null;
+                  const ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                  const nowMonthLabel = `${ABBR[Number(nowMk.slice(5, 7)) - 1]} ${nowMk.slice(0, 4)}`;
+                  return (
+                    <tr className="border-b border-[#f8f8f8] bg-[#eef4f1]/40">
+                      <td className="px-5 py-3 text-[11px] font-semibold text-[#3d3d3d]">
+                        YTD{" "}
+                        <span className="text-[9px] font-mono text-[#a1a1a1] font-normal">through {nowMonthLabel}</span>
+                      </td>
+                      {volume.years.map((yr, yi) => {
+                        const val = vals[yi];
+                        const isLatest = yi === volume.years.length - 1;
+                        return (
+                          <td key={yr} className="text-right px-5 py-3">
+                            <span className={`text-[12px] font-black font-mono ${isLatest ? "text-[#0f0f0f]" : "text-[#999]"}`}>
+                              {fmtBig(val)}
+                            </span>
+                          </td>
+                        );
+                      })}
+                      <td className="text-right px-5 py-3">
+                        {d ? (
+                          <span
+                            className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full"
+                            style={{ backgroundColor: d.up ? "#eef4f1" : "#fff0f0", color: d.up ? "#2b5346" : "#850b0b" }}
+                          >
+                            {d.up ? "↑" : "↓"}{Math.abs(d.pct)}%
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-[#d0d0d0]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
               </tbody>
             </table>
             {financials && (
