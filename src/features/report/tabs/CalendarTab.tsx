@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, ChevronRight, Upload, X, ChevronDown, ChevronUp,
   Database, Pin, PinOff, BarChart2, CalendarDays,
@@ -17,6 +17,8 @@ interface CalendarTabProps {
   isLoadingCustomer: boolean;
   onCustomerFile: (file: File) => void;
   onClearCustomer: () => void;
+  activeProvince?: string | null;
+  onProvinceChange?: (p: string | null) => void;
 }
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -114,6 +116,7 @@ export function CalendarTab({
   customerData, rawPastedCodes, foundReports, selectedFlow,
   staticLoading, staticError,
   customerFileName, isLoadingCustomer, onCustomerFile, onClearCustomer,
+  activeProvince, onProvinceChange,
 }: CalendarTabProps): React.ReactElement {
 
   const [activeProvs, setActiveProvs]       = useState<Set<string> | null>(null);
@@ -126,6 +129,17 @@ export function CalendarTab({
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
   const [familyFilter, setFamilyFilter]     = useState<"all" | "recurring">("recurring");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync global province chip → local province filter
+  useEffect(() => {
+    if (activeProvince != null) {
+      setActiveProvs(new Set([activeProvince]));
+    } else {
+      setActiveProvs(null);
+    }
+    setSelected(null);
+    setPinned(null);
+  }, [activeProvince]);
 
   const { eventStats } = customerData;
   const isCustomData = !!customerFileName;

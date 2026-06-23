@@ -13,6 +13,8 @@ interface FiscalTabProps {
   summary: KPIReportSummary;
   customerData: CustomerDataResult;
   selectedFlow: AnalysisFlow;
+  activeProvince?: string | null;
+  onProvinceChange?: (p: string | null) => void;
 }
 
 // ── Formatting ──────────────────────────────────────────────────
@@ -128,7 +130,7 @@ function Section({ title, sub, children }: SectionProps) {
 
 // ── Main component ──────────────────────────────────────────────
 
-export function FiscalTab({ foundReports, summary, customerData, selectedFlow }: FiscalTabProps): React.ReactElement {
+export function FiscalTab({ foundReports, summary, customerData, selectedFlow, activeProvince, onProvinceChange }: FiscalTabProps): React.ReactElement {
   const { eventStats } = customerData;
   const hasLookerData = foundReports.length > 0;
   const [eventModal, setEventModal] = useState<{ fy: string; prov: string | null } | null>(null);
@@ -678,8 +680,12 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow }:
                   const convPct = fin && totalSig > 0 ? (fin.paying / totalSig) * 100 : null;
                   const maxSig = Math.max(1, ...allProvs.map(p => volume.signupsByProv[p] ?? 0));
                   return (
-                    <tr key={prov} className={`border-b border-[#f8f8f8] ${ri % 2 === 1 ? "bg-[#fafafa]" : ""}`}>
-                      <td className="px-5 py-2.5">
+                    <tr key={prov} className={`border-b border-[#f8f8f8] ${ri % 2 === 1 ? "bg-[#fafafa]" : ""}`}
+                      style={prov === activeProvince ? { borderLeft: `3px solid ${provColor(prov)}` } : undefined}>
+                      <td
+                        className="px-5 py-2.5 cursor-pointer"
+                        onClick={() => onProvinceChange?.(prov === activeProvince ? null : prov)}
+                      >
                         <div className="flex items-center gap-3">
                           <span className="text-[11px] font-black font-mono" style={{ color: provColor(prov) }}>{prov}</span>
                           <div className="flex-1 max-w-16 h-1 bg-[#f0f0ee] rounded-full overflow-hidden">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ReportPage,
   ActiveTab,
@@ -23,6 +23,13 @@ import { CalendarTab } from "./tabs/CalendarTab";
 import { FiscalTab } from "./tabs/FiscalTab";
 import { CustomerUploadModal } from "./components/CustomerUploadModal";
 import { CustomerDataResult } from "../../hooks/useCustomerData";
+
+const CHIP_PROV_COLOR: Record<string, string> = {
+  BC: "#4d8970", AB: "#c9a000", ON: "#2b5346",
+  QC: "#9b4a1c", SK: "#6b8e9f", MB: "#8a6f00",
+  NS: "#5a5a5a", NB: "#888",
+};
+const chipProvColor = (p: string) => CHIP_PROV_COLOR[p] ?? "#888";
 
 interface ReportDashboardProps {
   reportPage: ReportPage;
@@ -93,6 +100,19 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   } = props;
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+
+  const [activeProvince, setActiveProvince] = useState<string | null>(null);
+
+  const chipProvinces = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const e of customerData.eventStats) {
+      if (!e.homeProvince || e.homeProvince === "??") continue;
+      counts[e.homeProvince] = (counts[e.homeProvince] ?? 0) + e.totalSignups;
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([p]) => p);
+  }, [customerData.eventStats]);
 
   const allPages: { id: ReportPage; label: string }[] = [
     { id: "comparison", label: "Comparison" },
@@ -181,6 +201,34 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </button>
       </div>
 
+      {/* Province chip — visible only on Calendar, Fiscal, Regional */}
+      {["calendar", "fiscal", "regional"].includes(reportPage) && chipProvinces.length > 0 && (
+        <div className="shrink-0 px-4 py-1.5 bg-white border-b border-[#ececec] flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <span className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
+          <button
+            onClick={() => setActiveProvince(null)}
+            className="shrink-0 text-[9px] font-mono px-2.5 py-1 rounded-full border transition-colors cursor-pointer"
+            style={activeProvince === null
+              ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
+              : { backgroundColor: "white", color: "#888", borderColor: "#e8e8e8" }}
+          >
+            All
+          </button>
+          {chipProvinces.map(p => (
+            <button
+              key={p}
+              onClick={() => setActiveProvince(prev => prev === p ? null : p)}
+              className="shrink-0 text-[9px] font-mono px-2.5 py-1 rounded-full border transition-colors cursor-pointer"
+              style={activeProvince === p
+                ? { backgroundColor: chipProvColor(p), color: "white", borderColor: chipProvColor(p) }
+                : { backgroundColor: "white", color: chipProvColor(p), borderColor: "#e8e8e8" }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Data source bar — only relevant in BD-only mode (Calendar/Fiscal visible) */}
       {(foundReports.length === 0 || ["calendar", "fiscal"].includes(reportPage)) && <div className="shrink-0 px-4 py-2 bg-[#f8f7f5] border-b border-[#ececec]">
         <div className="max-w-6xl mx-auto flex items-center gap-3 flex-wrap">
@@ -231,6 +279,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             summary={summary}
             customerData={customerData}
             selectedFlow={selectedFlow}
+            activeProvince={activeProvince}
+            onProvinceChange={setActiveProvince}
           />
         )}
 
@@ -246,6 +296,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             isLoadingCustomer={isLoadingCustomer}
             onCustomerFile={onCustomerFile}
             onClearCustomer={onClearCustomer}
+            activeProvince={activeProvince}
+            onProvinceChange={setActiveProvince}
           />
         )}
 
@@ -298,6 +350,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             userPersona={userPersona}
             eventStats={customerData.eventStats}
             onUploadLooker={foundReports.length === 0 ? (onResetToLookerUpload ?? onReset) : undefined}
+            activeProvince={activeProvince}
           />
         )}
 

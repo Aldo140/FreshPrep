@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Database, Upload } from "lucide-react";
 import { AnalyzedCodeReport, AnalysisFlow, DiscountCodeData, UserPersona } from "../../../types";
 import { EventStats } from "../../../hooks/useCustomerData";
@@ -29,9 +29,10 @@ interface RegionalTabProps {
   userPersona: UserPersona;
   eventStats?: EventStats[];
   onUploadLooker?: () => void;
+  activeProvince?: string | null;
 }
 
-export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker }: RegionalTabProps): React.ReactElement {
+export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker, activeProvince }: RegionalTabProps): React.ReactElement {
   const relevance = TAB_RELEVANCE.regional[selectedFlow];
   const bdOnly = dbRows.length === 0 && foundReports.length === 0;
 
@@ -110,6 +111,15 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
   const [activeProvinces, setActiveProvinces] = useState<Set<string>>(
     () => new Set(allProvinces),
   );
+
+  // Sync global province chip → local province filter
+  useEffect(() => {
+    if (activeProvince != null) {
+      setActiveProvinces(new Set([activeProvince]));
+    } else {
+      setActiveProvinces(new Set(allProvinces));
+    }
+  }, [activeProvince]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleProvince = (p: string) => {
     setActiveProvinces(prev => {
