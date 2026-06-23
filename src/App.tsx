@@ -319,6 +319,7 @@ export default function App(): React.ReactElement {
               onBackToWizard={bdOnlyMode ? () => setBdConfig(null) : analysis.actions.backToWizard}
               onReset={handleResetWorkspace}
               onResetToLookerUpload={() => handleResetWorkspace(true)}
+              onCompareFamily={bdOnlyMode ? (codes) => handleBdConfig("compare", codes) : undefined}
             />
           </ErrorBoundary>
         )}

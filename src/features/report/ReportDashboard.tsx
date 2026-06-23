@@ -63,6 +63,7 @@ interface ReportDashboardProps {
   onBackToWizard: () => void;
   onReset: () => void;
   onResetToLookerUpload?: () => void;
+  onCompareFamily?: (codes: string[]) => void;
 }
 
 export function ReportDashboard(props: ReportDashboardProps): React.ReactElement {
@@ -97,6 +98,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     onBackToWizard,
     onReset,
     onResetToLookerUpload,
+    onCompareFamily,
   } = props;
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -298,6 +300,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             onClearCustomer={onClearCustomer}
             activeProvince={activeProvince}
             onProvinceChange={setActiveProvince}
+            onCompareFamily={onCompareFamily}
           />
         )}
 

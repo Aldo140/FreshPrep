@@ -19,6 +19,7 @@ interface CalendarTabProps {
   onClearCustomer: () => void;
   activeProvince?: string | null;
   onProvinceChange?: (p: string | null) => void;
+  onCompareFamily?: (codes: string[]) => void;
 }
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -117,6 +118,7 @@ export function CalendarTab({
   staticLoading, staticError,
   customerFileName, isLoadingCustomer, onCustomerFile, onClearCustomer,
   activeProvince, onProvinceChange,
+  onCompareFamily,
 }: CalendarTabProps): React.ReactElement {
 
   const [activeProvs, setActiveProvs]       = useState<Set<string> | null>(null);
@@ -973,6 +975,17 @@ export function CalendarTab({
                           <span className="text-[11px] font-black font-mono text-[#1a1a1a]">{fam.totalSignups.toLocaleString()}</span>
                           <br />
                           <span className="text-[8px] font-mono text-[#a1a1a1]">{fam.events.length} event{fam.events.length !== 1 ? "s" : ""}</span>
+                          {onCompareFamily && fam.isRecurring && fam.events.length >= 2 && (
+                            <>
+                              <br />
+                              <button
+                                onClick={e => { e.stopPropagation(); onCompareFamily(fam.events.map(ev => ev.code)); }}
+                                className="text-[8px] font-mono text-[#2b5346] underline decoration-dotted cursor-pointer hover:text-[#1a3d2f]"
+                              >
+                                Compare
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
 
