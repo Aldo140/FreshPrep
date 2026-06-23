@@ -116,6 +116,26 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       .map(([p]) => p);
   }, [customerData.eventStats]);
 
+  const dataThrough = useMemo(() => {
+    const months = customerData.eventStats.map(e => e.eventMonth).filter(Boolean);
+    if (!months.length) return null;
+    return months.reduce((a, b) => a > b ? a : b);
+  }, [customerData.eventStats]);
+
+  const dataAgeMonths = useMemo(() => {
+    if (!dataThrough) return 0;
+    const [y, m] = dataThrough.split("-").map(Number);
+    const now = new Date();
+    return (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - m);
+  }, [dataThrough]);
+
+  const dataThroughLabel = useMemo(() => {
+    if (!dataThrough) return null;
+    const ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const [y, m] = dataThrough.split("-").map(Number);
+    return `${ABBR[m - 1]} ${y}`;
+  }, [dataThrough]);
+
   const allPages: { id: ReportPage; label: string }[] = [
     { id: "comparison", label: "Comparison" },
     { id: "overview", label: "Overview" },
@@ -239,6 +259,18 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             <>
               <span className="text-[10.5px] font-semibold font-mono text-[#1a1a1a]">{customerFileName}</span>
               <span className="text-[8.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full">your data</span>
+              {dataThroughLabel && (
+                <span
+                  className={`text-[8.5px] font-mono px-2 py-0.5 rounded-full shrink-0 border ${
+                    dataAgeMonths > 3
+                      ? "text-[#c9a000] bg-[#fffbeb] border-[#f5e09a]"
+                      : "text-[#a1a1a1] bg-[#f5f5f3] border-[#e5e5e5]"
+                  }`}
+                >
+                  data through {dataThroughLabel}
+                  {dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
+                </span>
+              )}
               <span className="text-[9px] font-mono text-[#a1a1a1]">BD events: EV-prefix + BusinessDevelopment channel</span>
               <button
                 onClick={onClearCustomer}
@@ -250,12 +282,18 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
           ) : (
             <>
               <span className="text-[10.5px] font-mono text-[#3d3d3d]">Built-in BD Events DB</span>
-              <span className="text-[8.5px] font-mono text-[#c9a000] bg-[#fffbeb] border border-[#f5e09a] px-2 py-0.5 rounded-full shrink-0">
-                Jul 2024 – Jun 19, 2026
-              </span>
-              <span className="text-[9px] font-mono text-[#a1a1a1]">
-                Events after Jun 19 won't appear — upload a fresh export to get current data
-              </span>
+              {dataThroughLabel && (
+                <span
+                  className={`text-[8.5px] font-mono px-2 py-0.5 rounded-full shrink-0 border ${
+                    dataAgeMonths > 3
+                      ? "text-[#c9a000] bg-[#fffbeb] border-[#f5e09a]"
+                      : "text-[#a1a1a1] bg-[#f5f5f3] border-[#e5e5e5]"
+                  }`}
+                >
+                  data through {dataThroughLabel}
+                  {dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
+                </span>
+              )}
             </>
           )}
           <button
