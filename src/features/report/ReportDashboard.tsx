@@ -112,41 +112,22 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   const pages = allPages.filter(p => {
     const needsLooker = ["overview", "performance", "revenue", "data", "issues"].includes(p.id);
     if (needsLooker && foundReports.length === 0) return false;
-    if (p.id === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) return false;
     if (p.id === "comparison" && selectedFlow !== "compare") return false;
-    if (p.id === "calendar" && selectedFlow === "compare") return false;
-    if (p.id === "fiscal"   && selectedFlow === "compare") return false;
-    // Calendar/Fiscal belong to the built-in BD events DB view only.
-    // Once a Looker file is uploaded those tabs are redundant — hide them.
-    if ((p.id === "calendar" || p.id === "fiscal") && foundReports.length > 0) return false;
     return true;
   });
 
-  // In BD-only mode (no foundReports), default to calendar
   useEffect(() => {
-    if (foundReports.length === 0 && !["calendar", "fiscal", "regional"].includes(reportPage)) {
+    const lookerOnly = ["overview", "performance", "revenue", "data", "issues"] as const;
+    if (foundReports.length === 0 && (lookerOnly as readonly string[]).includes(reportPage)) {
       setReportPage("calendar");
     }
-  }, [foundReports.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (reportPage === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) {
-      setReportPage("overview");
-    }
-  }, [userPersona, reportPage, setReportPage]);
+  }, [foundReports.length, reportPage, setReportPage]);
 
   useEffect(() => {
     if (selectedFlow === "compare") {
       setReportPage("comparison");
     }
   }, [selectedFlow]);
-
-  // Redirect away from Calendar/Fiscal when a Looker file is uploaded
-  useEffect(() => {
-    if (foundReports.length > 0 && (reportPage === "calendar" || reportPage === "fiscal")) {
-      setReportPage("overview");
-    }
-  }, [foundReports.length, reportPage, setReportPage]);
 
   // Redirect away from comparison page when not in compare flow
   useEffect(() => {
@@ -201,7 +182,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       </div>
 
       {/* Data source bar — only relevant in BD-only mode (Calendar/Fiscal visible) */}
-      {foundReports.length === 0 && <div className="shrink-0 px-4 py-2 bg-[#f8f7f5] border-b border-[#ececec]">
+      {(foundReports.length === 0 || ["calendar", "fiscal"].includes(reportPage)) && <div className="shrink-0 px-4 py-2 bg-[#f8f7f5] border-b border-[#ececec]">
         <div className="max-w-6xl mx-auto flex items-center gap-3 flex-wrap">
           <Database className="w-3.5 h-3.5 shrink-0 text-[#a1a1a1]" />
           {customerFileName ? (
