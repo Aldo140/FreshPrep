@@ -93,7 +93,7 @@ export function useStaticSignups() {
     setState(s => ({ ...s, loading: true, error: null }));
     try {
       if (!_promise) {
-        _promise = fetch("/data/signups.csv")
+        _promise = fetch(`${import.meta.env.BASE_URL}data/signups.csv`)
           .then(res => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.text();
