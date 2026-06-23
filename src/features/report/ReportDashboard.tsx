@@ -148,7 +148,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       label: `Issues${missingCodes.length > 0 ? ` (${missingCodes.length})` : ""}`,
     },
     { id: "calendar", label: "Calendar" },
-    { id: "fiscal",   label: "Fiscal" },
+    { id: "fiscal",   label: "BD Fiscal" },
   ];
 
   const pages = allPages.filter(p => {

@@ -138,6 +138,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   const [modalSort, setModalSort] = useState<{ by: "code" | "month" | "signups"; dir: "asc" | "desc" }>({ by: "month", dir: "asc" });
   const [modalProvFilter, setModalProvFilter] = useState<string | null>(null);
   const [modalSearch, setModalSearch] = useState("");
+  const [topPerfView, setTopPerfView] = useState<"volume" | "conversion" | "ltv">("volume");
 
   function openModal(fy: string, prov: string | null) {
     setEventModal({ fy, prov });
@@ -268,10 +269,15 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
     const cpaPaying     = hasCost && totalPaying   > 0 ? totalSpend / totalPaying   : null;
     const revToSpend    = hasCost && totalSpend    > 0 ? totalLTV12  / totalSpend   : null;
 
-    // Top performers
-    const byConv = [...foundReports].sort((a, b) => b.calculatedConversion - a.calculatedConversion);
-    const bySignups = [...foundReports].sort((a, b) => b.Signups - a.Signups);
-    const byLTV = [...foundReports].filter(r => r["Avg LTV 12"] > 0).sort((a, b) => b["Avg LTV 12"] - a["Avg LTV 12"]);
+    // Top performers — BD codes only (EV prefix or BusinessDevelopment channel)
+    const bdReports = foundReports.filter(r => {
+      if (r.discount_code?.startsWith("EV")) return true;
+      const ch = (r.channel ?? "").replace(/[\s_-]/g, "").toLowerCase();
+      return ch === "businessdevelopment";
+    });
+    const byConv = [...bdReports].sort((a, b) => b.calculatedConversion - a.calculatedConversion);
+    const bySignups = [...bdReports].sort((a, b) => b.Signups - a.Signups);
+    const byLTV = [...bdReports].filter(r => r["Avg LTV 12"] > 0).sort((a, b) => b["Avg LTV 12"] - a["Avg LTV 12"]);
 
     // Province breakdown from foundReports (split compound province strings)
     const provMap: Record<string, { paying: number; ltv12: number; spend: number; codes: number }> = {};
@@ -346,6 +352,15 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
     });
   }, [rawModalEvents, modalSearch, modalProvFilter, modalSort]);
 
+  // ── Top performer rows (view-switched) ───────────────────────
+
+  const topPerfRows = useMemo(() => {
+    if (!financials) return null;
+    if (topPerfView === "conversion") return financials.topConv;
+    if (topPerfView === "ltv")        return financials.topLTV;
+    return financials.topSignups;
+  }, [financials, topPerfView]);
+
   // ── Date range label ──────────────────────────────────────────
 
   const dateRangeLabel = useMemo(() => {
@@ -374,7 +389,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#a1a1a1] mb-1">Business Development · Fiscal Year Jul 1 – Jun 30</p>
-          <h2 className="text-[24px] font-black text-[#0f0f0f]">Fiscal Summary</h2>
+          <h2 className="text-[24px] font-black text-[#0f0f0f]">BD Fiscal</h2>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <p className="text-[11px] font-mono text-[#a1a1a1]">{dateRangeLabel}</p>
             <span className="text-[9px] font-mono text-[#c0c0c0]">·</span>
@@ -853,81 +868,80 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         </Section>
       )}
 
-      {/* ── Section 6: Top Performers ────────────────────────────── */}
-      {financials && (
-        <Section title="Top Performers" sub="from Looker data">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Best Conversion */}
-            <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#f5f5f3] flex items-center gap-2">
-                <Target className="w-3.5 h-3.5 text-[#2b5346]" />
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">Best Conversion</p>
-              </div>
-              <div className="divide-y divide-[#f8f8f8]">
-                {financials.topConv.map((r, i) => (
-                  <div key={r.discount_code} className="px-4 py-2.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[9px] font-mono text-[#d0d0d0] shrink-0">{i + 1}</span>
-                      <span className="font-mono font-black text-[10.5px] text-[#0f0f0f] truncate">{r.discount_code}</span>
-                      <span className="text-[8.5px] font-mono shrink-0" style={{ color: provColor((r.Province ?? "ON").split("+")[0].trim()) }}>
-                        {(r.Province ?? "ON").split("+")[0].trim()}
-                      </span>
-                    </div>
-                    <span className="text-[12px] font-black font-mono shrink-0" style={{ color: "#2b5346" }}>
-                      {r.calculatedConversion.toFixed(1)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* ── Section 6: Top BD Codes ──────────────────────────────── */}
+      {financials && topPerfRows !== null && (
+        <Section title="Top BD Codes" sub="BD events only · Looker data">
+          {/* View toggle */}
+          <div className="flex items-center gap-1.5 mb-1">
+            {([
+              { id: "volume"     as const, label: "Volume",     icon: <Users className="w-3 h-3" /> },
+              { id: "conversion" as const, label: "Conversion", icon: <Target className="w-3 h-3" /> },
+              { id: "ltv"        as const, label: "LTV 12-mo",  icon: <DollarSign className="w-3 h-3" /> },
+            ]).map(v => (
+              <button
+                key={v.id}
+                onClick={() => setTopPerfView(v.id)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-mono font-semibold transition-colors cursor-pointer border"
+                style={topPerfView === v.id
+                  ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
+                  : { backgroundColor: "white", color: "#888", borderColor: "#e8e8e8" }}
+              >
+                {v.icon}
+                {v.label}
+              </button>
+            ))}
+          </div>
 
-            {/* Most Signups */}
-            <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#f5f5f3] flex items-center gap-2">
-                <Users className="w-3.5 h-3.5 text-[#4d8970]" />
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">Most Signups</p>
+          {/* Leaderboard */}
+          <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#f5f5f3] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {topPerfView === "volume"     && <Users     className="w-3.5 h-3.5 text-[#2b5346]" />}
+                {topPerfView === "conversion" && <Target    className="w-3.5 h-3.5 text-[#2b5346]" />}
+                {topPerfView === "ltv"        && <DollarSign className="w-3.5 h-3.5 text-[#2b5346]" />}
+                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">
+                  {topPerfView === "volume" ? "Top 3 by signups" : topPerfView === "conversion" ? "Top 3 by conversion" : "Top 3 by LTV (12-mo avg)"}
+                </p>
               </div>
+              <p className="text-[8.5px] font-mono text-[#c0c0c0]">BD codes only</p>
+            </div>
+            {topPerfRows.length === 0 ? (
+              <div className="px-4 py-6 text-center text-[10px] font-mono text-[#c0c0c0]">No BD codes in Looker data</div>
+            ) : (
               <div className="divide-y divide-[#f8f8f8]">
-                {financials.topSignups.map((r, i) => (
-                  <div key={r.discount_code} className="px-4 py-2.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[9px] font-mono text-[#d0d0d0] shrink-0">{i + 1}</span>
-                      <span className="font-mono font-black text-[10.5px] text-[#0f0f0f] truncate">{r.discount_code}</span>
-                      <span className="text-[8.5px] font-mono shrink-0" style={{ color: provColor((r.Province ?? "ON").split("+")[0].trim()) }}>
-                        {(r.Province ?? "ON").split("+")[0].trim()}
+                {topPerfRows.map((r, i) => {
+                  const prov = (r.Province ?? "").split("+")[0].trim() || "?";
+                  const primary =
+                    topPerfView === "volume"     ? r.Signups.toLocaleString()
+                    : topPerfView === "conversion" ? `${r.calculatedConversion.toFixed(1)}%`
+                    : currency(r["Avg LTV 12"]);
+                  const primaryColor =
+                    topPerfView === "conversion"
+                      ? (r.calculatedConversion >= 35 ? "#2b5346" : r.calculatedConversion >= 25 ? "#c9a000" : "#9b4a1c")
+                      : topPerfView === "ltv" ? "#2b5346" : "#0f0f0f";
+                  const secondary =
+                    topPerfView === "volume"     ? `${r.calculatedConversion.toFixed(1)}% conv`
+                    : topPerfView === "conversion" ? `${r.Signups.toLocaleString()} sig`
+                    : `${r.calculatedConversion.toFixed(1)}% conv`;
+                  return (
+                    <div key={r.discount_code} className="px-4 py-3 flex items-center gap-3">
+                      <span className="text-[11px] font-black font-mono text-[#d0d0d0] w-4 shrink-0">{i + 1}</span>
+                      <span
+                        className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+                        style={{ backgroundColor: provColor(prov) + "20", color: provColor(prov) }}
+                      >
+                        {prov}
+                      </span>
+                      <span className="font-mono font-black text-[10.5px] text-[#0f0f0f] truncate flex-1 min-w-0">{r.discount_code}</span>
+                      <span className="text-[9px] font-mono text-[#b0b0b0] shrink-0">{secondary}</span>
+                      <span className="text-[14px] font-black font-mono shrink-0 w-20 text-right" style={{ color: primaryColor }}>
+                        {primary}
                       </span>
                     </div>
-                    <span className="text-[12px] font-black font-mono shrink-0 text-[#1a1a1a]">
-                      {r.Signups.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            </div>
-
-            {/* Best LTV */}
-            <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#f5f5f3] flex items-center gap-2">
-                <DollarSign className="w-3.5 h-3.5 text-[#2b5346]" />
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">Best LTV (12-mo avg)</p>
-              </div>
-              <div className="divide-y divide-[#f8f8f8]">
-                {financials.topLTV.map((r, i) => (
-                  <div key={r.discount_code} className="px-4 py-2.5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[9px] font-mono text-[#d0d0d0] shrink-0">{i + 1}</span>
-                      <span className="font-mono font-black text-[10.5px] text-[#0f0f0f] truncate">{r.discount_code}</span>
-                      <span className="text-[8.5px] font-mono shrink-0" style={{ color: provColor((r.Province ?? "ON").split("+")[0].trim()) }}>
-                        {(r.Province ?? "ON").split("+")[0].trim()}
-                      </span>
-                    </div>
-                    <span className="text-[12px] font-black font-mono shrink-0 text-[#2b5346]">
-                      {currency(r["Avg LTV 12"])}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </Section>
       )}
