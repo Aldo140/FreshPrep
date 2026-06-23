@@ -27,7 +27,7 @@ import {
   calculatePerformanceGrade,
   calculateOverallScore,
 } from "./utils/fileParser";
-import type { AnalyzedCodeReport } from "./types";
+import type { AnalyzedCodeReport, KPIReportSummary } from "./types";
 
 const EMPTY_SUMMARY = {
   totalSignups: 0, totalPayingCustomers: 0, blendedConversionRate: 0,
@@ -165,17 +165,64 @@ export default function App(): React.ReactElement {
 
   // Globally restrict to BD-only codes: EV-prefix, static BD DB entries, or BusinessDevelopment channel.
   // Non-BD codes (OGSALE50, FPFREEMEALS, etc.) must never reach any tab.
-  const bdFilteredReports = useMemo(() => {
+  const isBdCode = useMemo(() => {
     const bdSet = new Set(staticNonEvBdCodes.map(c => c.toUpperCase()));
-    return augmentedFoundReports.filter(r => {
-      const code = (r.discount_code ?? "").toUpperCase();
-      if (code.startsWith("EV")) return true;
-      if (r.isStaticOnly) return true;
-      if (bdSet.has(code)) return true;
-      const ch = (r.channel ?? "").replace(/[\s_-]/g, "").toLowerCase();
-      return ch === "businessdevelopment";
-    });
-  }, [augmentedFoundReports, staticNonEvBdCodes]);
+    return (code: string, channel: string, isStaticOnly?: boolean): boolean => {
+      const upper = code.toUpperCase();
+      if (upper.startsWith("EV")) return true;
+      if (isStaticOnly) return true;
+      if (bdSet.has(upper)) return true;
+      return channel.replace(/[\s_-]/g, "").toLowerCase() === "businessdevelopment";
+    };
+  }, [staticNonEvBdCodes]);
+
+  const bdFilteredReports = useMemo(() =>
+    augmentedFoundReports.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly)),
+  [augmentedFoundReports, isBdCode]);
+
+  // Recompute KPI summary from BD-filtered reports so Overview/Performance/Revenue KPIs
+  // reflect only BD codes, not the full Looker portfolio.
+  const bdFilteredSummary = useMemo((): KPIReportSummary => {
+    const reps = bdFilteredReports;
+    if (reps.length === 0) return summary ?? (EMPTY_SUMMARY as unknown as KPIReportSummary);
+    let totalSignups = 0, totalPayingCustomers = 0;
+    let totalLTV3 = 0, totalLTV6 = 0, totalLTV12 = 0;
+    let sumLTV12Vals = 0, sumConv = 0;
+    let topConvCode = "", topConvVal = 0, topScoreCode = "", topScoreVal = 0;
+    for (const r of reps) {
+      totalSignups += r.Signups;
+      totalPayingCustomers += r["Paying cx"];
+      totalLTV3 += r["Sum LTV 3"] ?? 0;
+      totalLTV6 += r["Sum LTV 6"] ?? 0;
+      totalLTV12 += r["Sum LTV 12"] ?? 0;
+      sumLTV12Vals += r["Avg LTV 12"] ?? 0;
+      sumConv += r.calculatedConversion;
+      if (r.calculatedConversion > topConvVal) { topConvVal = r.calculatedConversion; topConvCode = r.discount_code; }
+      if ((r.overallScore ?? 0) > topScoreVal) { topScoreVal = r.overallScore ?? 0; topScoreCode = r.discount_code; }
+    }
+    return {
+      totalSignups,
+      totalPayingCustomers,
+      blendedConversionRate: totalSignups > 0 ? (totalPayingCustomers / totalSignups) * 100 : 0,
+      totalLTV3,
+      totalLTV6,
+      totalLTV12,
+      averageLTV12: reps.length > 0 ? sumLTV12Vals / reps.length : 0,
+      averageConversionRate: reps.length > 0 ? sumConv / reps.length : 0,
+      numCodesFound: reps.length,
+      numCodesMissing: missingCodes.length,
+      topPerformingCodeCode: topConvCode,
+      topPerformingCodeVal: topConvVal,
+      bestOverallScoreCode: topScoreCode,
+      bestOverallScoreVal: topScoreVal,
+    };
+  }, [bdFilteredReports, missingCodes.length, summary]);
+
+  // Filter raw Looker rows to BD-only so Regional's ProvinceIntelligence
+  // and DataExplorer never see non-BD records.
+  const bdFilteredDbRows = useMemo(() =>
+    fileUpload.state.dbRows.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "")),
+  [fileUpload.state.dbRows, isBdCode]);
 
   const handleResetWorkspace = (openLooker = false): void => {
     fileUpload.actions.reset();
@@ -307,9 +354,9 @@ export default function App(): React.ReactElement {
               activeTab={report.state.activeTab}
               setActiveTab={report.actions.setActiveTab}
               foundReports={bdFilteredReports}
-              summary={summary ?? EMPTY_SUMMARY}
+              summary={bdFilteredSummary}
               channelSummary={channelSummary}
-              dbRows={fileUpload.state.dbRows}
+              dbRows={bdFilteredDbRows}
               fileName={fileUpload.state.fileName}
               uniqueDbCodes={fileUpload.state.uniqueDbCodes}
               rawPastedCodes={effectiveRawPastedCodes}
@@ -342,7 +389,7 @@ export default function App(): React.ReactElement {
       <PrintPreview
         foundReports={bdFilteredReports}
         missingCodes={missingCodes}
-        summary={summary}
+        summary={bdFilteredSummary}
         fileName={fileUpload.state.fileName}
         eventName={eventName}
         eventDate={eventDate}
