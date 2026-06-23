@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { AnalyzedCodeReport, KPIReportSummary, AnalysisFlow } from "../../../types";
 import { CustomerDataResult, EventStats } from "../../../hooks/useCustomerData";
+import { FiscalPrintModal } from "./FiscalPrintModal";
 
 const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -139,6 +140,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   const [modalProvFilter, setModalProvFilter] = useState<string | null>(null);
   const [modalSearch, setModalSearch] = useState("");
   const [topPerfView, setTopPerfView] = useState<"volume" | "conversion" | "ltv">("volume");
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   function openModal(fy: string, prov: string | null) {
     setEventModal({ fy, prov });
@@ -417,7 +419,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
             </div>
           )}
           <button
-            onClick={() => window.print()}
+            onClick={() => setShowPrintModal(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-[10px] font-semibold text-[#888] hover:text-[#1a1a1a] cursor-pointer bg-white shadow-sm"
           >
             <Printer className="w-3 h-3" />
@@ -1120,6 +1122,49 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
           </div>
         </div>
       </div>
+    )}
+
+    {/* ── Print modal ───────────────────────────────────────────── */}
+    {showPrintModal && (
+      <FiscalPrintModal
+        onClose={() => setShowPrintModal(false)}
+        volume={{
+          byYear:             volume.byYear,
+          years:              volume.years,
+          eventListByFY:      volume.eventListByFY,
+          signupsByProv:      volume.signupsByProv,
+          signupsByProvByFY:  volume.signupsByProvByFY,
+          eventsByProvByFY:   volume.eventsByProvByFY,
+          eventsByProvYTD:    volume.eventsByProvYTD,
+          signupsByProvYTD:   volume.signupsByProvYTD,
+          ytdSignupsByFY:     volume.ytdSignupsByFY,
+          totalEvents:        volume.totalEvents,
+          totalSignups:       volume.totalSignups,
+          latestYear:         volume.latestYear,
+          prevYear:           volume.prevYear,
+        }}
+        financials={financials ? {
+          totalSignups:  financials.totalSignups,
+          totalPaying:   financials.totalPaying,
+          blendedConv:   financials.blendedConv,
+          avgConv:       financials.avgConv,
+          totalLTV12:    financials.totalLTV12,
+          avgLTV12:      financials.avgLTV12,
+          hasCost:       financials.hasCost,
+          totalSpend:    financials.totalSpend,
+          cpaSignup:     financials.cpaSignup,
+          cpaPaying:     financials.cpaPaying,
+          revToSpend:    financials.revToSpend,
+          topSignups:    financials.topSignups,
+          topConv:       financials.topConv,
+          topLTV:        financials.topLTV,
+        } : null}
+        allProvs={allProvs}
+        dateRangeLabel={dateRangeLabel}
+        currentFY={currentFY}
+        nowMk={nowMk}
+        showYTD={showYTD}
+      />
     )}
     </React.Fragment>
   );
