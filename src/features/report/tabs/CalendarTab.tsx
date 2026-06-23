@@ -128,6 +128,7 @@ export function CalendarTab({
   const [calView, setCalView]               = useState<"heatmap" | "families">("heatmap");
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
   const [familyFilter, setFamilyFilter]     = useState<"all" | "recurring">("recurring");
+  const [familySearch, setFamilySearch]     = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync global province chip → local province filter
@@ -380,12 +381,19 @@ export function CalendarTab({
     }).sort((a, b) => b.totalSignups - a.totalSignups);
   }, [visibleStats, selProvs]);
 
-  const filteredFamilies = useMemo(() =>
-    familyFilter === "recurring"
+  const filteredFamilies = useMemo(() => {
+    let list = familyFilter === "recurring"
       ? eventFamilies.filter(f => f.isRecurring)
-      : eventFamilies,
-    [eventFamilies, familyFilter],
-  );
+      : eventFamilies;
+    if (familySearch.trim()) {
+      const q = familySearch.trim().toLowerCase();
+      list = list.filter(f =>
+        f.stem.toLowerCase().includes(q) ||
+        f.events.some(e => e.code.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [eventFamilies, familyFilter, familySearch]);
 
   const maxFamilySignups = useMemo(() =>
     Math.max(1, ...eventFamilies.map(f => f.maxEvSignups)),
@@ -763,7 +771,7 @@ export function CalendarTab({
         {/* View toggle */}
         <div className="ml-auto flex items-center bg-[#f5f5f3] p-0.5 rounded-lg border border-[#e5e5e5] shrink-0">
           <button
-            onClick={() => setCalView("heatmap")}
+            onClick={() => { setCalView("heatmap"); setFamilySearch(""); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold cursor-pointer transition-all ${calView === "heatmap" ? "bg-white text-[#2b5346] shadow-sm" : "text-[#888] hover:text-[#1a1a1a]"}`}
           >
             <BarChart2 className="w-3 h-3" /> Heatmap
@@ -882,6 +890,13 @@ export function CalendarTab({
                 All families ({eventFamilies.length})
               </button>
             </div>
+            <input
+              type="text"
+              placeholder="Search event families..."
+              value={familySearch}
+              onChange={e => setFamilySearch(e.target.value)}
+              className="text-[11px] font-mono px-3 py-1.5 rounded-lg border border-[#e8e8e8] bg-[#fafafa] text-[#0f0f0f] placeholder:text-[#c0c0c0] focus:outline-none focus:border-[#2b5346] min-w-[180px]"
+            />
             <span className="text-[9px] font-mono text-[#a1a1a1]">
               Event codes grouped by name — trailing numbers stripped to detect recurring events.
             </span>
@@ -894,7 +909,7 @@ export function CalendarTab({
                 {filteredFamilies.length === 0 ? (
                   <tr>
                     <td colSpan={MONTH_SLOTS.length + 2} className="py-10 text-center text-[10px] font-mono text-[#a1a1a1]">
-                      No recurring families found for current filters.
+                      {familySearch.trim() ? `No families match "${familySearch}"` : "No recurring families found for current filters."}
                     </td>
                   </tr>
                 ) : filteredFamilies.map(fam => {
