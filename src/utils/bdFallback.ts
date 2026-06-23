@@ -2,7 +2,7 @@ import { CustomerRecord, DiscountCodeData } from "../types";
 import { toCanonicalCode } from "./fileParser";
 
 function isBusinessDevelopmentChannel(channel: string): boolean {
-  return channel.trim().toLowerCase() === "businessdevelopment";
+  return channel.replace(/[\s_-]/g, "").toLowerCase() === "businessdevelopment";
 }
 
 function isPayingCustomer(row: CustomerRecord): boolean {
@@ -22,6 +22,27 @@ function isPayingCustomer(row: CustomerRecord): boolean {
 export function aggregateBusinessDevelopmentRows(
   customerRows: CustomerRecord[],
 ): DiscountCodeData[] {
+  const channelProfile = new Map<string, { total: number; bd: number }>();
+  for (const row of customerRows) {
+    const code = row.discount_code?.trim().toUpperCase();
+    if (!code) continue;
+    const canonicalCode = toCanonicalCode(code);
+    if (!canonicalCode) continue;
+    const profile = channelProfile.get(canonicalCode) ?? { total: 0, bd: 0 };
+    profile.total += 1;
+    if (isBusinessDevelopmentChannel(row.channel ?? "")) profile.bd += 1;
+    channelProfile.set(canonicalCode, profile);
+  }
+
+  // A non-EV code is a verified BD partnership code only when BD accounts for
+  // at least 80% of all uses in the preload. This excludes generic acquisition
+  // codes that happened to be used once at an event.
+  const verifiedNonEvCodes = new Set(
+    Array.from(channelProfile.entries())
+      .filter(([, profile]) => profile.bd > 0 && profile.bd / profile.total >= 0.8)
+      .map(([code]) => code),
+  );
+
   const grouped = new Map<string, {
     code: string;
     province: string;
@@ -31,12 +52,11 @@ export function aggregateBusinessDevelopmentRows(
 
   for (const row of customerRows) {
     const code = row.discount_code?.trim().toUpperCase();
-    if (!code || (!code.startsWith("EV") && !isBusinessDevelopmentChannel(row.channel ?? ""))) {
-      continue;
-    }
-
+    if (!code) continue;
     const canonicalCode = toCanonicalCode(code);
     if (!canonicalCode) continue;
+    if (!code.startsWith("EV") && !verifiedNonEvCodes.has(canonicalCode)) continue;
+    if (!code.startsWith("EV") && !isBusinessDevelopmentChannel(row.channel ?? "")) continue;
     const province = row.province?.trim().toUpperCase() || "??";
     const key = `${canonicalCode}::${province}`;
 

@@ -41,6 +41,10 @@ export default function App(): React.ReactElement {
     () => aggregateBusinessDevelopmentRows(staticSignups.rows),
     [staticSignups.rows],
   );
+  const verifiedStaticBdCodeSet = useMemo(
+    () => new Set(fallbackBusinessDevelopmentRows.map(row => toCanonicalCode(row.discount_code))),
+    [fallbackBusinessDevelopmentRows],
+  );
 
   const effectiveDbRows = useMemo(
     () => mergeBusinessDevelopmentFallbacks(
@@ -101,24 +105,20 @@ export default function App(): React.ReactElement {
     // Extract BD rows from static DB not already covered by the user's file
     const missingBdRows = staticSignups.rows.filter(r => {
       if (r.client_id && uploadedIds.has(r.client_id)) return false;
-      if (r.discount_code?.startsWith("EV")) return true;
-      const ch = r.channel?.replace(/[\s_-]/g, "").toLowerCase() ?? "";
-      return ch === "businessdevelopment" && r.discount_code !== null;
+      const code = r.discount_code?.trim().toUpperCase();
+      if (!code) return false;
+      if (code.startsWith("EV")) return true;
+      return verifiedStaticBdCodeSet.has(toCanonicalCode(code));
     });
 
     return [...uploaded, ...missingBdRows];
-  }, [customerFile.state.customerRows, staticSignups.rows]);
+  }, [customerFile.state.customerRows, staticSignups.rows, verifiedStaticBdCodeSet]);
 
   const customerData = useCustomerData(effectiveCustomerRows, effectiveRawPastedCodes);
 
   const allStaticBdCodes = useMemo((): string[] =>
     Array.from(new Set(fallbackBusinessDevelopmentRows.map(row => row.discount_code))),
   [fallbackBusinessDevelopmentRows]);
-  const staticBdCodeSet = useMemo(
-    () => new Set(allStaticBdCodes.map(toCanonicalCode)),
-    [allStaticBdCodes],
-  );
-
   // BD codes that exist in the static DB but are absent from the uploaded Looker file.
   // These are real BD events — they just weren't in the user's Looker export date range.
   const staticOnlyBdCodes = useMemo(() => {
@@ -133,10 +133,15 @@ export default function App(): React.ReactElement {
       const upper = code.trim().toUpperCase();
       if (upper.startsWith("EV")) return true;
       if (isStaticOnly) return true;
-      if (staticBdCodeSet.has(toCanonicalCode(code))) return true;
-      return channel.replace(/[\s_-]/g, "").toLowerCase() === "businessdevelopment";
+      const normalizedChannel = channel.replace(/[\s_-]/g, "").toLowerCase();
+      if (normalizedChannel === "businessdevelopment") return true;
+      const channelIsUnknown =
+        normalizedChannel === ""
+        || normalizedChannel === "direct/unknown"
+        || normalizedChannel === "unknown";
+      return channelIsUnknown && verifiedStaticBdCodeSet.has(toCanonicalCode(code));
     };
-  }, [staticBdCodeSet]);
+  }, [verifiedStaticBdCodeSet]);
 
   const bdFilteredReports = useMemo(() =>
     foundReports.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly)),
