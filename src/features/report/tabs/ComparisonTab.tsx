@@ -1,7 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { AnalyzedCodeReport } from "../../../types";
 import { EventStats } from "../../../hooks/useCustomerData";
-import { TrendingUp, TrendingDown, Minus, ArrowRight, CalendarDays } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, ArrowRight, CalendarDays, BarChart2 } from "lucide-react";
+
+const PROV_COLOR: Record<string, string> = {
+  BC: "#4d8970", AB: "#c9a000", ON: "#2b5346",
+  QC: "#9b4a1c", SK: "#6b8e9f", MB: "#8a6f00",
+};
+const provColor = (p: string) => PROV_COLOR[p] ?? "#888";
 
 interface ComparisonTabProps {
   foundReports: AnalyzedCodeReport[];
@@ -59,13 +65,40 @@ function fmtMonth(mk: string): string {
 }
 
 export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eventStats }: ComparisonTabProps): React.ReactElement {
-  // Build date context from eventStats (from static CSV or uploaded file)
+  // Build date + province context from eventStats
   const dateByCode = new Map<string, { label: string; month: string }>();
+  const provByCode = new Map<string, string>();
   for (const e of eventStats) {
     if (e.eventDateLabel && e.eventMonth) {
       dateByCode.set(e.code, { label: e.eventDateLabel, month: e.eventMonth });
     }
+    if (e.homeProvince) provByCode.set(e.code, e.homeProvince);
   }
+
+  // BD-only volume comparison: aggregate eventStats by edition group when no Looker reports
+  const bdGroups = useMemo(() => {
+    if (foundReports.length > 0 || rawPastedCodes.length < 2) return null;
+    const statsByCode = new Map<string, EventStats>(eventStats.map(e => [e.code, e]));
+    type Grp = { codes: string[]; totalSignups: number; provinces: string[]; dateMonths: string[] };
+    const groups: Record<string, Grp> = {};
+    for (const code of rawPastedCodes) {
+      const lbl = editionLabels[code] ?? "Edition A";
+      if (!groups[lbl]) groups[lbl] = { codes: [], totalSignups: 0, provinces: [], dateMonths: [] };
+      const stat = statsByCode.get(code);
+      if (stat) {
+        groups[lbl].codes.push(code);
+        groups[lbl].totalSignups += stat.totalSignups;
+        if (stat.homeProvince && !groups[lbl].provinces.includes(stat.homeProvince)) {
+          groups[lbl].provinces.push(stat.homeProvince);
+        }
+        if (stat.eventMonth && !groups[lbl].dateMonths.includes(stat.eventMonth)) {
+          groups[lbl].dateMonths.push(stat.eventMonth);
+        }
+      }
+    }
+    const list = Object.entries(groups);
+    return list.length >= 2 ? list : null;
+  }, [foundReports.length, rawPastedCodes, editionLabels, eventStats]);
 
   const editions: Edition[] = rawPastedCodes
     .map(code => {
@@ -73,6 +106,73 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
       return report ? { code, label: editionLabels[code] ?? code, report } : null;
     })
     .filter((e): e is Edition => e !== null);
+
+  // BD-only mode: show volume comparison from eventStats
+  if (editions.length < 2 && bdGroups) {
+    const maxSignups = Math.max(1, ...bdGroups.map(([, g]) => g.totalSignups));
+    const winner = bdGroups.reduce((a, b) => a[1].totalSignups >= b[1].totalSignups ? a : b);
+    return (
+      <div className="px-6 py-8 max-w-4xl mx-auto flex flex-col gap-8">
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Comparison Analysis · BD Events</p>
+          <h2 className="text-[20px] font-black text-[#0f0f0f]">Volume Comparison</h2>
+          <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">
+            Upload a Looker file to unlock conversion, LTV, and trend analysis.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {bdGroups.map(([label, grp], idx) => {
+            const isWinner = label === winner[0];
+            const barW = maxSignups > 0 ? (grp.totalSignups / maxSignups) * 100 : 0;
+            return (
+              <div key={label} className={`bg-white rounded-2xl border p-5 ${isWinner ? "border-[#2b5346]/30" : "border-[#e5e5e5]"}`}>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-semibold text-[#a1a1a1] font-mono">{label}</span>
+                      {grp.provinces.map(p => (
+                        <span key={p} className="text-[9px] font-mono px-1.5 py-0.5 rounded border font-semibold"
+                          style={{ color: provColor(p), borderColor: provColor(p) + "40", backgroundColor: provColor(p) + "12" }}>
+                          {p}
+                        </span>
+                      ))}
+                      {grp.dateMonths.length > 0 && (
+                        <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-0.5 rounded">
+                          {fmtMonth(grp.dateMonths.sort()[0])}{grp.dateMonths.length > 1 ? ` + ${grp.dateMonths.length - 1} more` : ""}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">{grp.codes.join(", ")}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-2xl font-black font-mono" style={{ color: isWinner ? "#2b5346" : "#1a1a1a" }}>{grp.totalSignups.toLocaleString()}</p>
+                    <p className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">signups</p>
+                  </div>
+                </div>
+                <div className="h-2 bg-[#f0f0f0] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${barW}%`, backgroundColor: isWinner ? "#2b5346" : "#a1a1a1" }} />
+                </div>
+                {idx > 0 && bdGroups[0][1].totalSignups > 0 && (
+                  <p className="text-[10px] font-mono mt-2" style={{ color: grp.totalSignups >= bdGroups[0][1].totalSignups ? "#2b5346" : "#9b4a1c" }}>
+                    {grp.totalSignups >= bdGroups[0][1].totalSignups ? "+" : ""}
+                    {(((grp.totalSignups - bdGroups[0][1].totalSignups) / bdGroups[0][1].totalSignups) * 100).toFixed(0)}% vs {bdGroups[0][0]}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="bg-[#f8f7f5] rounded-xl border border-[#e8e8e8] px-5 py-4 flex items-center gap-3">
+          <BarChart2 className="w-4 h-4 text-[#a1a1a1] shrink-0" />
+          <p className="text-xs text-[#3d3d3d]">
+            <strong>Volume only</strong> — Upload a Looker export to see conversion rates, LTV trajectory, and trend direction.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (editions.length < 2) {
     return (
@@ -147,12 +247,16 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
                 <CalendarDays className="w-3 h-3 text-[#b0b0b0]" />
                 {editions.map((e, i) => {
                   const dc = dateByCode.get(e.code);
+                  const prov = provByCode.get(e.code);
                   if (!dc) return null;
                   return (
                     <span key={e.code} className="flex items-center gap-1">
                       {i > 0 && <span className="text-[#d8d8d8] font-mono text-[10px]">→</span>}
-                      <span className="text-[10px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-0.5 rounded flex items-center gap-1.5">
                         <span className="text-[#a1a1a1]">{e.label}: </span>{fmtMonth(dc.month)}
+                        {prov && (
+                          <span className="text-[8px] font-bold px-1 py-0.5 rounded" style={{ color: provColor(prov), backgroundColor: provColor(prov) + "18" }}>{prov}</span>
+                        )}
                       </span>
                     </span>
                   );

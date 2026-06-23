@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Database, Upload } from "lucide-react";
-import { AnalyzedCodeReport, AnalysisFlow, DiscountCodeData, UserPersona } from "../../../types";
+import { AnalyzedCodeReport, AnalysisFlow, DiscountCodeData, UserPersona, ReportPage } from "../../../types";
 import { EventStats } from "../../../hooks/useCustomerData";
 import ProvinceIntelligence from "../components/ProvinceIntelligence";
 import { TAB_RELEVANCE } from "../../../config/flowRelevance";
@@ -30,11 +30,24 @@ interface RegionalTabProps {
   eventStats?: EventStats[];
   onUploadLooker?: () => void;
   activeProvince?: string | null;
+  onNavigate?: (page: ReportPage) => void;
 }
 
-export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker, activeProvince }: RegionalTabProps): React.ReactElement {
+export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker, activeProvince, onNavigate }: RegionalTabProps): React.ReactElement {
   const relevance = TAB_RELEVANCE.regional[selectedFlow];
   const bdOnly = dbRows.length === 0 && foundReports.length === 0;
+
+  // Dynamic date range from eventStats
+  const dbDateRange = useMemo(() => {
+    const dates = eventStats.map(e => e.eventDate).filter(Boolean).sort();
+    if (dates.length === 0) return "BD Events DB";
+    const ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const fmt = (d: string) => {
+      const [y, m] = d.split("-");
+      return `${ABBR[Number(m) - 1]} ${y}`;
+    };
+    return `${fmt(dates[0])} – ${fmt(dates[dates.length - 1])}`;
+  }, [eventStats]);
 
   // Fiscal year / YTD constants
   const now = new Date();
@@ -162,9 +175,9 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
             <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Regional · BD Events Database</p>
-            <h2 className="text-[20px] font-black text-[#0f0f0f]">Province × Fiscal Year</h2>
+            <h2 className="text-[20px] font-black text-[#0f0f0f]">Province Summary</h2>
             <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">
-              Events and signups per province, broken down by fiscal year · Jul 2024 – Jun 2026
+              Signups by province · {dbDateRange}
             </p>
           </div>
           <div className="text-right shrink-0">
@@ -178,7 +191,7 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
           <Database className="w-3.5 h-3.5 shrink-0 text-[#a1a1a1]" />
           <span className="text-[11px] font-mono text-[#3d3d3d]">Built-in BD Events DB · {totalEvents} events</span>
           <span className="text-[9px] font-mono text-[#c9a000] bg-[#fffbeb] border border-[#f5e09a] px-2 py-0.5 rounded-full shrink-0">
-            Jul 2024 – Jun 19, 2026
+            {dbDateRange}
           </span>
           {onUploadLooker && (
             <button
@@ -191,152 +204,47 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
           )}
         </div>
 
-        {/* Province filter pills */}
-        {allProvinces.length > 1 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
-            {allProvinces.map(p => (
-              <button
-                key={p}
-                onClick={() => toggleProvince(p)}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-mono font-semibold cursor-pointer border transition-all"
-                style={
-                  activeProvinces.has(p)
-                    ? { backgroundColor: provColor(p), color: "#fff", borderColor: provColor(p) }
-                    : { backgroundColor: "white", color: "#a1a1a1", borderColor: "#e5e5e5" }
-                }
-              >
-                {p}
-              </button>
-            ))}
-            {activeProvinces.size < allProvinces.length && (
-              <button
-                onClick={() => setActiveProvinces(new Set(allProvinces))}
-                className="text-[10px] font-mono text-[#2b5346] hover:underline cursor-pointer"
-              >
-                Show all
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Province × FY table */}
-        <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-[#fafafa] border-b border-[#f0f0ee] text-[#a1a1a1] font-semibold font-mono uppercase text-[9px]">
-                  <th className="py-2.5 px-4 sticky left-0 bg-[#fafafa]">Province</th>
-                  {years.map(fy => (
-                    <th key={fy} colSpan={2} className="py-2.5 px-3 text-center border-l border-[#f0f0ee]">
-                      <div>{fy}</div>
-                      <div className="text-[7.5px] font-normal normal-case text-[#c0c0c0] tracking-normal">{fyRange(fy)}</div>
-                    </th>
-                  ))}
-                  {showYTD && years.includes(currentFY) && (
-                    <th colSpan={2} className="py-2.5 px-3 text-center border-l border-[#f0f0ee] text-[#2b5346]">
-                      <div>YTD</div>
-                      <div className="text-[7.5px] font-normal normal-case text-[#a1a1a1] tracking-normal">thru {nowMk.slice(0,7)}</div>
-                    </th>
-                  )}
-                  <th className="py-2.5 px-3 text-center border-l border-[#f0f0ee]">Total Sig.</th>
-                </tr>
-                <tr className="bg-[#fafafa] border-b border-[#ececec] text-[#c0c0c0] font-mono text-[8px]">
-                  <th className="py-1 px-4 sticky left-0 bg-[#fafafa]" />
-                  {years.map(fy => (
-                    <React.Fragment key={fy}>
-                      <th className="py-1 px-3 text-center border-l border-[#f5f5f5]">Ev</th>
-                      <th className="py-1 px-3 text-center">Sig</th>
-                    </React.Fragment>
-                  ))}
-                  {showYTD && years.includes(currentFY) && (
-                    <>
-                      <th className="py-1 px-3 text-center border-l border-[#f5f5f5]">Ev</th>
-                      <th className="py-1 px-3 text-center">Sig</th>
-                    </>
-                  )}
-                  <th className="py-1 px-3 border-l border-[#f5f5f5]" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f8f8f8] text-[#3d3d3d]">
-                {filteredProvs.map(row => {
-                  const fyMap = byProv[row.province] ?? {};
-                  const ytd = ytdByProv[row.province] ?? { events: 0, signups: 0 };
-                  const shareW = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
-                  return (
-                    <tr key={row.province} className="hover:bg-[#fafafa]">
-                      <td className="py-3 px-4 sticky left-0 bg-white hover:bg-[#fafafa]">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="font-black text-[12px] font-mono px-1.5 py-0.5 rounded border shrink-0"
-                            style={{ color: provColor(row.province), borderColor: provColor(row.province) + "40", backgroundColor: provColor(row.province) + "12" }}
-                          >
-                            {row.province}
-                          </span>
-                          <div className="w-16 h-1.5 bg-[#eee] rounded-full overflow-hidden shrink-0">
-                            <div className="h-full rounded-full" style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }} />
-                          </div>
-                        </div>
-                      </td>
-                      {years.map(fy => {
-                        const cell = fyMap[fy] ?? { events: 0, signups: 0 };
-                        return (
-                          <React.Fragment key={fy}>
-                            <td className="py-3 px-3 text-center font-mono text-[#888] text-[11px] border-l border-[#f5f5f5]">
-                              {cell.events > 0 ? cell.events : <span className="text-[#ddd]">—</span>}
-                            </td>
-                            <td className="py-3 px-3 text-center font-mono font-semibold text-[#1a1a1a] text-[11px]">
-                              {cell.signups > 0 ? cell.signups.toLocaleString() : <span className="text-[#ddd] font-normal">—</span>}
-                            </td>
-                          </React.Fragment>
-                        );
-                      })}
-                      {showYTD && years.includes(currentFY) && (
-                        <>
-                          <td className="py-3 px-3 text-center font-mono text-[#2b5346] text-[11px] border-l border-[#f5f5f5]">
-                            {ytd.events > 0 ? ytd.events : <span className="text-[#ddd]">—</span>}
-                          </td>
-                          <td className="py-3 px-3 text-center font-mono font-semibold text-[#2b5346] text-[11px]">
-                            {ytd.signups > 0 ? ytd.signups.toLocaleString() : <span className="text-[#ddd] font-normal">—</span>}
-                          </td>
-                        </>
-                      )}
-                      <td className="py-3 px-3 text-center font-mono font-bold text-[#1a1a1a] text-[11px] border-l border-[#f5f5f5]">
-                        {row.signups.toLocaleString()}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              {/* Totals footer */}
-              <tfoot>
-                <tr className="border-t-2 border-[#e5e5e5] bg-[#f8f7f5] text-[11px] font-mono font-bold">
-                  <td className="py-2.5 px-4 text-[#a1a1a1] uppercase text-[9px] tracking-wider sticky left-0 bg-[#f8f7f5]">Total</td>
-                  {years.map(fy => {
-                    const t = totals[fy] ?? { events: 0, signups: 0 };
-                    return (
-                      <React.Fragment key={fy}>
-                        <td className="py-2.5 px-3 text-center text-[#888] border-l border-[#e5e5e5]">{t.events}</td>
-                        <td className="py-2.5 px-3 text-center text-[#1a1a1a]">{t.signups.toLocaleString()}</td>
-                      </React.Fragment>
-                    );
-                  })}
-                  {showYTD && years.includes(currentFY) && (
-                    <>
-                      <td className="py-2.5 px-3 text-center text-[#2b5346] border-l border-[#e5e5e5]">{ytdTotal.events}</td>
-                      <td className="py-2.5 px-3 text-center text-[#2b5346]">{ytdTotal.signups.toLocaleString()}</td>
-                    </>
-                  )}
-                  <td className="py-2.5 px-3 text-center text-[#1a1a1a] border-l border-[#e5e5e5]">{grandTotal.toLocaleString()}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+        {/* Province signups grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {filteredProvs.map(row => {
+            const shareW = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
+            return (
+              <div key={row.province} className="bg-white rounded-xl border border-[#e8e8e8] px-5 py-4 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <span
+                    className="font-black text-[13px] font-mono px-2 py-0.5 rounded border"
+                    style={{ color: provColor(row.province), borderColor: provColor(row.province) + "40", backgroundColor: provColor(row.province) + "12" }}
+                  >
+                    {row.province}
+                  </span>
+                  <span className="text-[9px] font-mono text-[#a1a1a1]">{row.events} event{row.events !== 1 ? "s" : ""}</span>
+                </div>
+                <p className="text-2xl font-black font-mono text-[#1a1a1a] leading-none">{row.signups.toLocaleString()}</p>
+                <p className="text-[9px] font-mono text-[#a1a1a1] mt-1">signups · {shareW.toFixed(0)}% of total</p>
+                <div className="mt-2 h-1 bg-[#eee] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <p className="text-[9px] font-mono text-[#c0c0c0] text-center">
-          Province attributed by majority of signups per event code · Fiscal year Jul → Jun
-        </p>
+        {/* Link to BD Fiscal for full breakdown */}
+        {onNavigate && (
+          <div className="bg-[#eef4f1] border border-[#2b5346]/20 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-[#2b5346]">Full fiscal breakdown available in BD Fiscal</p>
+              <p className="text-[10px] text-[#3d3d3d] font-mono mt-0.5">Province × year table with YTD comparison and cost analysis</p>
+            </div>
+            <button
+              onClick={() => onNavigate?.("fiscal")}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer bg-[#2b5346] text-white hover:bg-[#1a3d2f]"
+              style={{ transition: "background-color 150ms var(--ease-out)" }}
+            >
+              Open BD Fiscal →
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -377,34 +285,6 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
         )}
       </div>
 
-      {/* Province filter pills — same style as Calendar tab */}
-      {allProvinces.length > 1 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
-          {allProvinces.map(p => (
-            <button
-              key={p}
-              onClick={() => toggleProvince(p)}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-mono font-semibold cursor-pointer border transition-all"
-              style={
-                activeProvinces.has(p)
-                  ? { backgroundColor: provColor(p), color: "#fff", borderColor: provColor(p) }
-                  : { backgroundColor: "white", color: "#a1a1a1", borderColor: "#e5e5e5" }
-                }
-            >
-              {p}
-            </button>
-          ))}
-          {activeProvinces.size < allProvinces.length && (
-            <button
-              onClick={() => setActiveProvinces(new Set(allProvinces))}
-              className="text-[10px] font-mono text-[#2b5346] hover:underline cursor-pointer"
-            >
-              Show all
-            </button>
-          )}
-        </div>
-      )}
 
       <ProvinceIntelligence dbRows={dbRows} foundReports={filteredReports} />
     </div>

@@ -157,31 +157,6 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
         </div>
       </div>
 
-      {/* ── Stats strip ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-xl overflow-hidden shadow-sm" style={{ background: "#e8e8e8" }}>
-        {[
-          { label: "Total Signups",    value: summary.totalSignups.toLocaleString(),             sub: "people reached" },
-          { label: "Paying Customers", value: summary.totalPayingCustomers.toLocaleString(),      sub: "converted" },
-          { label: "Conversion Rate",  value: `${summary.blendedConversionRate.toFixed(1)}%`,    sub: "blended rate",  accent: grade.color, accentBg: grade.bg },
-          { label: "Avg LTV 12M",      value: `$${Math.round(summary.averageLTV12).toLocaleString()}`, sub: "per customer" },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="px-6 py-5 bg-white"
-            style={stat.accentBg ? { background: stat.accentBg } : undefined}
-          >
-            <p className="text-[9px] font-semibold text-[#a1a1a1] uppercase tracking-widest font-mono">{stat.label}</p>
-            <p
-              className="font-bold font-mono leading-none mt-3 tracking-tight"
-              style={{ fontSize: "2.25rem", color: stat.accent ?? "#1a1a1a" }}
-            >
-              {stat.value}
-            </p>
-            <p className="text-[9px] text-[#b0b0b0] mt-2 font-mono">{stat.sub}</p>
-          </div>
-        ))}
-      </div>
-
       {/* Code health — multi-code only */}
       {n > 1 && portfolioHealth && portfolioHealth.total > 0 && (
         <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm">
@@ -302,10 +277,7 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
             previewColor: "#3d3d3d",
             hoverBorder: "#3d3d3d",
           },
-        ].filter(item => {
-          if (item.page === "regional" && (userPersona === "bd-rep" || userPersona === "analyst")) return false;
-          return true;
-        }).map(item => {
+        ].filter(() => true).map(item => {
           const isPartial = TAB_RELEVANCE[item.page][selectedFlow] === "partial";
           return (
             <button

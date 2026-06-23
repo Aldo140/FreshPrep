@@ -14,7 +14,7 @@ interface UploadFlowProps {
 export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }: UploadFlowProps): React.ReactElement {
   const { isDragOver, fileInputRef } = state;
   const { handleDragOver, handleDragLeave, handleDrop, handleFileChange, triggerBrowsingInput } = actions;
-  const [showLooker, setShowLooker] = useState(autoOpenLooker);
+  const [showLooker, setShowLooker] = useState(true);
 
   // Scroll the Looker section into view when auto-opened
   const lookerRef = React.useRef<HTMLDivElement>(null);

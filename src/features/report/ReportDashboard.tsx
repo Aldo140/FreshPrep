@@ -17,7 +17,6 @@ import { PerformanceTab } from "./tabs/PerformanceTab";
 import { RevenueTab } from "./tabs/RevenueTab";
 import { RegionalTab } from "./tabs/RegionalTab";
 import { DataTab } from "./tabs/DataTab";
-import { IssuesTab } from "./tabs/IssuesTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
 import { CalendarTab } from "./tabs/CalendarTab";
 import { FiscalTab } from "./tabs/FiscalTab";
@@ -142,28 +141,17 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     { id: "performance", label: "Performance" },
     { id: "revenue", label: "Revenue" },
     { id: "regional", label: "Regional" },
-    { id: "data", label: "Data" },
-    {
-      id: "issues",
-      label: `Issues${missingCodes.length > 0 ? ` (${missingCodes.length})` : ""}`,
-    },
+    { id: "data", label: "All Codes" },
     { id: "calendar", label: "Calendar" },
     { id: "fiscal",   label: "BD Fiscal" },
   ];
 
   const pages = allPages.filter(p => {
-    const needsLooker = ["overview", "performance", "revenue", "data", "issues"].includes(p.id);
+    const needsLooker = ["overview", "performance", "revenue", "data"].includes(p.id);
     if (needsLooker && foundReports.length === 0) return false;
     if (p.id === "comparison" && selectedFlow !== "compare") return false;
     return true;
   });
-
-  useEffect(() => {
-    const lookerOnly = ["overview", "performance", "revenue", "data", "issues"] as const;
-    if (foundReports.length === 0 && (lookerOnly as readonly string[]).includes(reportPage)) {
-      setReportPage("calendar");
-    }
-  }, [foundReports.length, reportPage, setReportPage]);
 
   useEffect(() => {
     if (selectedFlow === "compare") {
@@ -171,12 +159,13 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     }
   }, [selectedFlow]);
 
-  // Redirect away from comparison page when not in compare flow
+  // Redirect to first visible page when current page is not in pages
   useEffect(() => {
-    if (reportPage === "comparison" && selectedFlow !== "compare") {
-      setReportPage("overview");
+    const visibleIds = new Set(pages.map(p => p.id));
+    if (pages.length > 0 && !visibleIds.has(reportPage)) {
+      setReportPage(pages[0].id);
     }
-  }, [reportPage, selectedFlow, setReportPage]);
+  }, [foundReports.length, selectedFlow, reportPage, setReportPage]);
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col" id="report-dashboard">
@@ -191,10 +180,15 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
               reportPage === page.id
                 ? "border-[#2b5346] text-[#2b5346]"
                 : "border-transparent text-[#3d3d3d] hover:text-[#1a1a1a]"
-            } ${page.id === "issues" ? "text-[#9b4a1c]" : ""}`}
+            }`}
             style={{ transition: "color 150ms var(--ease-out), border-color 150ms var(--ease-out)" }}
           >
             {page.label}
+            {page.id === "data" && missingCodes.length > 0 && (
+              <span className="min-w-[16px] h-4 px-1 bg-[#850b0b] text-white text-[8px] font-bold rounded-full flex items-center justify-center font-mono shrink-0">
+                {missingCodes.length}
+              </span>
+            )}
             {TAB_RELEVANCE[page.id][selectedFlow] === "partial" && (
               <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e5e5e5] px-1.5 py-0.5 rounded">
                 partial
@@ -392,6 +386,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             eventStats={customerData.eventStats}
             onUploadLooker={foundReports.length === 0 ? (onResetToLookerUpload ?? onReset) : undefined}
             activeProvince={activeProvince}
+            onNavigate={setReportPage}
           />
         )}
 
@@ -403,15 +398,9 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             fileName={fileName}
             selectedFlow={selectedFlow}
             onSwitchToExplorer={() => setActiveTab("explorer")}
-          />
-        )}
-
-        {reportPage === "issues" && (
-          <IssuesTab
             missingCodes={missingCodes}
             uniqueDbCodes={uniqueDbCodes}
             rawPastedCodes={rawPastedCodes}
-            foundReports={foundReports}
             onApplyCorrections={onApplyCorrections}
           />
         )}

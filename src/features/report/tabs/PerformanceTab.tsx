@@ -12,7 +12,7 @@ interface PerformanceTabProps {
 }
 
 export function PerformanceTab({ foundReports, summary, channelSummary }: PerformanceTabProps): React.ReactElement {
-  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(true);
   const [insightsOpen, setInsightsOpen] = useState(false);
 
   const totalSignups = summary.totalSignups;

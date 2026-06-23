@@ -515,6 +515,33 @@ export function CalendarTab({
         </div>
       </div>
 
+      {/* ── BD Summary banner (BD-only mode) ─────────────────────── */}
+      {foundReports.length === 0 && allProvs.length > 0 && (() => {
+        const ys = coverageStats.years;
+        const cur = ys[ys.length - 1];
+        const prev = ys[ys.length - 2];
+        const curSig = cur ? (coverageStats.byYear[cur]?.signups ?? 0) : 0;
+        const prevSig = prev ? (coverageStats.byYear[prev]?.signups ?? 0) : 0;
+        const yoyPct = prevSig > 0 ? ((curSig - prevSig) / prevSig) * 100 : null;
+        const topProv = allProvs[0];
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Total Events",  value: visibleEventCount.toString(),        sub: `${coverageStats.years.length} fiscal yr${coverageStats.years.length !== 1 ? "s" : ""}` },
+              { label: "Total Signups", value: totalSignups.toLocaleString(),        sub: "across all events" },
+              { label: "Top Province",  value: topProv,                              sub: `${((coverageStats.byYear[cur]?.signups ?? 0) > 0 ? "leading region" : "by events")}`, accent: provColor(topProv) },
+              { label: "YoY Growth",    value: yoyPct !== null ? `${yoyPct >= 0 ? "+" : ""}${yoyPct.toFixed(0)}%` : "—", sub: prev && cur ? `${prev} → ${cur}` : "year over year", accent: yoyPct !== null ? (yoyPct >= 0 ? "#2b5346" : "#850b0b") : undefined },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3.5 shadow-sm">
+                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-1">{stat.label}</p>
+                <p className="text-xl font-black font-mono leading-none" style={{ color: stat.accent ?? "#1a1a1a" }}>{stat.value}</p>
+                <p className="text-[9px] font-mono text-[#b0b0b0] mt-1">{stat.sub}</p>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* ── Data coverage ─────────────────────────────────────────  */}
       <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden">
         {/* Top row: year totals */}

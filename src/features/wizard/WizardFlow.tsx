@@ -17,7 +17,6 @@ import {
   Scale,
   ChevronDown,
   ChevronUp,
-  Wrench,
 } from "lucide-react";
 import { FileUploadState } from "../../hooks/useFileUpload";
 import { AnalysisState, AnalysisActions } from "../../hooks/useAnalysis";
@@ -34,7 +33,6 @@ interface WizardFlowProps {
 export function WizardFlow({ fileState, analysis, formatting, onReset, staticNonEvBdCodes = [] }: WizardFlowProps): React.ReactElement {
   const { state, actions } = analysis;
   const [showColumns, setShowColumns] = useState(false);
-  const [showTextTools, setShowTextTools] = useState(false);
 
   const isValid = fileState.fileValidation?.isValid;
   const requiredFound = fileState.fileValidation?.requiredFound ?? [];
@@ -313,16 +311,6 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
                     <span className="text-xs font-semibold text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 px-2.5 py-1 rounded font-mono">
                       {state.normalizedPastedCodes.length} {state.normalizedPastedCodes.length === 1 ? "code" : "codes"}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowTextTools(v => !v)}
-                      className="flex items-center gap-1.5 text-xs text-[#a1a1a1] hover:text-[#3d3d3d] cursor-pointer font-medium px-2 py-1 rounded hover:bg-[#f8f7f5]"
-                      style={{ transition: "color 150ms var(--ease-out)" }}
-                    >
-                      <Wrench className="w-3 h-3" />
-                      Clean up
-                      {showTextTools ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </button>
                   </div>
 
                   {/* Action buttons */}
@@ -355,57 +343,6 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticNon
                   </div>
                 </div>
 
-                {/* Text tools — collapsed by default */}
-                {showTextTools && (
-                  <div className="bg-[#f8f7f5] border border-[#e5e5e5] rounded-xl p-4 space-y-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {[
-                        { label: "Remove blanks", fn: () => actions.setInputText(formatting.cleanEmptyLines(state.inputText)) },
-                        { label: "Strip comments", fn: () => actions.setInputText(formatting.stripComments(state.inputText)) },
-                        { label: "Uppercase all", fn: () => actions.setInputText(formatting.toUppercase(state.inputText)) },
-                        { label: "Sort A → Z", fn: () => actions.setInputText(formatting.sortAlphabetically(state.inputText)) },
-                      ].map(({ label, fn }) => (
-                        <button
-                          key={label}
-                          type="button"
-                          onClick={fn}
-                          className="px-3 py-2 text-xs font-medium bg-white hover:bg-[#eef4f1] border border-[#e5e5e5] text-[#3d3d3d] rounded-lg cursor-pointer"
-                          style={{ transition: "background-color 150ms var(--ease-out)" }}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 pt-1 border-t border-[#e5e5e5]">
-                      <span className="text-[10px] font-semibold text-[#a1a1a1] uppercase tracking-wide shrink-0 font-mono">
-                        Remove lines with:
-                      </span>
-                      <input
-                        type="text"
-                        value={state.eraseKeyword}
-                        onChange={e => actions.setEraseKeyword(e.target.value)}
-                        placeholder="expired, test, …"
-                        className="flex-1 px-3 py-1.5 border border-[#e5e5e5] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#2b5346] focus:border-transparent bg-white"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          actions.setInputText(formatting.eraseLinesContaining(state.inputText, state.eraseKeyword));
-                          actions.setEraseKeyword("");
-                        }}
-                        disabled={!state.eraseKeyword.trim()}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 cursor-pointer ${
-                          state.eraseKeyword.trim()
-                            ? "bg-[#ffd0d0] border border-[#850b0b]/20 text-[#850b0b] hover:bg-[#ffb8b8]"
-                            : "bg-[#f8f7f5] text-[#a1a1a1] border border-[#e5e5e5] cursor-not-allowed"
-                        }`}
-                        style={{ transition: "background-color 150ms var(--ease-out)" }}
-                      >
-                        Erase
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 

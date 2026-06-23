@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AlertCircle, Database, ArrowRight, Info, ChevronDown, X, Maximize2, TrendingUp, Users, Target, Search } from "lucide-react";
+import { AlertCircle, Database, ArrowRight, Info, ChevronDown, X, Maximize2, TrendingUp, Users, Target, Search, CheckCircle2 } from "lucide-react";
 import { AnalyzedCodeReport, DiscountCodeData, AnalysisFlow } from "../../../types";
 import DetailedTable from "../components/DetailedTable";
 import DataExplorer from "../components/DataExplorer";
+import MissingCodesSection from "../components/MissingCodesSection";
 
 interface DataTabProps {
   foundReports: AnalyzedCodeReport[];
@@ -11,6 +12,10 @@ interface DataTabProps {
   fileName: string | null;
   selectedFlow: AnalysisFlow;
   onSwitchToExplorer: () => void;
+  missingCodes: string[];
+  uniqueDbCodes: string[];
+  rawPastedCodes: string[];
+  onApplyCorrections: (corrections: Record<string, string>) => void;
 }
 
 const TIERS = [
@@ -332,7 +337,7 @@ function FullscreenView({ reports, onClose, selectedFlow }: { reports: AnalyzedC
   );
 }
 
-export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, selectedFlow, onSwitchToExplorer }: DataTabProps): React.ReactElement {
+export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, selectedFlow, onSwitchToExplorer, missingCodes, uniqueDbCodes, rawPastedCodes, onApplyCorrections }: DataTabProps): React.ReactElement {
   const [expandedTier,    setExpandedTier]    = useState<string | null>(null);
   const [fullscreenOpen,  setFullscreenOpen]  = useState(false);
 
@@ -363,7 +368,7 @@ export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, select
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-[#1a1a1a]">Data</h2>
+          <h2 className="text-base font-semibold text-[#1a1a1a]">All Codes</h2>
           <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">
             {total} matched code{total !== 1 ? "s" : ""} · {dbRows.length.toLocaleString()} total records in database
           </p>
@@ -542,6 +547,34 @@ export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, select
           <DataExplorer dbRows={dbRows} fileName={fileName} />
         </div>
       </div>
+
+      {/* ── Issues ──────────────────────────────────────────── */}
+      {missingCodes.length > 0 && (
+        <div className="bg-white rounded-2xl border border-[#e78a58]/30 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-4 border-b border-[#f5ece6]">
+            <AlertCircle className="w-3.5 h-3.5 text-[#9b4a1c]" />
+            <div>
+              <h3 className="text-sm font-semibold text-[#9b4a1c]">Issues</h3>
+              <p className="text-[10px] text-[#a1a1a1] font-mono">{missingCodes.length} code{missingCodes.length !== 1 ? "s" : ""} not matched in dataset</p>
+            </div>
+          </div>
+          <div className="p-5">
+            <MissingCodesSection
+              missingCodes={missingCodes}
+              allDbCodes={uniqueDbCodes}
+              rawPastedCodes={rawPastedCodes}
+              foundReports={foundReports}
+              onApplyCorrections={onApplyCorrections}
+            />
+          </div>
+        </div>
+      )}
+      {missingCodes.length === 0 && rawPastedCodes.length > 0 && (
+        <div className="bg-[#eef4f1] border border-[#2b5346]/20 rounded-xl px-5 py-4 flex items-center gap-3">
+          <CheckCircle2 className="w-4 h-4 text-[#2b5346] shrink-0" />
+          <p className="text-xs font-semibold text-[#2b5346]">All codes matched — no issues detected</p>
+        </div>
+      )}
     </div>
   );
 }

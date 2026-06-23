@@ -163,6 +163,20 @@ export default function App(): React.ReactElement {
     [foundReports, syntheticFoundReports],
   );
 
+  // Globally restrict to BD-only codes: EV-prefix, static BD DB entries, or BusinessDevelopment channel.
+  // Non-BD codes (OGSALE50, FPFREEMEALS, etc.) must never reach any tab.
+  const bdFilteredReports = useMemo(() => {
+    const bdSet = new Set(staticNonEvBdCodes.map(c => c.toUpperCase()));
+    return augmentedFoundReports.filter(r => {
+      const code = (r.discount_code ?? "").toUpperCase();
+      if (code.startsWith("EV")) return true;
+      if (r.isStaticOnly) return true;
+      if (bdSet.has(code)) return true;
+      const ch = (r.channel ?? "").replace(/[\s_-]/g, "").toLowerCase();
+      return ch === "businessdevelopment";
+    });
+  }, [augmentedFoundReports, staticNonEvBdCodes]);
+
   const handleResetWorkspace = (openLooker = false): void => {
     fileUpload.actions.reset();
     analysis.actions.reset();
@@ -292,7 +306,7 @@ export default function App(): React.ReactElement {
               setReportPage={report.actions.setReportPage}
               activeTab={report.state.activeTab}
               setActiveTab={report.actions.setActiveTab}
-              foundReports={augmentedFoundReports}
+              foundReports={bdFilteredReports}
               summary={summary ?? EMPTY_SUMMARY}
               channelSummary={channelSummary}
               dbRows={fileUpload.state.dbRows}
@@ -326,7 +340,7 @@ export default function App(): React.ReactElement {
       </main>
 
       <PrintPreview
-        foundReports={augmentedFoundReports}
+        foundReports={bdFilteredReports}
         missingCodes={missingCodes}
         summary={summary}
         fileName={fileUpload.state.fileName}
