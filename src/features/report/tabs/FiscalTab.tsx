@@ -144,6 +144,13 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow }:
     setModalSearch("");
   }
 
+  function toggleSort(col: "code" | "month" | "signups") {
+    setModalSort(prev => ({
+      by: col,
+      dir: prev.by === col && prev.dir === "asc" ? "desc" : "asc",
+    }));
+  }
+
   const now = new Date();
   const nowMk = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const currentFY = fiscalYear(nowMk);
@@ -286,6 +293,40 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow }:
       return bTotal - aTotal;
     });
   }, [volume, financials]);
+
+  // ── Modal data memos ──────────────────────────────────────────
+
+  const rawModalEvents = useMemo(() => {
+    if (!eventModal) return [];
+    if (eventModal.prov === null) return volume.eventListByFY[eventModal.fy] ?? [];
+    return volume.eventListByProvByFY[eventModal.fy]?.[eventModal.prov] ?? [];
+  }, [eventModal, volume]);
+
+  const modalAvailableProvs = useMemo(
+    () =>
+      Array.from(
+        new Set(rawModalEvents.map(e => e.homeProvince).filter((p): p is string => Boolean(p) && p !== "??"))
+      ).sort(),
+    [rawModalEvents]
+  );
+
+  const filteredModalEvents = useMemo(() => {
+    let list = rawModalEvents;
+    if (modalSearch.trim()) {
+      const q = modalSearch.trim().toLowerCase();
+      list = list.filter(e => e.code.toLowerCase().includes(q));
+    }
+    if (modalProvFilter) {
+      list = list.filter(e => e.homeProvince === modalProvFilter);
+    }
+    return [...list].sort((a, b) => {
+      let cmp = 0;
+      if (modalSort.by === "code")    cmp = a.code.localeCompare(b.code);
+      if (modalSort.by === "month")   cmp = a.eventMonth.localeCompare(b.eventMonth);
+      if (modalSort.by === "signups") cmp = a.totalSignups - b.totalSignups;
+      return modalSort.dir === "asc" ? cmp : -cmp;
+    });
+  }, [rawModalEvents, modalSearch, modalProvFilter, modalSort]);
 
   // ── Date range label ──────────────────────────────────────────
 
@@ -837,47 +878,127 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow }:
     </div>
 
     {/* ── Event list modal ──────────────────────────────────────── */}
-    {eventModal && (() => {
-      const events = (eventModal.prov != null
-        ? (volume.eventListByProvByFY[eventModal.fy]?.[eventModal.prov] ?? [])
-        : (volume.eventListByFY[eventModal.fy] ?? [])
-      ).sort((a: EventStats, b: EventStats) => a.eventMonth.localeCompare(b.eventMonth));
-      return (
+    {eventModal && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        onClick={() => setEventModal(null)}
+      >
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setEventModal(null)}
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+          onClick={e => e.stopPropagation()}
         >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="px-5 py-4 border-b border-[#f0f0ee] flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">
-                  {eventModal.fy} · {eventModal.prov} · {events.length} event{events.length !== 1 ? "s" : ""}
-                </p>
-                <p className="text-[15px] font-black text-[#0f0f0f] mt-0.5">BD Events in {eventModal.prov}</p>
-              </div>
-              <button
-                onClick={() => setEventModal(null)}
-                className="text-[#c0c0c0] hover:text-[#1a1a1a] cursor-pointer mt-0.5"
-              >
-                <X className="w-4 h-4" />
-              </button>
+          {/* Header */}
+          <div className="px-5 py-4 border-b border-[#f0f0ee] flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">
+                {eventModal.fy} · {eventModal.prov ?? "All Provinces"} ·{" "}
+                {filteredModalEvents.length !== rawModalEvents.length
+                  ? `${filteredModalEvents.length} of `
+                  : ""}
+                {rawModalEvents.length} event{rawModalEvents.length !== 1 ? "s" : ""}
+              </p>
+              <p className="text-[15px] font-black text-[#0f0f0f] mt-0.5">
+                {eventModal.prov !== null
+                  ? `BD Events in ${eventModal.prov}`
+                  : `All ${eventModal.fy} Events`}
+              </p>
             </div>
-            <div className="overflow-y-auto" style={{ maxHeight: 360 }}>
-              <table className="w-full border-collapse">
-                <thead className="sticky top-0 bg-[#fafafa] border-b border-[#f0f0ee]">
+            <button
+              onClick={() => setEventModal(null)}
+              className="text-[#c0c0c0] hover:text-[#1a1a1a] cursor-pointer mt-0.5"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Search */}
+          <div className="px-5 pt-3 pb-2">
+            <input
+              type="text"
+              placeholder="Search codes..."
+              value={modalSearch}
+              onChange={e => setModalSearch(e.target.value)}
+              className="w-full text-[11px] font-mono px-3 py-2 rounded-lg border border-[#e8e8e8] bg-[#fafafa] text-[#0f0f0f] placeholder:text-[#c0c0c0] focus:outline-none focus:border-[#2b5346]"
+            />
+          </div>
+
+          {/* Province pills — all-provinces mode only */}
+          {eventModal.prov === null && modalAvailableProvs.length > 0 && (
+            <div className="px-5 pb-3 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setModalProvFilter(null)}
+                className="text-[9px] font-mono px-2.5 py-1 rounded-full border transition-colors cursor-pointer"
+                style={
+                  modalProvFilter === null
+                    ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
+                    : { backgroundColor: "white", color: "#888", borderColor: "#e8e8e8" }
+                }
+              >
+                All
+              </button>
+              {modalAvailableProvs.map(p => (
+                <button
+                  key={p}
+                  onClick={() => setModalProvFilter(prev => (prev === p ? null : p))}
+                  className="text-[9px] font-mono px-2.5 py-1 rounded-full border transition-colors cursor-pointer"
+                  style={
+                    modalProvFilter === p
+                      ? { backgroundColor: provColor(p), color: "white", borderColor: provColor(p) }
+                      : { backgroundColor: "white", color: provColor(p), borderColor: "#e8e8e8" }
+                  }
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Table */}
+          <div className="overflow-y-auto" style={{ maxHeight: 340 }}>
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 bg-[#fafafa] border-b border-[#f0f0ee]">
+                <tr>
+                  {(["code", "month", "signups"] as const).map(col => {
+                    const labels: Record<typeof col, string> = {
+                      code: "Code",
+                      month: "Month",
+                      signups: "Signups",
+                    };
+                    const isActive = modalSort.by === col;
+                    return (
+                      <th
+                        key={col}
+                        onClick={() => toggleSort(col)}
+                        className={`py-2 text-[8.5px] font-mono uppercase tracking-widest cursor-pointer select-none ${
+                          col === "code" ? "text-left px-4" : "text-right px-4"
+                        }`}
+                        style={{ color: isActive ? "#2b5346" : "#a1a1a1" }}
+                      >
+                        {labels[col]}
+                        {isActive ? (modalSort.dir === "asc" ? " ↑" : " ↓") : ""}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredModalEvents.length === 0 ? (
                   <tr>
-                    <th className="text-left px-4 py-2 text-[8.5px] font-mono uppercase tracking-widest text-[#a1a1a1]">Code</th>
-                    <th className="text-right px-4 py-2 text-[8.5px] font-mono uppercase tracking-widest text-[#a1a1a1]">Month</th>
-                    <th className="text-right px-4 py-2 text-[8.5px] font-mono uppercase tracking-widest text-[#a1a1a1]">Signups</th>
+                    <td colSpan={3} className="px-4 py-6 text-center text-[10px] font-mono text-[#c0c0c0]">
+                      No events match
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {events.map(e => (
+                ) : (
+                  filteredModalEvents.map(e => (
                     <tr key={e.code} className="border-b border-[#f8f8f8] hover:bg-[#fafafa]">
-                      <td className="px-4 py-2.5 font-mono text-[11px] font-bold text-[#0f0f0f]">{e.code}</td>
+                      <td className="px-4 py-2.5 font-mono text-[11px] font-bold text-[#0f0f0f]">
+                        {e.code}
+                        {eventModal.prov === null && e.homeProvince && e.homeProvince !== "??" && (
+                          <span className="ml-2 text-[8.5px] font-normal" style={{ color: provColor(e.homeProvince) }}>
+                            {e.homeProvince}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-2.5 font-mono text-[10px] text-[#888] text-right">
                         {MONTH_ABBR[Number(e.eventMonth.slice(5)) - 1]} {e.eventMonth.slice(0, 4)}
                       </td>
@@ -885,37 +1006,45 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow }:
                         {e.totalSignups.toLocaleString()}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="px-5 py-3 border-t border-[#f5f5f3] flex items-center justify-between gap-3">
-              <span className="text-[8.5px] font-mono text-[#c0c0c0]">
-                {events.reduce((s, e) => s + e.totalSignups, 0).toLocaleString()} total signups · attributed by majority province
-              </span>
-              <button
-                onClick={() => {
-                  const text = events
-                    .map(e => `${e.code}\t${MONTH_ABBR[Number(e.eventMonth.slice(5)) - 1]} ${e.eventMonth.slice(0, 4)}\t${e.totalSignups}`)
-                    .join("\n");
-                  navigator.clipboard.writeText(text).then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  });
-                }}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all"
-                style={copied
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div className="px-5 py-3 border-t border-[#f5f5f3] flex items-center justify-between gap-3">
+            <span className="text-[8.5px] font-mono text-[#c0c0c0]">
+              {filteredModalEvents.reduce((s, e) => s + e.totalSignups, 0).toLocaleString()} total signups
+              {eventModal.prov === null ? " · attributed by majority province" : ""}
+            </span>
+            <button
+              onClick={() => {
+                const text = filteredModalEvents
+                  .map(
+                    e =>
+                      `${e.code}\t${MONTH_ABBR[Number(e.eventMonth.slice(5)) - 1]} ${e.eventMonth.slice(0, 4)}\t${e.totalSignups}`
+                  )
+                  .join("\n");
+                navigator.clipboard.writeText(text).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                });
+              }}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all"
+              style={
+                copied
                   ? { backgroundColor: "#eef4f1", color: "#2b5346", borderColor: "#c0ddd6" }
-                  : { backgroundColor: "white", color: "#3d3d3d", borderColor: "#e5e5e5" }}
-              >
-                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copied!" : "Copy list"}
-              </button>
-            </div>
+                  : { backgroundColor: "white", color: "#3d3d3d", borderColor: "#e5e5e5" }
+              }
+            >
+              {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+              {copied ? "Copied!" : "Copy list"}
+            </button>
           </div>
         </div>
-      );
-    })()}
+      </div>
+    )}
     </React.Fragment>
   );
 }
