@@ -629,15 +629,12 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                         const isLatest = yi === volume.years.length - 1;
                         return (
                           <td key={yr} className="text-right px-5 py-3">
-                            {val !== null ? (
+                            {val != null ? (
                               <span className={`text-[12px] font-black font-mono ${isLatest ? "text-[#0f0f0f]" : "text-[#999]"}`}>
                                 {row.fmt(val)}
                               </span>
                             ) : (
-                              <span className="text-[10px] font-mono text-[#c0c0c0]">
-                                {"raw" in row && row.raw ? row.fmt(row.raw[0]) : "—"}
-                                {"note" in row && row.note && <><br /><span className="text-[8.5px] text-[#d0d0d0]">{row.note}</span></>}
-                              </span>
+                              <span className="text-[10px] font-mono text-[#c0c0c0]">—</span>
                             )}
                           </td>
                         );

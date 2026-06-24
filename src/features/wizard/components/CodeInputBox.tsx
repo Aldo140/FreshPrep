@@ -52,7 +52,7 @@ export default function CodeInputBox({
   };
 
   const processFile = async (file: File) => {
-    const { parseSpreadsheetFile } = await import("../utils/fileParser");
+    const { parseSpreadsheetFile } = await import("../../../utils/fileParser");
     try {
       const result = await parseSpreadsheetFile(file);
       onFileLoaded(result.dbRows, file.name);

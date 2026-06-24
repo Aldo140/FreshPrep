@@ -305,7 +305,7 @@ export default function App(): React.ReactElement {
         <div className="flex items-center gap-2 shrink-0">
           {fileUpload.state.dbRows.length > 0 && (
             <button
-              onClick={handleResetWorkspace}
+              onClick={() => handleResetWorkspace()}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-white/10 text-white hover:bg-white/20 cursor-pointer"
               style={{ transition: "background-color 150ms var(--ease-out)" }}
               title="Upload a different dataset"
