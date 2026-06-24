@@ -14,6 +14,24 @@ function isPayingCustomer(row: CustomerRecord): boolean {
   return hasPayingDate || row.last_step?.trim().toLowerCase() === "paying customer";
 }
 
+function displayChannel(channel: string | undefined): string {
+  const trimmed = channel?.trim();
+  if (!trimmed || trimmed.toLowerCase() === "null") return "Unspecified";
+  return trimmed;
+}
+
+function dominantChannel(channelCounts: Map<string, number>): string {
+  let bestChannel = "Unspecified";
+  let bestCount = -1;
+  for (const [channel, count] of channelCounts.entries()) {
+    if (count > bestCount) {
+      bestChannel = channel;
+      bestCount = count;
+    }
+  }
+  return bestChannel;
+}
+
 /**
  * Builds code + province fallback performance rows from the built-in signup database.
  * Includes EV-prefixed codes and non-EV codes explicitly attributed to BusinessDevelopment.
@@ -48,6 +66,7 @@ export function aggregateBusinessDevelopmentRows(
     province: string;
     signups: number;
     paying: number;
+    channelCounts: Map<string, number>;
   }>();
 
   for (const row of customerRows) {
@@ -65,17 +84,20 @@ export function aggregateBusinessDevelopmentRows(
       province,
       signups: 0,
       paying: 0,
+      channelCounts: new Map<string, number>(),
     };
 
     current.signups += 1;
     if (isPayingCustomer(row)) current.paying += 1;
+    const channel = displayChannel(row.channel);
+    current.channelCounts.set(channel, (current.channelCounts.get(channel) ?? 0) + 1);
     grouped.set(key, current);
   }
 
   return Array.from(grouped.values())
-    .map(({ code, province, signups, paying }): DiscountCodeData => ({
+    .map(({ code, province, signups, paying, channelCounts }): DiscountCodeData => ({
         discount_code: code,
-        channel: "BusinessDevelopment",
+        channel: dominantChannel(channelCounts),
         isStaticOnly: true,
         Province: province === "??" ? "ON" : province,
         Signups: signups,
