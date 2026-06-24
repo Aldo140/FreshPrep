@@ -31,6 +31,14 @@ const CHIP_PROV_COLOR: Record<string, string> = {
 const chipProvColor = (p: string) => CHIP_PROV_COLOR[p] ?? "#888";
 const isEvCode = (code: string): boolean => code.trim().toUpperCase().startsWith("EV");
 
+interface ExcludedCodeSummary {
+  code: string;
+  channel: string;
+  provinces: string[];
+  signups: number;
+  source: "Client LTV" | "BD Events DB" | "Event calendar";
+}
+
 function summarizeReports(reports: AnalyzedCodeReport[], numCodesMissing = 0): KPIReportSummary {
   const totalSignups = reports.reduce((sum, report) => sum + report.Signups, 0);
   const totalPayingCustomers = reports.reduce((sum, report) => sum + report["Paying cx"], 0);
@@ -158,31 +166,67 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   } = props;
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [showExcludedCodes, setShowExcludedCodes] = useState(false);
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
   const [evPrefixOnly, setEvPrefixOnly] = useState(false);
 
-  const nonEvCodeCount = useMemo(() => {
-    const codes = new Set<string>();
+  const excludedNonEvCodes = useMemo<ExcludedCodeSummary[]>(() => {
+    const map = new Map<string, ExcludedCodeSummary>();
+
+    const upsert = (
+      rawCode: string,
+      channel: string | undefined,
+      province: string | undefined,
+      signups: number,
+      source: ExcludedCodeSummary["source"],
+    ) => {
+      const code = rawCode.trim().toUpperCase();
+      if (!code || isEvCode(code)) return;
+      const existing = map.get(code) ?? {
+        code,
+        channel: channel?.trim() || "Unspecified",
+        provinces: [],
+        signups: 0,
+        source,
+      };
+      const cleanChannel = channel?.trim();
+      if (cleanChannel && existing.channel === "Unspecified") existing.channel = cleanChannel;
+      const cleanProvince = province?.trim().toUpperCase();
+      if (cleanProvince && cleanProvince !== "??" && !existing.provinces.includes(cleanProvince)) {
+        existing.provinces.push(cleanProvince);
+      }
+      existing.signups += Math.max(0, signups || 0);
+      if (existing.source !== source) existing.source = "BD Events DB";
+      map.set(code, existing);
+    };
+
     for (const report of foundReports) {
-      const code = report.discount_code.trim().toUpperCase();
-      if (code && !isEvCode(code)) codes.add(code);
+      upsert(report.discount_code, report.channel, report.Province, report.Signups, "Client LTV");
     }
     for (const row of dbRows) {
-      const code = row.discount_code.trim().toUpperCase();
-      if (code && !isEvCode(code)) codes.add(code);
+      upsert(row.discount_code, row.channel, row.Province, row.Signups, "BD Events DB");
     }
     for (const stat of customerData.eventStats) {
-      const code = stat.code.trim().toUpperCase();
-      if (code && !isEvCode(code)) codes.add(code);
+      upsert(stat.code, undefined, stat.homeProvince, stat.totalSignups, "Event calendar");
     }
-    return codes.size;
+    return Array.from(map.values())
+      .map(item => ({ ...item, provinces: item.provinces.sort() }))
+      .sort((a, b) => b.signups - a.signups || a.code.localeCompare(b.code));
   }, [foundReports, dbRows, customerData.eventStats]);
+
+  const nonEvCodeCount = excludedNonEvCodes.length;
 
   useEffect(() => {
     if (nonEvCodeCount === 0 && evPrefixOnly) {
       setEvPrefixOnly(false);
     }
   }, [nonEvCodeCount, evPrefixOnly]);
+
+  useEffect(() => {
+    if (!evPrefixOnly) {
+      setShowExcludedCodes(false);
+    }
+  }, [evPrefixOnly]);
 
   const scopedFoundReports = useMemo(
     () => evPrefixOnly ? foundReports.filter(report => isEvCode(report.discount_code)) : foundReports,
@@ -394,9 +438,21 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             <div>
               <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Event code scope</p>
               <p className="text-[9.5px] font-mono text-[#888] mt-0.5">
-                {evPrefixOnly
-                  ? `Showing EV-prefix codes only · ${nonEvCodeCount} non-EV code${nonEvCodeCount !== 1 ? "s" : ""} excluded`
-                  : "Showing EV-prefix and verified BusinessDevelopment codes"}
+                {evPrefixOnly ? (
+                  <>
+                    Showing EV-prefix codes only ·{" "}
+                    <button
+                      type="button"
+                      onClick={() => setShowExcludedCodes(true)}
+                      className="font-black text-[#2b5346] underline decoration-[#2b5346]/30 underline-offset-2 cursor-pointer hover:text-[#1a3d2f]"
+                    >
+                      {nonEvCodeCount} non-EV code{nonEvCodeCount !== 1 ? "s" : ""}
+                    </button>{" "}
+                    not included
+                  </>
+                ) : (
+                  "Showing EV-prefix and verified BusinessDevelopment codes"
+                )}
               </p>
               <p className="text-[9px] text-[#9b4a1c] mt-1">
                 EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.
@@ -643,6 +699,80 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         onClose={() => setShowCustomerModal(false)}
         onFile={file => { onCustomerFile(file); setShowCustomerModal(false); }}
       />
+
+      {showExcludedCodes && evPrefixOnly && (
+        <div
+          className="fixed inset-0 z-50 bg-black/35 flex items-end sm:items-center justify-center p-0 sm:p-5"
+          onMouseDown={event => {
+            if (event.target === event.currentTarget) setShowExcludedCodes(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label="Non-EV codes excluded by EV-prefix filter"
+            className="bg-white w-full sm:max-w-3xl max-h-[86vh] rounded-t-2xl sm:rounded-2xl border border-[#e5e5e5] shadow-2xl overflow-hidden flex flex-col"
+          >
+            <header className="px-5 py-4 border-b border-[#ececec] bg-[#fafafa] flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">EV-prefix scope</p>
+                <h3 className="text-lg font-black text-[#0f0f0f] mt-1">
+                  {nonEvCodeCount.toLocaleString()} non-EV code{nonEvCodeCount !== 1 ? "s" : ""} not included
+                </h3>
+                <p className="text-[10px] font-mono text-[#888] mt-0.5">
+                  These are verified BusinessDevelopment codes excluded while EV-prefix only is enabled.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExcludedCodes(false)}
+                className="w-8 h-8 rounded-full bg-white border border-[#e5e5e5] flex items-center justify-center text-[#888] hover:text-[#1a1a1a] cursor-pointer"
+                aria-label="Close excluded codes"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-auto">
+              <table className="w-full min-w-[640px] text-left border-collapse text-xs">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-white border-b border-[#e5e5e5] text-[#a1a1a1] font-semibold font-mono uppercase text-[9px]">
+                    <th className="py-2.5 px-5">Code</th>
+                    <th className="py-2.5 px-4">Channel</th>
+                    <th className="py-2.5 px-4">Province</th>
+                    <th className="py-2.5 px-4 text-right">Signups</th>
+                    <th className="py-2.5 px-5">Source</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f3f3f1]">
+                  {excludedNonEvCodes.map(code => (
+                    <tr key={code.code} className="hover:bg-[#fafafa]">
+                      <td className="py-3 px-5 font-black font-mono text-[#0f0f0f]">{code.code}</td>
+                      <td className="py-3 px-4 text-[#666]">{code.channel}</td>
+                      <td className="py-3 px-4 font-mono text-[#888]">
+                        {code.provinces.length ? code.provinces.join(" + ") : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono">{code.signups.toLocaleString()}</td>
+                      <td className="py-3 px-5 text-[#888]">{code.source}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <footer className="px-5 py-3 border-t border-[#ececec] bg-[#fafafa] flex items-center justify-between gap-3 text-[10px] font-mono text-[#888]">
+              <span>EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.</span>
+              <button
+                type="button"
+                onClick={() => setEvPrefixOnly(false)}
+                className="shrink-0 text-[#2b5346] font-black hover:underline cursor-pointer"
+              >
+                Include these codes
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
