@@ -295,8 +295,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     { id: "performance", label: "Performance" },
     { id: "revenue", label: "Revenue" },
     { id: "calendar", label: "Calendar" },
-    { id: "regional", label: "Regional" },
     { id: "fiscal",   label: "BD Fiscal" },
+    { id: "regional", label: "Regional" },
     { id: "data", label: "All Codes" },
   ];
 
