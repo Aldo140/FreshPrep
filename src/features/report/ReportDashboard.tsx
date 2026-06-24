@@ -289,6 +289,11 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     return `${ABBR[m - 1]} ${y}`;
   }, [dataThrough]);
 
+  const showProvinceChips =
+    ["calendar", "fiscal", "regional"].includes(reportPage) &&
+    chipProvinces.length > 0 &&
+    !(reportPage === "regional" && selectedFlow === "all" && foundReports.length === 0);
+
   const allPages: { id: ReportPage; label: string }[] = [
     { id: "comparison", label: "Comparison" },
     { id: "overview", label: "Overview" },
@@ -423,8 +428,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </div>
       )}
 
-      {/* Province chip — visible only on Calendar, Fiscal, Regional */}
-      {["calendar", "fiscal", "regional"].includes(reportPage) && chipProvinces.length > 0 && (
+      {/* Province chip — visible only on Calendar/Fiscal, plus Regional analysis views */}
+      {showProvinceChips && (
         <div className="shrink-0 px-4 py-1.5 bg-white border-b border-[#ececec] flex items-center gap-2 overflow-x-auto no-scrollbar">
           <span className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
           <button
