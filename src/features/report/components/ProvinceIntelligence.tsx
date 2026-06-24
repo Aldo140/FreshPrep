@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { DiscountCodeData, AnalyzedCodeReport } from "../../../types";
 import {
-  Users, DollarSign, TrendingUp, AlertTriangle,
-  Award, TrendingDown, Info, Search, X, ChevronRight,
+  Users, DollarSign, TrendingUp,
+  Award, Info, Search, X, ChevronRight,
 } from "lucide-react";
 
 interface ProvinceIntelligenceProps {
@@ -123,19 +123,17 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
     let highestOpportunity = provinceMetrics[0];
     let maxOppIdx = -1;
     let highestEfficiency = provinceMetrics[0];
-    let lowestPerforming = provinceMetrics[0];
-    let extraInvestment = provinceMetrics[0];
-    let maxInvestMargin = -1;
+    let highestLTV = provinceMetrics[0];
+    let strongestVolume = provinceMetrics[0];
 
     for (const m of provinceMetrics) {
       const oppIdx = m.totalSignups > 0 ? (m.conversion * m.avgLTV12) / Math.sqrt(m.totalSignups) : 0;
       if (oppIdx > maxOppIdx) { maxOppIdx = oppIdx; highestOpportunity = m; }
       if (m.efficiencyRatio > highestEfficiency.efficiencyRatio && m.totalDiscount > 0) highestEfficiency = m;
-      if (m.conversion < lowestPerforming.conversion) lowestPerforming = m;
-      const investMargin = m.totalSignups * (100 - m.conversion);
-      if (investMargin > maxInvestMargin) { maxInvestMargin = investMargin; extraInvestment = m; }
+      if (m.avgLTV12 > highestLTV.avgLTV12 && m.totalPayingCustomers > 0) highestLTV = m;
+      if (m.totalSignups > strongestVolume.totalSignups) strongestVolume = m;
     }
-    return { highestOpportunity, highestEfficiency, lowestPerforming, extraInvestment };
+    return { highestOpportunity, highestEfficiency, highestLTV, strongestVolume };
   }, [provinceMetrics]);
 
   const sortedLeaderboard = useMemo(() => [...provinceMetrics].sort((a, b) => {
@@ -478,7 +476,7 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
         <section className="bg-[#1a1a1a] text-white rounded-2xl p-5 border border-[#2a2a2a]">
           <div className="border-b border-[#2a2a2a] pb-3 mb-5">
             <h3 className="text-xs font-black text-[#e7bd27] font-mono uppercase tracking-wider">Regional insights</h3>
-            <p className="text-[10px] text-[#888] font-mono mt-0.5">Data-driven read on where to push and where to pull back.</p>
+            <p className="text-[10px] text-[#888] font-mono mt-0.5">Data-driven read on the strongest regional signals and where momentum is showing up.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -508,29 +506,29 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               </div>
             </div>
 
-            <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col justify-between transition-colors">
+            <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#2b9f75]/30 transition-colors">
               <div>
-                <span className="text-[9px] font-mono font-bold tracking-widest text-[#888] uppercase block mb-1.5">Lowest conversion</span>
-                <h4 className="text-xl font-black font-mono text-white">{recommendations.lowestPerforming.province}</h4>
+                <span className="text-[9px] font-mono font-bold tracking-widest text-[#2b9f75] uppercase block mb-1.5">Highest LTV</span>
+                <h4 className="text-xl font-black font-mono text-white">{recommendations.highestLTV.province}</h4>
                 <p className="text-[10.5px] text-[#888] mt-2.5 leading-relaxed">
-                  Only <strong className="text-white">{recommendations.lowestPerforming.conversion.toFixed(1)}%</strong> conversion rate. Review whether events here are the right fit or if the offer needs adjustment.
+                  Delivers <strong className="text-white">${Math.round(recommendations.highestLTV.avgLTV12).toLocaleString()} avg LTV</strong> across <strong className="text-white">{recommendations.highestLTV.totalPayingCustomers.toLocaleString()} paying cx</strong>. Strong customer-value signal.
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-[#888] uppercase font-mono font-bold flex items-center gap-1">
-                <TrendingDown className="w-3 h-3 text-[#850b0b]" /> Re-evaluate
+                <DollarSign className="w-3 h-3 text-[#2b9f75]" /> High value market
               </div>
             </div>
 
             <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col justify-between hover:border-[#e7bd27]/30 transition-colors">
               <div>
-                <span className="text-[9px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1.5">High volume, low close</span>
-                <h4 className="text-xl font-black font-mono text-white">{recommendations.extraInvestment.province}</h4>
+                <span className="text-[9px] font-mono font-bold tracking-widest text-[#e7bd27] uppercase block mb-1.5">Strongest volume</span>
+                <h4 className="text-xl font-black font-mono text-white">{recommendations.strongestVolume.province}</h4>
                 <p className="text-[10.5px] text-[#888] mt-2.5 leading-relaxed">
-                  <strong className="text-white">{recommendations.extraInvestment.totalSignups.toLocaleString()} signups</strong> but conversion is under-performing. Strong top-of-funnel demand — worth investigating drop-off in onboarding.
+                  Generated <strong className="text-white">{recommendations.strongestVolume.totalSignups.toLocaleString()} signups</strong> and <strong className="text-white">{recommendations.strongestVolume.totalPayingCustomers.toLocaleString()} paying cx</strong>. Clear proof of regional reach.
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-white/10 text-[9px] text-[#888] uppercase font-mono font-bold flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3 text-[#e78a58]" /> Investigate drop-off
+                <Users className="w-3 h-3 text-[#e7bd27]" /> Broadest demand
               </div>
             </div>
           </div>
