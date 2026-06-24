@@ -37,9 +37,10 @@ interface RegionalTabProps {
   onUploadLooker?: () => void;
   activeProvince?: string | null;
   onNavigate?: (page: ReportPage) => void;
+  channelScope?: string;
 }
 
-export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker, activeProvince, onNavigate }: RegionalTabProps): React.ReactElement {
+export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker, activeProvince, onNavigate, channelScope }: RegionalTabProps): React.ReactElement {
   const relevance = TAB_RELEVANCE.regional[selectedFlow];
   const bdOnly = dbRows.length === 0 && foundReports.length === 0;
   const [codeLookupQuery, setCodeLookupQuery] = useState("");
@@ -476,7 +477,7 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
       </div>
 
 
-      <ProvinceIntelligence dbRows={dbRows} foundReports={filteredReports} />
+      <ProvinceIntelligence dbRows={dbRows} foundReports={filteredReports} channelScope={channelScope} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { TAB_RELEVANCE } from "../../../config/flowRelevance";
 import { PortfolioHealth } from "../../../hooks/useAnalysis";
 import KeyFindingsSection from "../components/KeyFindingsSection";
 import { ArrowRight, BarChart3, DollarSign, MapPin, Table2 } from "lucide-react";
+import { MetricInfo } from "../../../components/MetricInfo";
 
 interface OverviewTabProps {
   foundReports: AnalyzedCodeReport[];
@@ -120,7 +121,7 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
                 {summary.blendedConversionRate.toFixed(1)}%
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <p className="text-[9px] text-white/45 uppercase tracking-widest font-mono">Conversion rate</p>
+                <p className="text-[9px] text-white/45 uppercase tracking-widest font-mono flex items-center gap-1">Conversion rate <MetricInfo text="Paying customers ÷ total signups across all your codes. The blended rate weights high-volume codes more heavily." className="opacity-60 hover:opacity-100" /></p>
                 <span
                   className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-md"
                   style={{ backgroundColor: grade.bg, color: grade.color }}
@@ -131,12 +132,12 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
               </div>
             </div>
             {[
-              { label: "Avg LTV 12M",   value: `$${Math.round(summary.averageLTV12).toLocaleString()}` },
-              { label: "Total signups", value: summary.totalSignups.toLocaleString() },
+              { label: "Avg LTV 12M", value: `$${Math.round(summary.averageLTV12).toLocaleString()}`, tip: "Average estimated revenue per paying customer over their first 12 months. A higher number means your events attract more valuable subscribers." },
+              { label: "Total signups", value: summary.totalSignups.toLocaleString(), tip: "Everyone who registered using one of your promo codes — includes people still in their free trial, not just paying customers." },
             ].map(k => (
               <div key={k.label}>
                 <p className="text-4xl font-bold font-mono text-white leading-none tracking-tight">{k.value}</p>
-                <p className="text-[9px] text-white/45 uppercase tracking-widest font-mono mt-2">{k.label}</p>
+                <p className="text-[9px] text-white/45 uppercase tracking-widest font-mono mt-2 flex items-center gap-1">{k.label} <MetricInfo text={k.tip} className="opacity-60 hover:opacity-100" /></p>
               </div>
             ))}
           </div>
@@ -163,7 +164,7 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
           {/* Header + bar stay clipped for rounded top corners */}
           <div className="overflow-hidden rounded-t-xl">
             <div className="flex items-center justify-between px-6 py-3 border-b border-[#f2f2f2]">
-              <p className="text-[9px] font-semibold text-[#a1a1a1] uppercase tracking-widest font-mono">Code health</p>
+              <p className="text-[9px] font-semibold text-[#a1a1a1] uppercase tracking-widest font-mono flex items-center gap-1">Code health <MetricInfo text="How your promo codes are distributed across performance tiers based on conversion rate. Strong ≥ 40%, Average 20–39%, Weak &lt; 20%." side="bottom" /></p>
               <span className="text-[9px] font-mono text-[#c0c0c0]">{portfolioHealth.total} codes · hover each tier to learn more</span>
             </div>
             <div className="flex h-1.5" style={{ background: "#f5f5f5" }}>

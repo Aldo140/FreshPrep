@@ -6,6 +6,7 @@ import {
 import { AnalyzedCodeReport, KPIReportSummary, AnalysisFlow } from "../../../types";
 import { CustomerDataResult, EventStats } from "../../../hooks/useCustomerData";
 import { FiscalPrintModal } from "./FiscalPrintModal";
+import { MetricInfo } from "../../../components/MetricInfo";
 
 const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -87,7 +88,7 @@ function fyStatus(fy: string, covered: number): "full" | "partial" | "none" {
 // ── Sub-components ──────────────────────────────────────────────
 
 interface KpiCardProps {
-  label: string;
+  label: React.ReactNode;
   value: string;
   sub?: string;
   note?: string;
@@ -496,7 +497,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               large
             />
             <KpiCard
-              label="Blended Conversion"
+              label={<span className="flex items-center gap-1">Blended Conversion <MetricInfo text="% of all signups who became paying customers across all event codes combined. The 'avg code conv.' below is the simple average per code, unweighted by volume." side="bottom" /></span>}
               value={`${financials.blendedConv.toFixed(1)}%`}
               sub={`avg code conv. ${financials.avgConv.toFixed(1)}%`}
               accent={financials.blendedConv >= 35 ? "#2b5346" : financials.blendedConv >= 25 ? "#c9a000" : "#9b4a1c"}
@@ -504,7 +505,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               large
             />
             <KpiCard
-              label="12-mo Revenue (LTV)"
+              label={<span className="flex items-center gap-1">12-mo Revenue (LTV) <MetricInfo text="Total estimated 12-month revenue from all paying customers acquired this fiscal year. LTV = Lifetime Value — how much a customer is worth over time." side="bottom" /></span>}
               value={currency(financials.totalLTV12)}
               sub="estimated 12-month value"
               accent="#2b5346"
@@ -512,7 +513,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               large
             />
             <KpiCard
-              label="Avg LTV / Customer"
+              label={<span className="flex items-center gap-1">Avg LTV / Customer <MetricInfo text="Average estimated 12-month revenue per paying customer. Tells you the quality of subscribers your events bring in — higher means more valuable customers." side="bottom" /></span>}
               value={currency(financials.avgLTV12)}
               sub="12-month avg"
               accent="#4d8970"
@@ -548,21 +549,21 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               large
             />
             <KpiCard
-              label="Cost / Signup"
+              label={<span className="flex items-center gap-1">Cost / Signup <MetricInfo text="Total event investment ÷ number of people who registered. How much it costs to get someone through the door and signed up." side="bottom" /></span>}
               value={currency(financials.cpaSignup ?? 0, 2)}
               sub="total spend ÷ signups"
               accent="#c9a000"
               icon={<Target className="w-4 h-4" />}
             />
             <KpiCard
-              label="Cost / Paying Customer"
+              label={<span className="flex items-center gap-1">Cost / Paying Customer <MetricInfo text="Total event investment ÷ paying customers acquired. The true cost to acquire one subscriber. Compare this to Avg LTV to see if the event is profitable." side="bottom" /></span>}
               value={currency(financials.cpaPaying ?? 0, 2)}
               sub="total spend ÷ paying cx"
               accent="#c9a000"
               icon={<Users className="w-4 h-4" />}
             />
             <KpiCard
-              label="Revenue / Investment"
+              label={<span className="flex items-center gap-1">Revenue / Investment <MetricInfo text="12-month customer LTV ÷ total event spend. A 5× means every $1 invested in events generates $5 in customer revenue. Anything above 3× is strong." side="bottom" /></span>}
               value={financials.revToSpend ? `${financials.revToSpend.toFixed(1)}×` : "—"}
               sub="LTV12 return on spend"
               accent={financials.revToSpend && financials.revToSpend >= 5 ? "#2b5346" : "#c9a000"}
@@ -599,7 +600,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                       </th>
                     );
                   })}
-                  <th className="text-right px-5 py-3 text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">Δ YoY</th>
+                  <th className="text-right px-5 py-3 text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]"><span className="flex items-center justify-end gap-1">Δ YoY <MetricInfo text="Change in signups vs. the previous fiscal year. ▲ green = more signups than last year. ▼ red = fewer. Δ means 'change'." side="bottom" /></span></th>
                 </tr>
               </thead>
               <tbody>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { MetricInfo } from "../../../components/MetricInfo";
 import {
   Loader2, ChevronRight, Upload, X, ChevronDown, ChevronUp,
   Database, Pin, PinOff, BarChart2, CalendarDays,
@@ -68,13 +69,46 @@ function monthLabel(mk: string) {
   return MONTH_ABBR[Number(mk.split("-")[1]) - 1];
 }
 
-/** Strip trailing digits to find event family stem.
- *  EVSTAMPEDE10 + EVSTAMPEDE25 → "EVSTAMPEDE"
- *  EVCNE20 + EVCNE25 → "EVCNE"
+// Canadian city/province tokens embedded in event codes — longest first to
+// prevent a short token (BC) shadowing a longer one (BCLA → should keep LA).
+const CITY_START_RE = /^(COQUITLAM|ABBOTSFORD|KAMLOOPS|VICTORIA|VANCOUVER|EDMONTON|CALGARY|AIRDRIE|KELOWNA|LANGLEY|SURREY|DELTA|LETH|NVAN|ABBY|COQ|YYC|YVR|YEG|VIC|VAN|EDM|CGY|BC|AB)/;
+const CITY_END_RE   = /(COQUITLAM|ABBOTSFORD|KAMLOOPS|VICTORIA|VANCOUVER|EDMONTON|CALGARY|AIRDRIE|KELOWNA|LANGLEY|SURREY|DELTA|LETH|NVAN|ABBY|COQ|YYC|YVR|YEG|VIC|VAN|EDM|CGY|BC|AB)$/;
+
+/**
+ * Derive the event family stem from a promo code.
+ *
+ * Steps applied in order:
+ *  1. Uppercase + strip trailing discount/year digits    EVSTAMPEDE10   → EVSTAMPEDE
+ *  2. Strip single occurrence-counter digit after EV     EV1PNE         → EVPNE
+ *       Single \d only — leaves EV101STFITNESS intact.
+ *  3. Strip any remaining trailing 4-digit year          EVEDMFMARKET2025 → EVEDMFMARKET
+ *  4. Strip single occurrence-counter digit between
+ *     two letters anywhere in stem                       EVIB1PNE       → EVIBPNE
+ *       Safe against EVTC10K (digit is not between two letters there).
+ *  5. Merge IB-team codes into base family               EVIBBRIDGE     → EVBRIDGE
+ *       EVIBPNE, EVIBLILAC, EVIBKIEHLS all merge with their EV* counterparts.
+ *  6. Strip leading / trailing Canadian city token from
+ *     the event-name portion                             EVVICHOMESHOW  → EVHOMESHOW
+ *       EVHOMESHOWVIC, EVVANHOMESHOW, EVBCHOMESHOW all land on EVHOMESHOW.
+ *       Only applied to EV* codes; skips BD* codes.
+ *       Skipped when stripping would leave < 3 chars (e.g. EVVAN → keep).
  */
 function detectFamily(code: string): string {
-  const stem = code.replace(/\d+$/, "");
-  return stem.length >= 4 ? stem : code;
+  const upper = code.toUpperCase().replace(/\s+/g, "");
+  if (upper.includes("KAMLOOPS"))  return "EVKAMLOOPS";
+  if (upper.includes("KELOWNA"))   return "EVKELOWNA";
+  if (upper.includes("PENTICTON")) return "EVPENTICTON";
+  let stem = code.toUpperCase().replace(/\d+$/, "");                 // 1
+  stem = stem.replace(/^(EV)\d([A-Z])/, "$1$2");                    // 2
+  stem = stem.replace(/\d{4,}$/, "");                               // 3
+  stem = stem.replace(/([A-Z])\d([A-Z])/g, "$1$2");                 // 4
+  stem = stem.replace(/^EVIB/, "EV");                               // 5
+  if (stem.startsWith("EV")) {                                       // 6
+    const eventPart = stem.slice(2);
+    const stripped = eventPart.replace(CITY_START_RE, "").replace(CITY_END_RE, "");
+    if (stripped.length >= 3) stem = "EV" + stripped;
+  }
+  return stem.length >= 4 ? stem : code.toUpperCase();
 }
 
 interface EventFamily {
@@ -111,6 +145,63 @@ const EXPECTED_COLS = [
   { name: "first_paying_date", note: "Date of first paid order" },
   { name: "days till paying",  note: "Days from signup to first paying delivery week — slight discrepancy vs. exact date is expected" },
 ];
+
+// ── AB team province override ─────────────────────────────────
+// These codes are run by the AB team even when the host city is in BC.
+// Their signups are attributed to "AB" regardless of customer home province.
+const AB_TEAM_CODES = new Set([
+  "BDABBIKESHOW5","BDWOMENSHOW","BDBABYANDTOT5","BDNIGHTMARKET5",
+  "EVSERVUS","BDSOAPRUN","EVLILAC","EVNIGHTMARKETMWD","EVCROSSROADSMW",
+  "EVCURRIE5","EVJULYNIGHTMARKET5","EVSUNFEST5","EVTASTEOFCALGARY11",
+  "EVMARDA11","EVNIGHTMARKET11","EVGLOBALFEST85","EVROCKYMTN11",
+  "EVEDMFALLSHOW11","EVCALRENO6","EVWF6","EVEDMREN06","EVCROSSRD6",
+  "EVYYCHOME6","EVRDHOMESHOW6","EVLETHSHOW11","EVABBIKESHOW6",
+  "EVEDMHG6","EVYYCWS6","EVCHHOME6","EVSPCKIMB6","EVIBYYCMARATHON6",
+  "EVIBYYCTOTS6","EVIBBLOSSOM6","EVIBLILAC6","EVIBBRIDGE6","EVIBBRIDGE10",
+  "EVIBAIRDRIE6","EVIBAIRDRIE10","EVIBKIEHLS6","EVIBOKOTOKS6",
+  "EVIBCHESTERMERE6","EVIBCARSTAIRS6","EVIBCD10","EVIBTASTEEDM10",
+  "EVIBEDM10","EVIBEDMDNTNFM10","EVIBMOMMKT10","EVIBSUNFEST10",
+  "EVIBTASTECGY10","EVIBMARDAGRAS10","EVIBWHOOPUP10","EVIBABKIEHLS6",
+  "EVIBLMM10","EVIBLMBKER10","EVIBFOXYBOX10","EVIBCGYFHS10",
+  "EVIBABWOMENEXPO10","EVIBEDMFHS10","EVIBTRAFIGURA10","EVIBCGYRMWFF10",
+  "EVIBEDMRMWFF10","EVIB101STFITNESS10","EVIBRISEREP10","EVIBLIGHTUPFEST10",
+  "EVIBGRANDSOUTH10","EVIBEDMTABOO10","EVIBMOMMKTHOLIDAY10","EVIBLMMHOLIDAY10",
+  "EVIBPEAKTP10","EVIBGRANARYRDS10","EVIBSTUDIOBHOLI10","EVIBVEGANMKT10",
+  "EVIBHERITAGEOUAC10","EVIBCGYRENO2510","EVIBCGYRENOSSTYLED10",
+  "EVIBMYODETOXCGY10","EVIBCRUSHCAMP10","EVIBWEDDINGFEDM10","EVIBEDMRENO2510",
+  "EVIBCGYRV10","BDIBF45STALB","EVIBWEDDINGFCGY10","EVIBEDMRV10",
+  "EVIBCCTC2510","BDIBGYMVMTK10","EVIBCGYHGDN2510","EVIBLMMMAR2510",
+  "EVIBRDHOME10","BDIBHERGYMVMT10","EVIBLETHHOME10","EVIBCGYAUTO10",
+  "BDIBCHURCHFIT10","EVIBEDMHGDN2510","EVIBBIKEAB2510","EVNATWOMEN2510",
+  "EVOKTRADE2510","EVAIRDHLIFE2510","EVLACOMBEDCC10","EVSTALBLIFE10",
+  "EVCHTRADE2510","EVSCURUN10","EVHSCAFARM10","EVHERWESWB10","EVSMEPICV29",
+  "EVMHOA2510","EVBRIDGE2025","EVCD2025","EVSTAMPEDE10","EVBRIDGE2",
+  "EVHSFARM2","EVISUNFEST","EVTASTE2025","EVBOW2025","EVMARDAGRAS",
+  "EVBRIDGELAND2025","EVMAHOGANY2025","EVLMM2025","EVWHOOP2025",
+  "EVHERITAGE2025","EVHSFARM3","EVEDMFMARKET2025","EVHERITAGE2","EVMAHOGANY3",
+  "EVRUMBLE2025","EVAIRDRIEFEST2025","EVBRIDGE9","EVAIRDRIEFARMERS1",
+  "EVHERITAGE10","EVEDMFMARKET202513","EVAIRDRIEFARMERS2","EVOKOTOKS2025",
+  "EVBCKELOWNASHOW2025","EVCRESCENT2025","EVAIRDRIEFARMERS3",
+  "EVCALGARYHOMESHOW2025","EVPENTICTON","EVTRIWOOD2025","EVMAHOGANYFMARKET2025",
+  "EVAIRDRIEFARMERS4","EVEDMFMARKET202504","EVHSFARM4","EVEDMFMARKET202511",
+  "EVHILLHURSTWINTER","EVEDMHOMESHOW2025","EVFOODWINE2025","EVKAMLOOPSHS",
+  "EVHSWINTER","EVHALLOWEENMARKET1","EVLETHBRIDGEHOLIDAYEXPO","EVEDMFOODWINE",
+  "EVBEARMARKET","EVHANDCRAFTEDLETHBRIDGE","EVSPRUCE2025","EVCHESTERMEREXMASMARKET",
+  "EVAIRDRIEFARM","EVCALGARYMOMMARKET","EVSPRUCE2","EVMOMSHOWEDM",
+  "EVGRANARY1","EVLMMNOV2025","EVEXTRAVAGANZA","EVUNIDISTRICT","EVGRANARYNOV",
+  "EVMOMSHOWEDMCONVENTION","EVSILVERBELLSEDM","EVMOMMARKETSHERWOODPARK",
+  "EVCALRENO2026","EVEDMPETSHOW2026","EVEDMBLUSH","EVEDMWEDDINGFAIR2026",
+  "EVEDMRENOSHOW","CALGARYWEDDINGFAIR","EVKELOWNASPRINGSHOW",
+  "EVCGYTEACHERS2026","EVREDDEERTEACHERS2026","EVPALLISERTEACHER2026",
+  "EVBOATSHOW2026","EVHOMEANDGIFT","EVEDMONTONTEACHERS",
+  "EVCALGARYSPRINGSHOW2026","EVREDDEERSHOW2026",
+  "EVEDMGYMVMTKENSINGTONAFTERDARK","EVLETH2026","EVEDMBOATSHOW",
+  "EVABBIKESHOW","EVVERNONSPRINGSHOW","EVEDMHOMEANDGARDEN","EVABFOODANDDRINK",
+  "EVWEDDING2026","EVEDMAUTOSHOW","EVKAMLOOPS26","EVSTALBERT2026",
+  "EVAIRDRIEHS26","EVOKOTOKSHS26","EVCOCHRANE","EVLAGREE",
+  "EVCALGARYMARATHON26","EVCURRIEMARKET2026","EVMODERN26","EVEDMFARMERSM",
+  "EVWIMEDM","EVKELOWNASPRINGSHOW2025",
+]);
 
 // ── Component ──────────────────────────────────────────────────
 
@@ -152,6 +243,15 @@ export function CalendarTab({
     ? "EV-prefix + verified BusinessDevelopment codes"
     : "EV-prefix codes only";
 
+  // Apply AB team province override: codes run by AB team even when hosted in BC cities
+  const normalizedStats = useMemo(() =>
+    eventStats.map(e => {
+      const key = e.code.toUpperCase().replace(/\s+/g, "");
+      return AB_TEAM_CODES.has(key) ? { ...e, homeProvince: "AB" } : e;
+    }),
+    [eventStats],
+  );
+
   const reportByCode = useMemo(() => {
     const m = new Map<string, AnalyzedCodeReport>();
     for (const r of foundReports) m.set(r.discount_code, r);
@@ -166,12 +266,12 @@ export function CalendarTab({
   const isFilteredPaste = selectedFlow === "paste" && pastedSet.size > 0;
 
   const visibleStats = useMemo(() => {
-    let stats = eventStats;
+    let stats = normalizedStats;
     if (pasteOnly && isFilteredPaste) {
       stats = stats.filter(e => pastedSet.has(e.code.toUpperCase()));
     }
     return stats;
-  }, [eventStats, pastedSet, pasteOnly, isFilteredPaste]);
+  }, [normalizedStats, pastedSet, pasteOnly, isFilteredPaste]);
 
   // ── Month range ───────────────────────────────────────────────
 
@@ -537,12 +637,12 @@ export function CalendarTab({
         return (
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Total Events",  value: visibleEventCount.toString(),   sub: `${coverageStats.years.length} yr${coverageStats.years.length !== 1 ? "s" : ""} of data` },
-              { label: "Total Signups", value: totalSignups.toLocaleString(),   sub: "across all events" },
-              { label: "YoY Growth",    value: yoyPct !== null ? `${yoyPct >= 0 ? "+" : ""}${yoyPct.toFixed(0)}%` : "—", sub: prevPrevY && prevY ? `${prevPrevY} → ${prevY} (completed yrs)` : "insufficient data", accent: yoyPct !== null ? (yoyPct >= 0 ? "#2b5346" : "#850b0b") : undefined },
+              { label: "Total Events",  tip: undefined,                                                                                                                                                    value: visibleEventCount.toString(),   sub: `${coverageStats.years.length} yr${coverageStats.years.length !== 1 ? "s" : ""} of data` },
+              { label: "Total Signups", tip: "Total people who registered using any event code across all years shown.",                                                                                    value: totalSignups.toLocaleString(),   sub: "across all events" },
+              { label: "YoY Growth",    tip: "Year-over-Year: how much signup volume changed between the two most recent full calendar years. Compares completed years only — not the current partial year.", value: yoyPct !== null ? `${yoyPct >= 0 ? "+" : ""}${yoyPct.toFixed(0)}%` : "—", sub: prevPrevY && prevY ? `${prevPrevY} → ${prevY} (completed yrs)` : "insufficient data", accent: yoyPct !== null ? (yoyPct >= 0 ? "#2b5346" : "#850b0b") : undefined },
             ].map((stat, i) => (
               <div key={i} className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3.5 shadow-sm">
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-1">{stat.label}</p>
+                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-1 flex items-center gap-1">{stat.label}{stat.tip && <MetricInfo text={stat.tip} side="bottom" />}</p>
                 <p className="text-xl font-black font-mono leading-none" style={{ color: stat.accent ?? "#1a1a1a" }}>{stat.value}</p>
                 <p className="text-[9px] font-mono text-[#b0b0b0] mt-1">{stat.sub}</p>
               </div>

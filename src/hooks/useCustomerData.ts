@@ -19,6 +19,7 @@ export interface MonthStats {
 
 export interface EventStats {
   code: string;
+  channel: string;        // dominant channel for this code (e.g. "Events", "BusinessDevelopment")
   eventDate: string;      // ISO "YYYY-MM-DD" — first signup date within peak month
   eventMonth: string;     // "YYYY-MM"
   eventDateLabel: string; // "Jul 3" (for display inside month context)
@@ -83,11 +84,15 @@ function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
   const events: EventStats[] = [];
   for (const [code, codeRows] of byCode) {
     const provinces: Record<string, number> = {};
+    const channelCounts: Record<string, number> = {};
     for (const r of codeRows) {
       const p = r.province || "??";
       provinces[p] = (provinces[p] ?? 0) + 1;
+      const ch = r.channel?.trim() || "Unknown";
+      channelCounts[ch] = (channelCounts[ch] ?? 0) + 1;
     }
     const homeProvince = Object.entries(provinces).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "??";
+    const dominantChannel = Object.entries(channelCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Unknown";
 
     // Group valid ISO dates by month, then pick the peak month (most signups).
     // Using first-signup as event date places codes with early stragglers in wrong month.
@@ -114,8 +119,9 @@ function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
       : "";
 
     events.push({
-      code, eventDate, eventMonth, eventDateLabel, firstSignupDate, lastSignupDate,
-      homeProvince, totalSignups: codeRows.length, signupsByProvince: provinces,
+      code, channel: dominantChannel, eventDate, eventMonth, eventDateLabel,
+      firstSignupDate, lastSignupDate, homeProvince,
+      totalSignups: codeRows.length, signupsByProvince: provinces,
     });
   }
 

@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { ChevronDown, TrendingUp, BarChart2, DollarSign, Users, Target } from "lucide-react";
 import { AnalyzedCodeReport, KPIReportSummary, ChannelSummary } from "../../../types";
 import PortfolioSummaryWidget from "../components/PortfolioSummaryWidget";
+import { MetricInfo } from "../../../components/MetricInfo";
 
 interface RevenueTabProps {
   summary: KPIReportSummary;
@@ -94,10 +95,10 @@ function PortfolioMap({ reports, summary }: { reports: AnalyzedCodeReport[]; sum
               <div className="w-7 h-7 rounded-lg bg-[#eef4f1] flex items-center justify-center shrink-0">
                 <Target className="w-3.5 h-3.5 text-[#2b5346]" />
               </div>
-              Code Portfolio Map
+              Code Portfolio Map <MetricInfo text="A scatter plot where every bubble is one promo code. Codes in the top-right ('ideal zone') have both high conversion and high customer value — those are your best events." side="bottom" />
             </h3>
             <p className="text-[11px] text-[#a8a8a8] font-mono mt-1.5">
-              Each bubble = one promo code &nbsp;·&nbsp; X = conversion rate &nbsp;·&nbsp; Y = avg customer value (12mo) &nbsp;·&nbsp; size = customers acquired
+              Each bubble = one promo code &nbsp;·&nbsp; <span title="How many signups became paying customers">X = conversion rate</span> &nbsp;·&nbsp; <span title="Avg revenue per paying customer over 12 months">Y = avg customer value (12mo)</span> &nbsp;·&nbsp; size = customers acquired
             </p>
           </div>
         </div>
@@ -458,7 +459,7 @@ export function RevenueTab({ summary, foundReports, channelSummary }: RevenueTab
           <div className="flex items-center gap-3 min-w-0">
             <TrendingUp className="w-3.5 h-3.5 text-[#2b5346] shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-[#1a1a1a]">Customer LTV Progression</h3>
+              <h3 className="text-sm font-semibold text-[#1a1a1a] flex items-center gap-1.5">Customer LTV Progression <MetricInfo text="LTV (Lifetime Value) is the total revenue a customer generates. This chart shows how value builds at 3, 6, and 12 months — so you can see how quickly event signups become loyal subscribers." side="bottom" /></h3>
               <p className="text-[11px] text-[#a1a1a1] font-mono mt-0.5">
                 {foundReports.length} codes · avg ${Math.round(summary.averageLTV12).toLocaleString()} per customer at 12mo
               </p>
@@ -529,7 +530,7 @@ export function RevenueTab({ summary, foundReports, channelSummary }: RevenueTab
           <div className="flex items-center gap-3 min-w-0">
             <BarChart2 className="w-3.5 h-3.5 text-[#2b5346] shrink-0" />
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-[#1a1a1a]">Revenue Contribution</h3>
+              <h3 className="text-sm font-semibold text-[#1a1a1a] flex items-center gap-1.5">Revenue Contribution <MetricInfo text="Which codes generate the most total 12-month revenue. The bar width shows each code's share of the whole portfolio." side="bottom" /></h3>
               <p className="text-[11px] text-[#a1a1a1] font-mono mt-0.5">
                 {foundReports.length} codes · ${summary.totalLTV12.toLocaleString()} portfolio total (12mo)
               </p>

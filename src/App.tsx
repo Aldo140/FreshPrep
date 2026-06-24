@@ -13,7 +13,7 @@ import { useCustomerFile } from "./hooks/useCustomerFile";
 import { useCustomerData } from "./hooks/useCustomerData";
 import { useStaticSignups } from "./hooks/useStaticSignups";
 import { UploadFlow } from "./features/upload/UploadFlow";
-import { BdFlowPicker } from "./features/upload/BdFlowPicker";
+
 import { WizardFlow } from "./features/wizard/WizardFlow";
 import { ReportDashboard } from "./features/report/ReportDashboard";
 import { PrintPreview } from "./features/report/PrintPreview";
@@ -46,18 +46,60 @@ export default function App(): React.ReactElement {
     [fallbackBusinessDevelopmentRows],
   );
 
+  // Dominant channel per canonical code derived from the static signup rows.
+  // Used to restore the correct channel (Events vs BusinessDevelopment) when
+  // a Looker export omits the channel column.
+  const staticCodeChannelMap = useMemo(() => {
+    const counts = new Map<string, Record<string, number>>();
+    for (const row of staticSignups.rows) {
+      const code = toCanonicalCode(row.discount_code ?? "");
+      if (!code) continue;
+      const ch = row.channel?.trim() || "BusinessDevelopment";
+      if (!counts.has(code)) counts.set(code, {});
+      const entry = counts.get(code)!;
+      entry[ch] = (entry[ch] ?? 0) + 1;
+    }
+    const result = new Map<string, string>();
+    for (const [code, entry] of counts) {
+      const dominant = Object.entries(entry).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "BusinessDevelopment";
+      result.set(code, dominant);
+    }
+    return result;
+  }, [staticSignups.rows]);
+
+  // Enrich channels on uploaded rows: Looker exports often omit channel, leaving
+  // codes as "Direct / Unknown". Use the static BD registry to restore the correct
+  // channel (Events or BusinessDevelopment) so scope filters work on all tabs.
+  const enrichedUploadedRows = useMemo(() =>
+    fileUpload.state.dbRows.map(row => {
+      const ch = (row.channel ?? "").trim().toLowerCase();
+      const isUnknown = ch === "" || ch === "direct / unknown" || ch === "unknown";
+      const canonical = toCanonicalCode(row.discount_code ?? "");
+      if (isUnknown) {
+        if (verifiedStaticBdCodeSet.has(canonical)) {
+          return { ...row, channel: staticCodeChannelMap.get(canonical) ?? "BusinessDevelopment" };
+        }
+        if (row.discount_code?.toUpperCase().startsWith("EV")) {
+          return { ...row, channel: "Events" };
+        }
+      }
+      return row;
+    }),
+    [fileUpload.state.dbRows, verifiedStaticBdCodeSet, staticCodeChannelMap],
+  );
+
   const effectiveDbRows = useMemo(
     () => mergeBusinessDevelopmentFallbacks(
-      fileUpload.state.dbRows,
+      enrichedUploadedRows,
       fallbackBusinessDevelopmentRows,
     ),
-    [fileUpload.state.dbRows, fallbackBusinessDevelopmentRows],
+    [enrichedUploadedRows, fallbackBusinessDevelopmentRows],
   );
 
   // Uploaded Client LTV is the source of truth for Overview/Performance/Revenue.
   // Built-in fallback rows stay available for Calendar/Fiscal/Regional DB context,
   // but must not be added into financial report totals.
-  const analysis = useAnalysis(fileUpload.state.dbRows, fileUpload.state.uniqueDbCodes);
+  const analysis = useAnalysis(enrichedUploadedRows, fileUpload.state.uniqueDbCodes);
   const report = useReport({
     foundReports: analysis.state.reportResults.foundReports,
     missingCodes: analysis.state.reportResults.missingCodes,
@@ -79,7 +121,7 @@ export default function App(): React.ReactElement {
     staticSignups.load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleBdOnly = () => setBdOnlyMode(true);
+  const handleBdOnly = () => { setBdOnlyMode(true); setBdConfig({ flow: "all", codes: [] }); };
   const handleBdConfig = (flow: "all" | "paste" | "compare", codes: string[], codesB?: string[]) => setBdConfig({ flow, codes, codesB });
 
   const effectiveRawPastedCodes = bdOnlyMode
@@ -99,6 +141,8 @@ export default function App(): React.ReactElement {
   const effectiveCustomerRows = useMemo(() => {
     const uploaded = customerFile.state.customerRows;
     if (uploaded.length === 0) return staticSignups.rows;
+    // Only merge static BD rows in full-DB mode; in paste/compare modes respect the user's selection exactly
+    if (effectiveSelectedFlow !== "all") return uploaded;
 
     // Build a set of client_ids already in the user's file for deduplication
     const uploadedIds = new Set(uploaded.map(r => r.client_id).filter(id => id && id.length > 0));
@@ -113,7 +157,7 @@ export default function App(): React.ReactElement {
     });
 
     return [...uploaded, ...missingBdRows];
-  }, [customerFile.state.customerRows, staticSignups.rows, verifiedStaticBdCodeSet]);
+  }, [customerFile.state.customerRows, staticSignups.rows, verifiedStaticBdCodeSet, effectiveSelectedFlow]);
 
   const customerData = useCustomerData(effectiveCustomerRows, effectiveRawPastedCodes);
 
@@ -144,13 +188,38 @@ export default function App(): React.ReactElement {
     };
   }, [verifiedStaticBdCodeSet]);
 
-  const bdFilteredReports = useMemo(() =>
-    foundReports.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly)),
-  [foundReports, isBdCode]);
+  // When the user uploads their own Client LTV and selects specific codes,
+  // respect their selection exactly — don't restrict to EV-prefix / BD registry.
+  // BD filtering only applies in built-in DB mode (bdOnlyMode) or when no file is uploaded.
+  const userUploadedMode = !bdOnlyMode && fileUpload.state.dbRows.length > 0;
+
+  // Breakdown of which event codes' signup data came from the user's Client LTV upload
+  // vs which were merged in from the built-in BD database. Only relevant in full-DB mode.
+  const codeSourceBreakdown = useMemo(() => {
+    if (!userUploadedMode || effectiveSelectedFlow !== "all" || customerFile.state.customerRows.length === 0) return null;
+    const uploadedCodeSet = new Set(
+      customerFile.state.customerRows.map(r => r.discount_code).filter((c): c is string => Boolean(c)),
+    );
+    const uploadedCodes = Array.from(uploadedCodeSet).sort();
+    const staticCodes = Array.from(
+      new Set(
+        effectiveCustomerRows
+          .filter(r => r.discount_code && !uploadedCodeSet.has(r.discount_code))
+          .map(r => r.discount_code!),
+      ),
+    ).sort();
+    return { uploadedCodes, staticCodes };
+  }, [userUploadedMode, effectiveSelectedFlow, customerFile.state.customerRows, effectiveCustomerRows]);
+
+  const bdFilteredReports = useMemo(() => {
+    if (userUploadedMode) return foundReports;
+    return foundReports.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly));
+  }, [foundReports, isBdCode, userUploadedMode]);
 
   // Recompute KPI summary from BD-filtered reports so Overview/Performance/Revenue KPIs
   // reflect only BD codes, not the full Looker portfolio.
   const bdFilteredSummary = useMemo((): KPIReportSummary => {
+    if (userUploadedMode) return summary ?? (EMPTY_SUMMARY as unknown as KPIReportSummary);
     const reps = bdFilteredReports;
     if (reps.length === 0) return summary ?? (EMPTY_SUMMARY as unknown as KPIReportSummary);
     let totalSignups = 0, totalPayingCustomers = 0;
@@ -184,14 +253,14 @@ export default function App(): React.ReactElement {
       bestOverallScoreCode: topScoreCode,
       bestOverallScoreVal: topScoreVal,
     };
-  }, [bdFilteredReports, missingCodes.length, summary]);
+  }, [bdFilteredReports, missingCodes.length, summary, userUploadedMode]);
 
-  // Filter raw Looker rows to BD-only so Regional's ProvinceIntelligence
-  // and DataExplorer never see non-BD records. Use the merged dataset so codes
-  // outside the uploaded Looker date range remain available in Regional.
-  const bdFilteredDbRows = useMemo(() =>
-    effectiveDbRows.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly)),
-  [effectiveDbRows, isBdCode]);
+  // Filter raw Looker rows to BD-only for Regional/Calendar/DataExplorer.
+  // In user-upload mode, respect their data as-is.
+  const bdFilteredDbRows = useMemo(() => {
+    if (userUploadedMode) return effectiveDbRows;
+    return effectiveDbRows.filter(r => isBdCode(r.discount_code ?? "", r.channel ?? "", r.isStaticOnly));
+  }, [effectiveDbRows, isBdCode, userUploadedMode]);
 
   const handleResetWorkspace = (openLooker = false): void => {
     fileUpload.actions.reset();
@@ -202,7 +271,6 @@ export default function App(): React.ReactElement {
     setWantLookerUpload(openLooker);
   };
 
-  const showBdPicker = bdOnlyMode && bdConfig === null;
   const showDashboard = (hasReportGenerated && foundReports.length > 0) || (bdOnlyMode && bdConfig !== null);
 
   return (
@@ -286,9 +354,7 @@ export default function App(): React.ReactElement {
             autoOpenLooker={wantLookerUpload}
           />
         )}
-        {showBdPicker && (
-          <BdFlowPicker onConfirm={handleBdConfig} onBack={handleResetWorkspace} />
-        )}
+
         {fileUpload.state.dbRows.length > 0 && !hasReportGenerated && !bdOnlyMode && (
           <WizardFlow
             fileState={fileUpload.state}
@@ -346,10 +412,11 @@ export default function App(): React.ReactElement {
               eventName={eventName}
               eventDate={eventDate}
               onApplyCorrections={analysis.actions.applyCorrections}
-              onBackToWizard={bdOnlyMode ? () => setBdConfig(null) : analysis.actions.backToWizard}
+              onBackToWizard={bdOnlyMode ? () => handleResetWorkspace(false) : analysis.actions.backToWizard}
               onReset={handleResetWorkspace}
               onResetToLookerUpload={() => handleResetWorkspace(true)}
               onCompareFamily={bdOnlyMode ? (codes) => handleBdConfig("compare", codes) : undefined}
+              codeSourceBreakdown={codeSourceBreakdown}
             />
           </ErrorBoundary>
         )}

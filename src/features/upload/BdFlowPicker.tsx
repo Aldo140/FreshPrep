@@ -46,12 +46,13 @@ export function BdFlowPicker({ onConfirm, onBack }: BdFlowPickerProps): React.Re
     "w-full text-xs font-mono rounded-lg border border-[#ddd] bg-[#fafafa] px-3 py-2 resize-none focus:outline-none focus:border-[#2b5346] focus:ring-1 focus:ring-[#2b5346]/20 placeholder:text-[#bbb]";
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 bg-[#f8f7f5] overflow-y-auto">
+    <div className="flex-1 overflow-y-auto bg-[#f8f7f5]">
+      <div className="flex flex-col items-center min-h-full px-6 py-10">
       <div className="w-full max-w-lg">
 
         <div className="mb-6">
           <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">
-            Built-in BD Events DB · Jul 2024 – Jun 2026
+            Built-in BD Events DB · Jul 1, 2024 – Jun 24, 2026
           </p>
           <h2 className="text-xl font-semibold text-[#1a1a1a] mt-1">How do you want to explore?</h2>
           <p className="text-xs text-[#666] mt-1">Choose a mode — you can change this anytime via "Edit analysis".</p>
@@ -149,6 +150,7 @@ export function BdFlowPicker({ onConfirm, onBack }: BdFlowPickerProps): React.Re
           </button>
         </div>
 
+      </div>
       </div>
     </div>
   );

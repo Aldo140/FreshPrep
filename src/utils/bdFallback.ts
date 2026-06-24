@@ -130,32 +130,11 @@ export function mergeBusinessDevelopmentFallbacks(
   if (uploadedRows.length === 0) return uploadedRows;
   if (fallbackRows.length === 0) return uploadedRows;
 
-  const fallbackCodes = new Set(
-    fallbackRows.map(row => toCanonicalCode(row.discount_code)),
-  );
-  const uploadedCodes = new Set<string>();
-
-  // Looker LTV exports often omit channel, which the parser represents as
-  // "Direct / Unknown". Enrich those rows when the preloaded signup DB
-  // explicitly verifies the code as a BusinessDevelopment event code.
-  const enrichedUploaded = uploadedRows.map(row => {
-    const canonicalCode = toCanonicalCode(row.discount_code);
-    uploadedCodes.add(canonicalCode);
-    const normalizedChannel = row.channel.trim().toLowerCase();
-    const channelIsUnknown =
-      normalizedChannel === ""
-      || normalizedChannel === "direct / unknown"
-      || normalizedChannel === "unknown";
-
-    if (channelIsUnknown && fallbackCodes.has(canonicalCode)) {
-      return { ...row, channel: "BusinessDevelopment" };
-    }
-    return row;
-  });
+  const uploadedCodes = new Set(uploadedRows.map(row => toCanonicalCode(row.discount_code)));
 
   const missingFallbacks = fallbackRows.filter(
     row => !uploadedCodes.has(toCanonicalCode(row.discount_code)),
   );
 
-  return [...enrichedUploaded, ...missingFallbacks];
+  return [...uploadedRows, ...missingFallbacks];
 }

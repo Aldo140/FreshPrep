@@ -4,6 +4,7 @@ import { AnalyzedCodeReport, DiscountCodeData, AnalysisFlow } from "../../../typ
 import DetailedTable from "../components/DetailedTable";
 import DataExplorer from "../components/DataExplorer";
 import MissingCodesSection from "../components/MissingCodesSection";
+import { MetricInfo } from "../../../components/MetricInfo";
 
 interface DataTabProps {
   foundReports: AnalyzedCodeReport[];
@@ -413,8 +414,9 @@ export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, select
           </div>
 
           <div className="px-5 py-4">
-            <p className="text-[9px] font-semibold text-[#c8c8c8] uppercase tracking-widest font-mono mb-3.5">
+            <p className="text-[9px] font-semibold text-[#c8c8c8] uppercase tracking-widest font-mono mb-3.5 flex items-center gap-1">
               Performance Distribution — click a tier to see its codes
+              <MetricInfo text="Each code is rated by its signup-to-paying conversion rate. Strong ≥ 40%, Good 30–40%, Average 20–30%, Weak 10–20%, Poor < 10%. These thresholds reflect typical BD campaign benchmarks at FreshPrep." side="top" />
             </p>
 
             {/* Tier chips — clickable */}

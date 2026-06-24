@@ -4,10 +4,12 @@ import {
   Users, DollarSign, TrendingUp,
   Award, Info, Search, X, ChevronRight,
 } from "lucide-react";
+import { MetricInfo } from "../../../components/MetricInfo";
 
 interface ProvinceIntelligenceProps {
   dbRows: DiscountCodeData[];
   foundReports: AnalyzedCodeReport[];
+  channelScope?: string;
 }
 
 interface ProvinceMetricSummary {
@@ -20,24 +22,25 @@ interface ProvinceMetricSummary {
   totalDiscount: number;
   efficiencyRatio: number;
   metricScore: number;
-  grade: "Elite" | "Strong" | "Average" | "Weak";
+  grade: "Leading" | "Growing" | "Developing" | "Weak";
 }
 
 const GRADE_STYLE: Record<string, { pill: string; border: string; bg: string }> = {
-  Elite:   { pill: "bg-purple-100 text-purple-900 border-purple-200",    border: "hover:border-purple-300",   bg: "bg-purple-50/20" },
-  Strong:  { pill: "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20",   border: "hover:border-[#2b5346]/30", bg: "bg-[#eef4f1]/10" },
-  Average: { pill: "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30",   border: "hover:border-[#e7bd27]/50", bg: "bg-[#fdf8e1]/20" },
-  Weak:    { pill: "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20",   border: "hover:border-[#850b0b]/30", bg: "bg-[#ffd0d0]/10" },
+  Leading:    { pill: "bg-purple-100 text-purple-900 border-purple-200",    border: "hover:border-purple-300",   bg: "bg-purple-50/20" },
+  Growing:    { pill: "bg-[#eef4f1] text-[#2b5346] border-[#2b5346]/20",   border: "hover:border-[#2b5346]/30", bg: "bg-[#eef4f1]/10" },
+  Developing: { pill: "bg-[#fdf8e1] text-[#8a6f00] border-[#e7bd27]/30",   border: "hover:border-[#e7bd27]/50", bg: "bg-[#fdf8e1]/20" },
+  Weak:       { pill: "bg-[#ffd0d0] text-[#850b0b] border-[#850b0b]/20",   border: "hover:border-[#850b0b]/30", bg: "bg-[#ffd0d0]/10" },
 };
 
 const GRADE_DESC: Record<string, string> = {
-  Elite:   "Top conversion and LTV — prioritise budget here.",
-  Strong:  "Solid results. Worth growing event presence.",
-  Average: "Baseline performance. Room to improve.",
-  Weak:    "Low conversion or LTV — review fit or event format.",
+  Leading:    "Top conversion and LTV — strong signal for continued investment.",
+  Growing:    "Solid momentum. Opportunity to deepen event presence.",
+  Developing: "Positive early signals. Events building awareness and pipeline.",
+  Weak:       "Low conversion or LTV — review fit or event format.",
 };
 
-export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceIntelligenceProps) {
+export default function ProvinceIntelligence({ dbRows, foundReports, channelScope }: ProvinceIntelligenceProps) {
+  const eventsMode = channelScope === "events";
   const [dataSource, setDataSource] = useState<"audited" | "full">("audited");
   const [sortBy, setSortBy] = useState<"paying" | "conversion" | "ltv" | "signups" | "score">("paying");
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -83,9 +86,9 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
       const metricScore = Math.round(sConv * 0.4 + sLtv * 0.4 + sSignups * 0.2);
 
       let grade: ProvinceMetricSummary["grade"] = "Weak";
-      if (metricScore >= 75 || (conversion >= 50 && val.paying >= 10)) grade = "Elite";
-      else if (metricScore >= 50 || (conversion >= 35 && val.paying >= 5)) grade = "Strong";
-      else if (metricScore >= 25 || conversion >= 20) grade = "Average";
+      if (metricScore >= 75 || (conversion >= 50 && val.paying >= 10)) grade = "Leading";
+      else if (metricScore >= 50 || (conversion >= 35 && val.paying >= 5)) grade = "Growing";
+      else if (metricScore >= 25 || conversion >= 20) grade = "Developing";
 
       return {
         province: val.province, totalSignups: val.signups,
@@ -218,6 +221,16 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
               ? "Filtered to your analyzed codes only."
               : "Full uploaded dataset — all codes, all channels."}
           </p>
+          {eventsMode && (
+            <p className="flex items-center gap-1 text-[9.5px] font-mono text-[#a07800] mt-1.5">
+              <Info className="w-3 h-3 shrink-0 text-[#c9a000]" />
+              Some EV-prefix codes may be missing
+              <MetricInfo
+                side="bottom"
+                text="Codes from 2024 and earlier weren't always tagged 'Events' in the database — they may not appear here. To guarantee all EV-prefix codes are included, enable the EV-prefix toggle in the scope bar above."
+              />
+            </p>
+          )}
         </div>
         <div className="flex bg-[#f5f5f3] p-1 rounded-lg border border-[#e5e5e5] shrink-0">
           <button
@@ -267,125 +280,128 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
         ))}
       </section>
 
-      {/* ── Performance tiers + Province comparison ─────────── */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* Performance tiers */}
-        <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-          <div className="border-b border-[#f5f5f3] pb-3">
-            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Classification</p>
-            <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5">Performance tiers</h3>
-            <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Provinces ranked by conversion, LTV, and signup volume.</p>
+      {/* ── Province metrics (Comparison) — FIRST ──────────── */}
+      <section>
+        <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f0f0ee] bg-[#fafafa] flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Comparison</p>
+              <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5">Province metrics</h3>
+              <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Signups, conversion, and avg LTV relative to the top province. Click to drill down.</p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0 pb-0.5">
+              {[["#c0c0c0","Signups"],["#2b5346","Conversion"],["#c9a000","Avg LTV"]].map(([c, l]) => (
+                <span key={l} className="flex items-center gap-1 text-[9px] font-mono text-[#a1a1a1]">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c }} />{l}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {(["Elite", "Strong", "Average", "Weak"] as const).map(grade => {
-              const inGrade = provinceMetrics.filter(p => p.grade === grade);
-              const gs = GRADE_STYLE[grade];
-              return (
-                <div key={grade} className={`border border-[#f0f0ee] p-3 rounded-xl transition-colors ${gs.border}`}>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[9px] font-black font-mono tracking-widest px-2 py-0.5 rounded-full border uppercase ${gs.pill}`}>
-                        {grade}
-                      </span>
-                      <span className="text-[9.5px] text-[#a1a1a1]">
-                        {inGrade.length} province{inGrade.length !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <span className="text-[9.5px] text-[#888] italic hidden sm:block">{GRADE_DESC[grade]}</span>
-                  </div>
-
-                  {inGrade.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {inGrade.map(row => (
-                        <div key={row.province} className={`${gs.bg} border border-[#f0f0ee] p-2.5 rounded-lg flex justify-between items-center`}>
-                          <div>
-                            <p className="font-black text-[13px] text-[#0f0f0f] font-mono">{row.province}</p>
-                            <p className="text-[9px] text-[#888] font-mono mt-0.5">
-                              {row.conversion.toFixed(1)}% conv.
-                            </p>
-                          </div>
-                          <div className="text-right font-mono">
-                            <p className="text-[11px] font-black text-[#1a1a1a]">${Math.round(row.avgLTV12).toLocaleString()}</p>
-                            <p className="text-[8px] uppercase tracking-wider text-[#a1a1a1] font-semibold">avg LTV 12m</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-[10px] text-[#c0c0c0] italic">No provinces in this tier.</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <p className="text-[9px] font-mono text-[#c8c8c8] border-t border-[#f5f5f3] pt-2 flex items-center gap-1">
-            <Info className="w-3 h-3" />
-            Score: 40% conversion · 40% avg LTV · 20% signup volume
-          </p>
-        </div>
-
-        {/* Province bars */}
-        <div className="bg-white border border-[#e5e5e5] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-          <div className="border-b border-[#f5f5f3] pb-3">
-            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Comparison</p>
-            <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5">Province metrics</h3>
-            <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">Signups, conversion rate, and avg LTV — relative to the top province. Click a province to view its events.</p>
-          </div>
-
-          <div className="flex flex-col gap-3 overflow-y-auto max-h-[380px] pr-0.5">
+          <div className="divide-y divide-[#f8f8f8]">
             {provinceMetrics.map(row => {
               const relSignups = Math.min(100, (row.totalSignups / maxStats.maxSignups) * 100);
               const relLtv     = Math.min(100, (row.avgLTV12    / maxStats.maxLtv)     * 100);
               const relConv    = Math.min(100, row.conversion);
+              const gs = GRADE_STYLE[row.grade];
 
               return (
                 <button
                   key={row.province}
                   type="button"
                   onClick={() => openProvinceEvents(row.province)}
-                  className="w-full text-left border border-[#f0f0ee] p-3 rounded-xl bg-[#fafafa] flex flex-col gap-2 cursor-pointer hover:border-[#2b5346]/30 hover:bg-[#f7faf8] transition-colors"
+                  className="w-full text-left flex items-center gap-4 px-5 py-3.5 hover:bg-[#f7faf8] transition-colors cursor-pointer group"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-xs text-[#0f0f0f] font-mono bg-[#f0f0ee] px-2 py-0.5 rounded border border-[#e5e5e5]">
-                      {row.province}
-                    </span>
-                    <span className="flex items-center gap-1 text-[10px] font-mono text-[#888]">
-                      Score <span className="font-black text-[#2b5346]">{row.metricScore}</span>/100
-                      <ChevronRight className="w-3 h-3" />
+                  {/* Province + grade */}
+                  <div className="w-24 shrink-0">
+                    <p className="font-black text-[15px] font-mono text-[#0f0f0f] leading-none mb-1">{row.province}</p>
+                    <span className={`text-[8px] font-black font-mono tracking-wider uppercase px-1.5 py-0.5 rounded-full border ${gs.pill}`}>
+                      {row.grade}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-1.5 text-[9.5px]">
+
+                  {/* Three metric bars */}
+                  <div className="flex-1 grid grid-cols-3 gap-4">
                     {[
-                      { label: "Signups", value: row.totalSignups.toLocaleString(), pct: relSignups, color: "#c0c0c0" },
-                      { label: "Conversion", value: `${row.conversion.toFixed(1)}%`, pct: relConv, color: "#2b5346" },
-                      { label: "Avg LTV 12m", value: `$${Math.round(row.avgLTV12).toLocaleString()}`, pct: relLtv, color: "#c9a000" },
+                      { label: "Signups",    value: row.totalSignups.toLocaleString(),              pct: relSignups, color: "#c0c0c0" },
+                      { label: "Conversion", value: `${row.conversion.toFixed(1)}%`,                pct: relConv,    color: "#2b5346" },
+                      { label: "Avg LTV",    value: `$${Math.round(row.avgLTV12).toLocaleString()}`, pct: relLtv,    color: "#c9a000" },
                     ].map(m => (
                       <div key={m.label}>
-                        <div className="flex justify-between text-[#888] mb-0.5">
-                          <span>{m.label}</span>
-                          <span className="font-mono font-semibold text-[#3d3d3d]">{m.value}</span>
+                        <div className="flex justify-between items-baseline mb-1">
+                          <span className="text-[9px] font-mono text-[#a1a1a1]">{m.label}</span>
+                          <span className="text-[10.5px] font-mono font-bold text-[#1a1a1a]">{m.value}</span>
                         </div>
-                        <div className="h-1.5 bg-[#eee] rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${m.pct}%`, backgroundColor: m.color }} />
+                        <div className="h-1 bg-[#eeeeee] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${m.pct}%`, backgroundColor: m.color }} />
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Score + arrow */}
+                  <div className="shrink-0 flex items-center gap-2 text-right">
+                    <div>
+                      <p className="text-[20px] font-black font-mono text-[#1a1a1a] leading-none">{row.metricScore}</p>
+                      <p className="text-[8px] font-mono text-[#a1a1a1] leading-none mt-0.5">/ 100</p>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#d0d0d0] group-hover:text-[#2b5346] transition-colors" />
                   </div>
                 </button>
               );
             })}
           </div>
+        </div>
+      </section>
 
-          <div className="flex items-center gap-4 text-[9px] font-mono text-[#a1a1a1] border-t border-[#f5f5f3] pt-2">
-            {[["#c0c0c0","Signups"],["#2b5346","Conversion"],["#c9a000","Avg LTV 12m"]].map(([c, l]) => (
-              <span key={l} className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: c }} />
-                {l}
-              </span>
-            ))}
+      {/* ── Performance tiers — SECOND ───────────────────── */}
+      <section>
+        <div className="bg-white border border-[#e5e5e5] rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#f0f0ee] bg-[#fafafa]">
+            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Classification</p>
+            <h3 className="text-sm font-black text-[#0f0f0f] mt-0.5 flex items-center gap-1.5">
+              Performance tiers
+              <MetricInfo text="Each province is scored and classified based on how well BD events perform there. Score = 40% conversion + 40% avg customer value + 20% signup volume." />
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[#f0f0ee]">
+            {(["Leading", "Growing", "Developing", "Weak"] as const).map(grade => {
+              const inGrade = provinceMetrics.filter(p => p.grade === grade);
+              const gs = GRADE_STYLE[grade];
+              return (
+                <div key={grade} className="p-4 flex flex-col gap-3">
+                  <div>
+                    <span className={`inline-block text-[9px] font-black font-mono tracking-widest px-2 py-0.5 rounded-full border uppercase ${gs.pill}`}>
+                      {grade}
+                    </span>
+                    <p className="text-[9px] text-[#a1a1a1] font-mono mt-2 leading-snug italic">{GRADE_DESC[grade]}</p>
+                  </div>
+                  {inGrade.length > 0 ? (
+                    <div className="flex flex-col gap-1.5">
+                      {inGrade.map(row => (
+                        <div key={row.province} className={`${gs.bg} border border-[#f0f0ee] rounded-lg px-3 py-2 flex items-center justify-between`}>
+                          <p className="font-black text-[13px] font-mono text-[#0f0f0f]">{row.province}</p>
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold font-mono text-[#2b5346]">{row.conversion.toFixed(1)}%</p>
+                            <p className="text-[8px] font-mono text-[#a1a1a1]">${Math.round(row.avgLTV12).toLocaleString()}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-[#c8c8c8] italic">No provinces</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="px-5 py-2.5 border-t border-[#f5f5f3] bg-[#fafafa]">
+            <p className="text-[9px] font-mono text-[#c8c8c8] flex items-center gap-1">
+              <Info className="w-3 h-3" />
+              Score: 40% conversion · 40% avg LTV · 20% signup volume
+            </p>
           </div>
         </div>
       </section>
@@ -426,14 +442,16 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                 <tr className="bg-[#fafafa] border-b border-[#f0f0ee] text-[#a1a1a1] font-semibold font-mono uppercase text-[9px]">
                   <th className="py-2.5 px-4 text-center w-10">#</th>
                   <th className="py-2.5 px-4">Province</th>
-                  <th className="py-2.5 px-4 text-right">Signups</th>
-                  <th className="py-2.5 px-4 text-right">Paying cx</th>
-                  <th className="py-2.5 px-4 text-right">Conversion</th>
-                  <th className="py-2.5 px-4 text-right">Avg LTV 12m</th>
-                  <th className="py-2.5 px-4 text-right">Discount used</th>
-                  <th className="py-2.5 px-4 text-right">LTV / discount</th>
-                  <th className="py-2.5 px-4 text-center">Score</th>
-                  <th className="py-2.5 px-4 text-center">Tier</th>
+                  <th className="py-2.5 px-4 text-right"><span className="flex items-center justify-end gap-1">Signups <MetricInfo text="Total people who registered using any BD event code in this province — paid or not." /></span></th>
+                  <th className="py-2.5 px-4 text-right"><span className="flex items-center justify-end gap-1">Paying cx <MetricInfo text="Signups who completed their trial and started paying full price — your real conversions." /></span></th>
+                  <th className="py-2.5 px-4 text-right"><span className="flex items-center justify-end gap-1">Conversion <MetricInfo text="Paying customers ÷ total signups. How well this province's events turn attendees into subscribers." /></span></th>
+                  <th className="py-2.5 px-4 text-right"><span className="flex items-center justify-end gap-1">Avg LTV 12m <MetricInfo text="Average estimated revenue per paying customer over their first 12 months. Higher = more valuable customers." /></span></th>
+                  {eventsMode
+                    ? <th className="py-2.5 px-4 text-right"><span className="flex items-center justify-end gap-1">Total LTV 12m <MetricInfo text="Sum of all paying customers' 12-month value in this province — the total revenue opportunity." /></span></th>
+                    : <><th className="py-2.5 px-4 text-right"><span className="flex items-center justify-end gap-1">Discount used <MetricInfo text="Total monetary discount applied to orders from customers acquired in this province." /></span></th><th className="py-2.5 px-4 text-right"><span className="flex items-center justify-end gap-1">LTV / discount <MetricInfo text="How many dollars of 12-month revenue were generated per dollar of discount spent. Higher is more efficient." /></span></th></>
+                  }
+                  <th className="py-2.5 px-4 text-center"><span className="flex items-center justify-center gap-1">Score <MetricInfo text="Composite score out of 100 weighted by conversion (40%), avg LTV (40%), and signup volume (20%)." /></span></th>
+                  <th className="py-2.5 px-4 text-center"><span className="flex items-center justify-center gap-1">Tier <MetricInfo text="Performance classification: Leading (top conversion + LTV), Growing (solid), Developing (early signals), Weak (needs review)." /></span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f8f8f8] text-[#3d3d3d]">
@@ -452,8 +470,10 @@ export default function ProvinceIntelligence({ dbRows, foundReports }: ProvinceI
                       <td className="py-2.5 px-4 text-right font-mono">{row.totalPayingCustomers.toLocaleString()}</td>
                       <td className="py-2.5 px-4 text-right font-mono font-bold text-[#1a1a1a]">{row.conversion.toFixed(1)}%</td>
                       <td className="py-2.5 px-4 text-right font-mono">${Math.round(row.avgLTV12).toLocaleString()}</td>
-                      <td className="py-2.5 px-4 text-right font-mono text-[#a1a1a1]">${Math.round(row.totalDiscount).toLocaleString()}</td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-[#2b5346]">{row.efficiencyRatio.toFixed(1)}x</td>
+                      {eventsMode
+                        ? <td className="py-2.5 px-4 text-right font-mono font-bold text-[#2b5346]">${Math.round(row.totalLTV12).toLocaleString()}</td>
+                        : <><td className="py-2.5 px-4 text-right font-mono text-[#a1a1a1]">${Math.round(row.totalDiscount).toLocaleString()}</td><td className="py-2.5 px-4 text-right font-mono font-bold text-[#2b5346]">{row.efficiencyRatio.toFixed(1)}x</td></>
+                      }
                       <td className="py-2.5 px-4 text-center font-mono text-[#888]">
                         <span className="font-black text-[#1a1a1a]">{row.metricScore}</span>/100
                       </td>

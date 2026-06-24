@@ -1,8 +1,13 @@
 import React, { useState } from "react";
-import { FileSpreadsheet, ExternalLink, ChevronDown, ChevronUp, ArrowRight, Database, AlertCircle } from "lucide-react";
+import {
+  FileSpreadsheet, ExternalLink, ChevronDown, ChevronUp,
+  ArrowRight, ArrowLeft, Database, AlertCircle, BookOpen,
+  CheckCircle2, XCircle,
+} from "lucide-react";
 import { FileUploadState, FileUploadActions } from "../../hooks/useFileUpload";
 
-const LOOKER_URL = "https://datastudio.google.com/u/1/reporting/025f0337-0db3-4d63-8659-8b52ba3c4b6f/page/p_g8t621xt5c";
+const LOOKER_URL =
+  "https://datastudio.google.com/u/1/reporting/025f0337-0db3-4d63-8659-8b52ba3c4b6f/page/p_g8t621xt5c";
 
 interface UploadFlowProps {
   state: FileUploadState;
@@ -11,239 +16,545 @@ interface UploadFlowProps {
   autoOpenLooker?: boolean;
 }
 
-export function UploadFlow({ state, actions, onBdOnly, autoOpenLooker = false }: UploadFlowProps): React.ReactElement {
-  const { isDragOver, fileInputRef } = state;
-  const { handleDragOver, handleDragLeave, handleDrop, handleFileChange, triggerBrowsingInput } = actions;
-  const [showLooker, setShowLooker] = useState(autoOpenLooker);
-
-  // Scroll the Looker section into view when auto-opened
-  const lookerRef = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    if (autoOpenLooker && lookerRef.current) {
-      setShowLooker(true);
-      setTimeout(() => lookerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
+function Yes({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden" id="launch-screen">
+    <li className="flex items-start gap-2">
+      <CheckCircle2 className="w-3.5 h-3.5 text-[#2b5346] shrink-0 mt-px" />
+      <span className="text-xs text-[#3d3d3d] leading-relaxed">{children}</span>
+    </li>
+  );
+}
 
-      {/* Left brand panel */}
-      <div className="hidden md:flex md:w-[38%] flex-col justify-between px-10 py-10 text-white relative overflow-hidden">
-        <img
-          src="https://freshprep.imgix.net/landing/carousel/recipe_3.jpg?auto=compress,format&w=700"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "saturate(0.9) brightness(0.5)" }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(160deg, rgba(26,61,46,0.88) 0%, rgba(43,83,70,0.75) 60%, rgba(26,61,46,0.65) 100%)" }}
-        />
-        <div className="relative z-10 flex flex-col justify-between h-full">
-          <p className="text-[11px] font-mono text-white/40 uppercase tracking-[0.18em]">BD Campaign Intelligence</p>
-          <div>
-            <h2 className="text-[2.2rem] font-display font-semibold leading-[1.15] text-white mb-8">
-              BD event analysis,<br />built in.
-            </h2>
-            <div className="space-y-4">
-              {[
-                ["Province × month heatmap", "See where and when every BD event lands."],
-                ["Fiscal year comparison", "FY2025 vs FY2026 — event codes, signups, province split."],
-                ["Looker integration", "Upload your Client LTV export to add conversion and revenue."],
-              ].map(([title, sub]) => (
-                <div key={title} className="flex gap-3 items-start">
-                  <span className="mt-[7px] w-5 h-px bg-[#e7bd27] shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-white leading-snug">{title}</p>
-                    <p className="text-xs text-white/50 mt-0.5 leading-relaxed">{sub}</p>
-                  </div>
+function No({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2">
+      <XCircle className="w-3.5 h-3.5 text-[#cacaca] shrink-0 mt-px" />
+      <span className="text-xs text-[#999] leading-relaxed">{children}</span>
+    </li>
+  );
+}
+
+const COMPARISON_ROWS: [string, boolean, boolean][] = [
+  ["Calendar heatmap (province × month)", true, true],
+  ["Fiscal year comparison (FY2025 / FY2026)", true, true],
+  ["Regional province breakdown", true, true],
+  ["Code lookup & browse all 708 codes", true, true],
+  ["Compare two event editions", true, true],
+  ["Data after Jun 24, 2026", false, true],
+  ["Conversion rate (signups → paying)", false, true],
+  ["LTV at 3 / 6 / 12 months", false, true],
+  ["Discount spend & efficiency ratio", false, true],
+  ["Performance grade (A+ → F)", false, true],
+  ["Export Excel / CSV / Print", false, true],
+];
+
+// ── Left brand panel ──────────────────────────────────────────
+function BrandPanel() {
+  return (
+    <div className="hidden md:flex md:w-[38%] flex-col justify-between px-10 py-10 text-white relative overflow-hidden">
+      <img
+        src="https://freshprep.imgix.net/landing/carousel/recipe_3.jpg?auto=compress,format&w=700"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ filter: "saturate(0.9) brightness(0.5)" }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(160deg, rgba(26,61,46,0.88) 0%, rgba(43,83,70,0.75) 60%, rgba(26,61,46,0.65) 100%)",
+        }}
+      />
+      <div className="relative z-10 flex flex-col justify-between h-full">
+        <p className="text-[11px] font-mono text-white/40 uppercase tracking-[0.18em]">
+          BD Campaign Intelligence
+        </p>
+        <div>
+          <h2 className="text-[2.2rem] font-display font-semibold leading-[1.15] text-white mb-8">
+            BD event analysis,
+            <br />
+            built in.
+          </h2>
+          <div className="space-y-4">
+            {[
+              ["Province × month heatmap", "See where and when every BD event lands."],
+              ["Fiscal year comparison", "FY2025 vs FY2026 — event codes, signups, province split."],
+              ["Looker integration", "Upload your Client LTV export to add conversion and revenue."],
+            ].map(([title, sub]) => (
+              <div key={title} className="flex gap-3 items-start">
+                <span className="mt-[7px] w-5 h-px bg-[#e7bd27] shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-white leading-snug">{title}</p>
+                  <p className="text-xs text-white/50 mt-0.5 leading-relaxed">{sub}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-          <div className="h-px w-12 bg-white/20" />
         </div>
+        <div className="h-px w-12 bg-white/20" />
       </div>
+    </div>
+  );
+}
 
-      {/* Right panel — two paths */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-10 bg-[#f8f7f5]">
-        <div className="w-full max-w-lg space-y-4">
+// ── Guide view ────────────────────────────────────────────────
+function GuideView({
+  onBdOnly,
+  onUpload,
+}: {
+  onBdOnly: () => void;
+  onUpload: () => void;
+}) {
+  return (
+    <div className="flex-1 overflow-y-auto bg-[#f8f7f5]">
+      <div className="flex flex-col items-center min-h-full px-5 py-10">
+        <div className="w-full max-w-2xl space-y-5">
 
           {/* Mobile eyebrow */}
-          <div className="md:hidden text-center mb-2">
-            <p className="text-[11px] font-mono text-[#a1a1a1] uppercase tracking-widest">BD Campaign Intelligence</p>
-            <h2 className="text-2xl font-display font-semibold text-[#1a1a1a] mt-1">Choose how to start</h2>
+          <div className="md:hidden text-center">
+            <p className="text-[11px] font-mono text-[#a1a1a1] uppercase tracking-widest">
+              BD Campaign Intelligence
+            </p>
           </div>
 
-          {/* Desktop heading */}
-          <div className="hidden md:block mb-1">
-            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">BD Campaign Intelligence</p>
-            <h2 className="text-xl font-semibold text-[#1a1a1a] mt-0.5">Choose how to start</h2>
+          {/* Page header */}
+          <div className="flex items-center gap-2.5">
+            <BookOpen className="w-4 h-4 text-[#2b5346] shrink-0" />
+            <h2 className="text-xl font-semibold text-[#1a1a1a]">What can I check here?</h2>
+            <span className="text-[8px] font-mono font-bold text-[#2b5346] bg-[#eef4f1] border border-[#2b5346]/20 px-2 py-0.5 rounded-full whitespace-nowrap uppercase tracking-wider">
+              user guide
+            </span>
           </div>
 
-          {/* ── Path A: Built-in BD database ── */}
-          <div
-            className="bg-white rounded-2xl border-2 border-[#2b5346] shadow-sm overflow-hidden"
-          >
-            <div className="px-5 pt-5 pb-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#eef4f1] flex items-center justify-center shrink-0 mt-0.5">
-                  <Database className="w-4 h-4 text-[#2b5346]" />
+          {/* Two-option card */}
+          <div className="rounded-2xl border border-[#e5e5e5] bg-white shadow-sm overflow-hidden">
+            <div className="grid md:grid-cols-[1fr_1px_1fr]">
+
+              {/* ── Option A: Built-in ── */}
+              <div className="border-t-[3px] border-[#e7bd27] bg-[#eef4f1] p-5 flex flex-col gap-4">
+
+                <div className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#2b5346] flex items-center justify-center shrink-0 mt-0.5">
+                    <Database className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-bold text-[#0f0f0f]">Built-in Database</p>
+                      <span className="text-[7.5px] font-mono font-bold text-[#2b5346] bg-white/80 border border-[#2b5346]/20 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                        recommended
+                      </span>
+                    </div>
+                    <p className="text-[9px] font-mono text-[#2b5346]/70 mt-0.5">
+                      Jul 1, 2024 – Jun 24, 2026 · 708 codes · 2 fiscal years
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-bold text-[#0f0f0f]">Use Built-in BD Events Database</p>
-                    <span className="text-[8.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full">recommended</span>
-                  </div>
-                  <p className="text-xs text-[#3d3d3d] mt-1 leading-relaxed">
-                    Explore historical events from Jul 1, 2024 through Jun 22, 2026. Calendar heatmap, fiscal year breakdown, province analysis, and code lookup are pre-loaded — no upload needed.
+
+                <div>
+                  <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#2b5346] mb-2">
+                    What you can check
                   </p>
-                  <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                    <span className="text-[9px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-1 rounded-lg">Jul 2024 – Jun 2026</span>
-                    <span className="text-[9px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-1 rounded-lg">705 event codes</span>
-                    <span className="text-[9px] font-mono text-[#3d3d3d] bg-[#f5f5f3] border border-[#e8e8e8] px-2 py-1 rounded-lg">2 fiscal years</span>
+                  <ul className="space-y-1.5">
+                    <Yes>Province × month <strong>calendar heatmap</strong></Yes>
+                    <Yes><strong>Fiscal year comparison</strong> — FY2025 vs FY2026</Yes>
+                    <Yes>Browse &amp; search <strong>all 705 event codes</strong></Yes>
+                    <Yes><strong>Compare two event editions</strong> side-by-side</Yes>
+                    <Yes>Regional signups by province</Yes>
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#b5b5b5] mb-2">
+                    Not included
+                  </p>
+                  <ul className="space-y-1">
+                    <No>Conversion rate or LTV</No>
+                    <No>Performance grades (A+ → F)</No>
+                    <No>Events after Jun 24, 2026</No>
+                  </ul>
+                </div>
+
+                <div className="mt-auto pt-1 space-y-2.5">
+                  <div className="flex items-start gap-1.5 text-[8.5px] font-mono text-[#b08000] leading-relaxed">
+                    <AlertCircle className="w-3 h-3 shrink-0 mt-px" />
+                    <span>Data ends Jun 24 — upload a Looker export anytime to get current data</span>
                   </div>
+                  <button
+                    onClick={onBdOnly}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold cursor-pointer text-white transition-colors"
+                    style={{ backgroundColor: "#2b5346" }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1a3d2f")}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#2b5346")}
+                  >
+                    Explore BD Events
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center gap-1.5 text-[9px] font-mono text-[#c9a000]">
-                <AlertCircle className="w-3 h-3 shrink-0" />
-                <span>Data ends Jun 22, 2026 — upload a newer export anytime to get current data</span>
+              {/* Gold vertical divider (desktop) */}
+              <div className="hidden md:block bg-[#e7bd27]/25" />
+
+              {/* Horizontal divider (mobile) */}
+              <div className="md:hidden h-px bg-[#e5e5e5]" />
+
+              {/* ── Option B: Upload ── */}
+              <div className="bg-white p-5 flex flex-col gap-4">
+
+                <div className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#f2f2f0] flex items-center justify-center shrink-0 mt-0.5">
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-[#777]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#0f0f0f]">Upload Your Looker File</p>
+                    <p className="text-[9px] font-mono text-[#999] mt-0.5">
+                      Current data · conversion · LTV · grades
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#2b5346] mb-2">
+                    Everything in Option A, plus
+                  </p>
+                  <ul className="space-y-1.5">
+                    <Yes>Conversion rate — signups → paying customers</Yes>
+                    <Yes>LTV at 3, 6, and 12 months</Yes>
+                    <Yes>Performance grade per code (A+ → F)</Yes>
+                    <Yes>Discount spend &amp; efficiency ratio</Yes>
+                    <Yes>Export to Excel, CSV, or Print</Yes>
+                    <Yes>Missing code flags (red badge)</Yes>
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#b5b5b5] mb-2">
+                    Use when you need
+                  </p>
+                  <ul className="space-y-1">
+                    <No>Events not yet in the built-in database</No>
+                    <No>Data or conversions after Jun 24, 2026</No>
+                    <No>Revenue &amp; grade analysis</No>
+                  </ul>
+                </div>
+
+                <div className="mt-auto pt-1">
+                  <button
+                    onClick={onUpload}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold cursor-pointer text-[#1a1a1a] border-2 border-[#dedede] hover:border-[#2b5346] hover:text-[#2b5346] transition-colors"
+                  >
+                    Upload Your File
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="px-5 pb-5">
-              <button
-                onClick={onBdOnly}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold cursor-pointer text-white"
-                style={{ backgroundColor: "#2b5346", transition: "background-color 150ms" }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1a3d2f")}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#2b5346")}
-              >
-                Explore BD Events
-                <ArrowRight className="w-4 h-4" />
-              </button>
+          {/* Comparison table */}
+          <div>
+            <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#b5b5b5] mb-2.5">
+              Feature comparison
+            </p>
+            <div className="overflow-x-auto rounded-xl border border-[#e5e5e5] bg-white">
+              <table className="w-full text-[10px] font-mono border-collapse">
+                <thead>
+                  <tr className="bg-[#f5f5f3] border-b border-[#e5e5e5]">
+                    <th className="text-left px-3 py-2 text-[#888] font-semibold">Feature</th>
+                    <th className="text-center px-3 py-2 text-[#2b5346] font-semibold">Built-in</th>
+                    <th className="text-center px-3 py-2 text-[#888] font-semibold">Upload</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISON_ROWS.map(([feat, db, upload]) => (
+                    <tr key={feat} className="border-b border-[#f0f0ee] last:border-0">
+                      <td className="px-3 py-1.5 text-[#3d3d3d]">{feat}</td>
+                      <td className="px-3 py-1.5 text-center">
+                        {db ? (
+                          <span className="text-[#2b5346] font-bold">✓</span>
+                        ) : (
+                          <span className="text-[#d5d5d5]">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-1.5 text-center">
+                        {upload ? (
+                          <span className="text-[#2b5346] font-bold">✓</span>
+                        ) : (
+                          <span className="text-[#d5d5d5]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-[#e5e5e5]" />
-            <span className="text-[10px] font-mono text-[#a1a1a1] shrink-0">checking a new event or need data after Jun 22?</span>
-            <div className="flex-1 h-px bg-[#e5e5e5]" />
-          </div>
-
-          {/* ── Path B: Looker upload ── */}
-          <div ref={lookerRef} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-colors ${autoOpenLooker ? "border-[#2b5346]" : "border-[#e5e5e5]"}`}>
-            <button
-              onClick={() => setShowLooker(v => !v)}
-              className="w-full px-5 py-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#fafafa] transition-colors"
-            >
-              <div className="flex items-start gap-3 text-left">
-                <div className="w-8 h-8 rounded-lg bg-[#f5f5f3] flex items-center justify-center shrink-0 mt-0.5">
-                  <FileSpreadsheet className="w-4 h-4 text-[#888]" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-[#1a1a1a]">Upload Your Own Data File</p>
-                  <p className="text-xs text-[#888] mt-0.5">
-                    For new events, current conversion/LTV, or data after Jun 22, 2026 — export the Client LTV table from Looker Studio
-                  </p>
-                </div>
-              </div>
-              {showLooker
-                ? <ChevronUp className="w-4 h-4 text-[#a1a1a1] shrink-0" />
-                : <ChevronDown className="w-4 h-4 text-[#a1a1a1] shrink-0" />}
-            </button>
-
-            {showLooker && (
-              <div className="border-t border-[#f0f0ee] px-5 pb-5 pt-4 space-y-4">
-
-                {/* Looker instructions */}
-                <div className="rounded-xl border border-[#2b5346]/15 bg-[#eef4f1] p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[#2b5346] text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
-                    <p className="text-xs font-semibold text-[#1a1a1a] uppercase tracking-wide">Where to get the file</p>
-                  </div>
-                  <a
-                    href={LOOKER_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-xs font-semibold text-[#2b5346] hover:underline w-fit"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                    Open the Signup Flow Evaluation Dashboard
-                  </a>
-                  <ol className="space-y-1.5 text-xs text-[#3d3d3d] leading-relaxed list-none pl-1">
-                    {[
-                      ["a.", <>Open the <strong className="font-semibold text-[#1a1a1a]">Signup Flow Evaluation Dashboard</strong> using the link above and sign in with your Fresh Prep Google account</>],
-                      ["b.", <>Go to the dashboard page or section labelled <strong className="font-semibold text-[#1a1a1a]">Signup to Paying Customer Conversion</strong></>],
-                      ["c.", <>At the top of that page, set the date filter to the <strong className="font-semibold text-[#1a1a1a]">period you want to analyze</strong>. Start before the event or campaign began and extend the end date far enough to include later conversions</>],
-                      ["d.", <>Scroll until you reach the table labelled <strong className="font-semibold text-[#1a1a1a]">Client LTV</strong>. Do not use the Exportable Client List for this upload—the Client LTV table contains the aggregated signup, paying-customer, conversion, discount, and LTV metrics this analysis needs</>],
-                      ["e.", <>Move your cursor over the <strong className="font-semibold text-[#1a1a1a]">Client LTV table</strong>. In the table’s top-right corner, click the <strong className="font-semibold text-[#1a1a1a]">three-dot menu (⋮)</strong></>],
-                      ["f.", <>Select <strong className="font-semibold text-[#1a1a1a]">Export → CSV</strong>. Export the table itself—not the entire dashboard or a PDF</>],
-                      ["g.", <>Wait for the download to finish. The CSV will normally be saved in your computer’s <strong className="font-semibold text-[#1a1a1a]">Downloads</strong> folder</>],
-                      ["h.", "Return here and drag the downloaded CSV into the upload box below, or click the box and select it from Downloads"],
-                    ].map(([label, text]) => (
-                      <li key={String(label)} className="flex items-start gap-2">
-                        <span className="text-[#2b5346] font-bold font-mono mt-px shrink-0">{label}</span>
-                        <span>{text}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-
-                {/* Drop zone */}
-                <div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".xlsx,.xls,.csv,.tsv"
-                    className="hidden"
-                  />
-                  <div
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={triggerBrowsingInput}
-                    className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer flex flex-col items-center justify-center min-h-[130px] transition-colors"
-                    style={{
-                      borderColor: isDragOver ? "#2b5346" : "#e5e5e5",
-                      backgroundColor: isDragOver ? "#eef4f1" : "#fafafa",
-                    }}
-                  >
-                    <FileSpreadsheet
-                      className="w-8 h-8 mb-2.5"
-                      style={{ color: isDragOver ? "#2b5346" : "#c0c0c0" }}
-                    />
-                    <p className="text-sm font-medium text-[#1a1a1a]">Drop your data file here</p>
-                    <p className="text-xs mt-1 font-medium text-[#2b5346]">or click to browse</p>
-                    <p className="text-[10px] text-[#a1a1a1] mt-1.5 font-mono">CSV · XLSX · XLS · TSV</p>
-                  </div>
-                </div>
-
-                <p className="text-[9.5px] text-[#a1a1a1] font-mono leading-relaxed">
-                  Column headers are auto-detected. Promo code, signups, LTV, and channel columns are mapped automatically. All data stays in your browser.
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Footer */}
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-1 pb-2">
             <img
               src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
               alt="FreshPrep"
               className="h-4 w-auto opacity-30"
               style={{ filter: "brightness(0)" }}
             />
-            <span className="text-[9.5px] text-[#c0c0c0] font-mono uppercase tracking-widest">Campaign Intelligence · All analysis runs client-side</span>
+            <span className="text-[9.5px] text-[#c0c0c0] font-mono uppercase tracking-widest">
+              Campaign Intelligence · All analysis runs client-side
+            </span>
           </div>
 
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Upload view ───────────────────────────────────────────────
+function UploadView({
+  state,
+  actions,
+  onBack,
+}: {
+  state: FileUploadState;
+  actions: FileUploadActions;
+  onBack: () => void;
+}) {
+  const [showAllSteps, setShowAllSteps] = useState(false);
+  const { isDragOver, fileInputRef } = state;
+  const { handleDragOver, handleDragLeave, handleDrop, handleFileChange, triggerBrowsingInput } =
+    actions;
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-[#f8f7f5]">
+      <div className="flex flex-col items-center min-h-full px-5 py-10">
+        <div className="w-full max-w-lg space-y-5">
+
+          {/* Back */}
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-xs text-[#666] font-medium hover:text-[#1a1a1a] cursor-pointer transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to guide
+          </button>
+
+          {/* Header */}
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#f2f2f0] flex items-center justify-center shrink-0 mt-0.5">
+              <FileSpreadsheet className="w-4.5 h-4.5 text-[#777]" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-[#1a1a1a]">Upload Your Looker Export</h2>
+              <p className="text-xs text-[#888] mt-0.5 leading-relaxed">
+                Export the <strong className="text-[#555]">Client LTV table</strong> from Looker Studio, then drop it below. Accepted: CSV, XLSX, XLS, TSV.
+              </p>
+            </div>
+          </div>
+
+          {/* How-to card */}
+          <div className="rounded-2xl border border-[#2b5346]/15 bg-[#eef4f1] overflow-hidden">
+            <div className="px-5 py-4 space-y-4">
+
+              <div className="flex items-center justify-between">
+                <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#2b5346]">
+                  How to export from Looker Studio
+                </p>
+                <a
+                  href={LOOKER_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[9px] font-mono font-semibold text-[#2b5346] hover:underline"
+                >
+                  Open Looker
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              </div>
+
+              {/* 3-step summary */}
+              <ol className="space-y-3 list-none">
+                {(
+                  [
+                    [
+                      "1",
+                      <>
+                        Open the{" "}
+                        <strong>Signup Flow Evaluation Dashboard</strong> and sign
+                        in with your Fresh Prep Google account
+                      </>,
+                    ],
+                    [
+                      "2",
+                      <>
+                        Set the date range — start <strong>before</strong> the
+                        event began and extend the end far enough to capture late
+                        conversions
+                      </>,
+                    ],
+                    [
+                      "3",
+                      <>
+                        Scroll to the <strong>Client LTV</strong> table (not
+                        the Exportable Client List), hover it, then click{" "}
+                        <strong>⋮ → Export → CSV</strong>
+                      </>,
+                    ],
+                  ] as [string, React.ReactNode][]
+                ).map(([num, text]) => (
+                  <li key={num} className="flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-[#2b5346] text-white text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      {num}
+                    </span>
+                    <span className="text-xs text-[#3d3d3d] leading-relaxed">{text}</span>
+                  </li>
+                ))}
+              </ol>
+
+              {/* Toggle for verbose steps */}
+              <button
+                onClick={() => setShowAllSteps(v => !v)}
+                className="flex items-center gap-1 text-[9px] font-mono text-[#2b5346]/60 hover:text-[#2b5346] cursor-pointer transition-colors"
+              >
+                {showAllSteps ? (
+                  <ChevronUp className="w-3 h-3" />
+                ) : (
+                  <ChevronDown className="w-3 h-3" />
+                )}
+                {showAllSteps ? "Hide full instructions" : "Show full step-by-step"}
+              </button>
+
+              {showAllSteps && (
+                <div className="pt-3 border-t border-[#2b5346]/10 space-y-2">
+                  {(
+                    [
+                      [
+                        "a.",
+                        <>
+                          Open the <strong>Signup Flow Evaluation Dashboard</strong> using the
+                          link above and sign in with your Fresh Prep Google account
+                        </>,
+                      ],
+                      ["b.", <>Go to the section labelled <strong>Signup to Paying Customer Conversion</strong></>],
+                      [
+                        "c.",
+                        <>
+                          Set the date filter. Start before the event began and extend the end
+                          date far enough to include later conversions — customers often pay
+                          weeks after signing up
+                        </>,
+                      ],
+                      [
+                        "d.",
+                        <>
+                          Scroll to the table labelled <strong>Client LTV</strong>. Do{" "}
+                          <em>not</em> use the Exportable Client List — the Client LTV table
+                          has the aggregated metrics this analysis needs
+                        </>,
+                      ],
+                      [
+                        "e.",
+                        <>
+                          Hover over the <strong>Client LTV</strong> table. In the top-right
+                          corner, click the <strong>three-dot menu (⋮)</strong>
+                        </>,
+                      ],
+                      ["f.", <>Select <strong>Export → CSV</strong>. Export the table itself, not the entire dashboard or a PDF</>],
+                      [
+                        "g.",
+                        <>
+                          Wait for the download to finish. The file will appear in your{" "}
+                          <strong>Downloads</strong> folder
+                        </>,
+                      ],
+                      [
+                        "h.",
+                        "Return here and drag the downloaded file into the upload box below, or click to select it",
+                      ],
+                    ] as [string, React.ReactNode][]
+                  ).map(([label, text]) => (
+                    <div key={String(label)} className="flex items-start gap-2">
+                      <span className="text-[#c9a000] font-bold font-mono text-[9.5px] shrink-0 mt-px">
+                        {label}
+                      </span>
+                      <span className="text-[9.5px] font-mono text-[#3d3d3d] leading-relaxed">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Drop zone */}
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".xlsx,.xls,.csv,.tsv"
+              className="hidden"
+            />
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={triggerBrowsingInput}
+              className="border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer flex flex-col items-center justify-center min-h-[160px] transition-colors"
+              style={{
+                borderColor: isDragOver ? "#2b5346" : "#e5e5e5",
+                backgroundColor: isDragOver ? "#eef4f1" : "#fafafa",
+              }}
+            >
+              <FileSpreadsheet
+                className="w-9 h-9 mb-3"
+                style={{ color: isDragOver ? "#2b5346" : "#c0c0c0" }}
+              />
+              <p className="text-sm font-semibold text-[#1a1a1a]">Drop your data file here</p>
+              <p className="text-xs mt-1 font-medium text-[#2b5346]">or click to browse</p>
+              <p className="text-[10px] text-[#b5b5b5] mt-2 font-mono">CSV · XLSX · XLS · TSV</p>
+            </div>
+            <p className="text-[9px] text-[#b5b5b5] font-mono mt-2 text-center leading-relaxed">
+              Column headers are auto-detected · your file never leaves the browser
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center gap-2 pt-1 pb-2">
+            <img
+              src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
+              alt="FreshPrep"
+              className="h-4 w-auto opacity-30"
+              style={{ filter: "brightness(0)" }}
+            />
+            <span className="text-[9.5px] text-[#c0c0c0] font-mono uppercase tracking-widest">
+              Campaign Intelligence · All analysis runs client-side
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────
+export function UploadFlow({
+  state,
+  actions,
+  onBdOnly,
+  autoOpenLooker = false,
+}: UploadFlowProps): React.ReactElement {
+  const [view, setView] = useState<"guide" | "upload">(
+    autoOpenLooker ? "upload" : "guide"
+  );
+
+  return (
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden" id="launch-screen">
+      <BrandPanel />
+      {view === "guide" ? (
+        <GuideView onBdOnly={onBdOnly} onUpload={() => setView("upload")} />
+      ) : (
+        <UploadView state={state} actions={actions} onBack={() => setView("guide")} />
+      )}
     </div>
   );
 }
