@@ -54,9 +54,10 @@ export default function App(): React.ReactElement {
     [fileUpload.state.dbRows, fallbackBusinessDevelopmentRows],
   );
 
-  // Fallback rows are lookup-only. The uploaded file remains the source of
-  // truth for generic Full Dataset and Compare code lists.
-  const analysis = useAnalysis(effectiveDbRows, fileUpload.state.uniqueDbCodes);
+  // Uploaded Client LTV is the source of truth for Overview/Performance/Revenue.
+  // Built-in fallback rows stay available for Calendar/Fiscal/Regional DB context,
+  // but must not be added into financial report totals.
+  const analysis = useAnalysis(fileUpload.state.dbRows, fileUpload.state.uniqueDbCodes);
   const report = useReport({
     foundReports: analysis.state.reportResults.foundReports,
     missingCodes: analysis.state.reportResults.missingCodes,
