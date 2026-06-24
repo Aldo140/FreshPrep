@@ -859,18 +859,23 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                       </td>
                     </React.Fragment>
                   )}
-                  {financials && (
-                    <React.Fragment>
-                      <td className="text-right px-3 py-3 font-mono text-[11px] font-black text-[#0f0f0f] border-l border-[#e8e8e8]">{financials.totalPaying.toLocaleString()}</td>
-                      <td className="text-right px-3 py-3">
-                        <span className="text-[11px] font-black font-mono"
-                          style={{ color: financials.blendedConv >= 35 ? "#2b5346" : financials.blendedConv >= 25 ? "#c9a000" : "#9b4a1c" }}>
-                          {financials.blendedConv.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="text-right px-3 py-3 font-mono text-[12px] font-black text-[#2b5346]">{currency(financials.totalLTV12)}</td>
-                    </React.Fragment>
-                  )}
+                  {financials && (() => {
+                    const totalConvPct = volume.totalSignups > 0
+                      ? (financials.totalPaying / volume.totalSignups) * 100
+                      : 0;
+                    return (
+                      <React.Fragment>
+                        <td className="text-right px-3 py-3 font-mono text-[11px] font-black text-[#0f0f0f] border-l border-[#e8e8e8]">{financials.totalPaying.toLocaleString()}</td>
+                        <td className="text-right px-3 py-3">
+                          <span className="text-[11px] font-black font-mono"
+                            style={{ color: totalConvPct >= 35 ? "#2b5346" : totalConvPct >= 25 ? "#c9a000" : "#9b4a1c" }}>
+                            {totalConvPct.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="text-right px-3 py-3 font-mono text-[12px] font-black text-[#2b5346]">{currency(financials.totalLTV12)}</td>
+                      </React.Fragment>
+                    );
+                  })()}
                   {financials?.hasCost && <td className="text-right px-3 py-3 font-mono text-[12px] font-black text-[#c9a000] border-l border-[#e8e8e8]">{currency(financials.totalSpend)}</td>}
                 </tr>
               </tbody>
