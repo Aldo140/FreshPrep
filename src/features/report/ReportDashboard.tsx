@@ -30,6 +30,17 @@ const CHIP_PROV_COLOR: Record<string, string> = {
 };
 const chipProvColor = (p: string) => CHIP_PROV_COLOR[p] ?? "#888";
 const isEvCode = (code: string): boolean => code.trim().toUpperCase().startsWith("EV");
+const normalizeChannel = (channel: string | undefined): string =>
+  (channel ?? "").replace(/[\s_-]/g, "").toLowerCase();
+
+type ChannelScope = "events" | "bd" | "all";
+
+function matchesChannelScope(channel: string | undefined, scope: ChannelScope): boolean {
+  if (scope === "all") return true;
+  const normalized = normalizeChannel(channel);
+  if (scope === "events") return normalized === "events";
+  return normalized === "businessdevelopment";
+}
 
 interface ExcludedCodeSummary {
   code: string;
@@ -168,7 +179,27 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showExcludedCodes, setShowExcludedCodes] = useState(false);
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
+  const [channelScope, setChannelScope] = useState<ChannelScope>("all");
   const [evPrefixOnly, setEvPrefixOnly] = useState(false);
+
+  const channelScopedFoundReports = useMemo(
+    () => foundReports.filter(report => matchesChannelScope(report.channel, channelScope)),
+    [foundReports, channelScope],
+  );
+
+  const channelScopedDbRows = useMemo(
+    () => dbRows.filter(row => matchesChannelScope(row.channel, channelScope)),
+    [dbRows, channelScope],
+  );
+
+  const channelScopedEventStats = useMemo(() => {
+    if (channelScope === "all") return customerData.eventStats;
+    const allowedCodes = new Set([
+      ...channelScopedFoundReports.map(report => report.discount_code.trim().toUpperCase()),
+      ...channelScopedDbRows.map(row => row.discount_code.trim().toUpperCase()),
+    ]);
+    return customerData.eventStats.filter(stat => allowedCodes.has(stat.code.trim().toUpperCase()));
+  }, [customerData.eventStats, channelScope, channelScopedFoundReports, channelScopedDbRows]);
 
   const excludedNonEvCodes = useMemo<ExcludedCodeSummary[]>(() => {
     const map = new Map<string, ExcludedCodeSummary>();
@@ -200,19 +231,19 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       map.set(code, existing);
     };
 
-    for (const report of foundReports) {
+    for (const report of channelScopedFoundReports) {
       upsert(report.discount_code, report.channel, report.Province, report.Signups, "Client LTV");
     }
-    for (const row of dbRows) {
+    for (const row of channelScopedDbRows) {
       upsert(row.discount_code, row.channel, row.Province, row.Signups, "BD Events DB");
     }
-    for (const stat of customerData.eventStats) {
+    for (const stat of channelScopedEventStats) {
       upsert(stat.code, undefined, stat.homeProvince, stat.totalSignups, "Event calendar");
     }
     return Array.from(map.values())
       .map(item => ({ ...item, provinces: item.provinces.sort() }))
       .sort((a, b) => b.signups - a.signups || a.code.localeCompare(b.code));
-  }, [foundReports, dbRows, customerData.eventStats]);
+  }, [channelScopedFoundReports, channelScopedDbRows, channelScopedEventStats]);
 
   const nonEvCodeCount = excludedNonEvCodes.length;
 
@@ -229,13 +260,17 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   }, [evPrefixOnly]);
 
   const scopedFoundReports = useMemo(
-    () => evPrefixOnly ? foundReports.filter(report => isEvCode(report.discount_code)) : foundReports,
-    [foundReports, evPrefixOnly],
+    () => evPrefixOnly
+      ? channelScopedFoundReports.filter(report => isEvCode(report.discount_code))
+      : channelScopedFoundReports,
+    [channelScopedFoundReports, evPrefixOnly],
   );
 
   const scopedDbRows = useMemo(
-    () => evPrefixOnly ? dbRows.filter(row => isEvCode(row.discount_code)) : dbRows,
-    [dbRows, evPrefixOnly],
+    () => evPrefixOnly
+      ? channelScopedDbRows.filter(row => isEvCode(row.discount_code))
+      : channelScopedDbRows,
+    [channelScopedDbRows, evPrefixOnly],
   );
 
   const scopedMissingCodes = useMemo(
@@ -249,8 +284,10 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   );
 
   const scopedEventStats = useMemo(
-    () => evPrefixOnly ? customerData.eventStats.filter(stat => isEvCode(stat.code)) : customerData.eventStats,
-    [customerData.eventStats, evPrefixOnly],
+    () => evPrefixOnly
+      ? channelScopedEventStats.filter(stat => isEvCode(stat.code))
+      : channelScopedEventStats,
+    [channelScopedEventStats, evPrefixOnly],
   );
 
   const scopedCustomerData = useMemo<CustomerDataResult>(() => {
@@ -266,13 +303,17 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   }, [customerData, scopedEventStats]);
 
   const scopedSummary = useMemo(
-    () => evPrefixOnly ? summarizeReports(scopedFoundReports, scopedMissingCodes.length) : summary,
-    [evPrefixOnly, scopedFoundReports, scopedMissingCodes.length, summary],
+    () => evPrefixOnly || channelScope !== "all"
+      ? summarizeReports(scopedFoundReports, scopedMissingCodes.length)
+      : summary,
+    [evPrefixOnly, channelScope, scopedFoundReports, scopedMissingCodes.length, summary],
   );
 
   const scopedChannelSummary = useMemo(
-    () => evPrefixOnly ? summarizeChannels(scopedFoundReports) : channelSummary,
-    [evPrefixOnly, scopedFoundReports, channelSummary],
+    () => evPrefixOnly || channelScope !== "all"
+      ? summarizeChannels(scopedFoundReports)
+      : channelSummary,
+    [evPrefixOnly, channelScope, scopedFoundReports, channelSummary],
   );
 
   const scopedUniqueChannels = useMemo(
@@ -291,7 +332,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   );
 
   const scopedPortfolioHealth = useMemo<PortfolioHealth | null>(() => {
-    if (!evPrefixOnly) return portfolioHealth;
+    if (!evPrefixOnly && channelScope === "all") return portfolioHealth;
     if (scopedFoundReports.length === 0) return null;
     return scopedFoundReports.reduce<PortfolioHealth>((acc, report) => {
       acc.total += 1;
@@ -300,7 +341,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       else acc.weak += 1;
       return acc;
     }, { total: 0, strong: 0, average: 0, weak: 0 });
-  }, [evPrefixOnly, portfolioHealth, scopedFoundReports]);
+  }, [evPrefixOnly, channelScope, portfolioHealth, scopedFoundReports]);
 
   const chipProvinces = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -337,6 +378,16 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     ["calendar", "fiscal", "regional"].includes(reportPage) &&
     chipProvinces.length > 0 &&
     !(reportPage === "regional" && selectedFlow === "all" && foundReports.length === 0);
+
+  const showScopeControls =
+    foundReports.length > 0 || dbRows.length > 0 || customerData.eventStats.length > 0;
+
+  const channelScopeLabel =
+    channelScope === "events"
+      ? "Events channel"
+      : channelScope === "bd"
+        ? "BusinessDevelopment channel"
+        : "Events + BusinessDevelopment";
 
   const allPages: { id: ReportPage; label: string }[] = [
     { id: "comparison", label: "Comparison" },
@@ -432,53 +483,84 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       </div>
 
       {/* Event-code scope — shared by every report page */}
-      {nonEvCodeCount > 0 && (
+      {showScopeControls && (
         <div className="shrink-0 px-4 py-2 bg-white border-b border-[#ececec]">
           <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Event code scope</p>
+              <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Events · BD · All</p>
               <p className="text-[9.5px] font-mono text-[#888] mt-0.5">
                 {evPrefixOnly ? (
                   <>
-                    Showing EV-prefix codes only ·{" "}
-                    <button
-                      type="button"
-                      onClick={() => setShowExcludedCodes(true)}
-                      className="font-black text-[#2b5346] underline decoration-[#2b5346]/30 underline-offset-2 cursor-pointer hover:text-[#1a3d2f]"
-                    >
-                      {nonEvCodeCount} non-EV code{nonEvCodeCount !== 1 ? "s" : ""}
-                    </button>{" "}
-                    not included
+                    Showing {channelScopeLabel} · EV-prefix codes only
+                    {nonEvCodeCount > 0 && (
+                      <>
+                        {" "}·{" "}
+                        <button
+                          type="button"
+                          onClick={() => setShowExcludedCodes(true)}
+                          className="font-black text-[#2b5346] underline decoration-[#2b5346]/30 underline-offset-2 cursor-pointer hover:text-[#1a3d2f]"
+                        >
+                          {nonEvCodeCount} non-EV code{nonEvCodeCount !== 1 ? "s" : ""}
+                        </button>{" "}
+                        not included
+                      </>
+                    )}
                   </>
                 ) : (
-                  "Showing EV-prefix and verified BusinessDevelopment codes"
+                  `Showing ${channelScopeLabel}`
                 )}
               </p>
               <p className="text-[9px] text-[#9b4a1c] mt-1">
                 EV-prefix only usually excludes larger BD partnership campaigns led by Jackie.
               </p>
             </div>
-            <div className="flex items-center gap-3 select-none shrink-0">
-              <span className="text-[10px] font-mono font-semibold text-[#3d3d3d]">EV-prefix only</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={evPrefixOnly}
-                onClick={() => {
-                  setEvPrefixOnly(value => !value);
-                  setActiveProvince(null);
-                }}
-                className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
-                  evPrefixOnly ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
-                }`}
-                aria-label="Show EV-prefix event codes only"
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-                    evPrefixOnly ? "translate-x-4" : "translate-x-0"
+            <div className="flex items-center gap-4 select-none shrink-0 flex-wrap justify-end">
+              <div className="flex items-center bg-[#f5f5f3] border border-[#e5e5e5] rounded-full p-0.5">
+                {[
+                  { id: "events" as const, label: "Events" },
+                  { id: "bd" as const, label: "BD" },
+                  { id: "all" as const, label: "All" },
+                ].map(option => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => {
+                      setChannelScope(option.id);
+                      setActiveProvince(null);
+                      setShowExcludedCodes(false);
+                    }}
+                    className={`px-3 py-1 rounded-full text-[10px] font-mono font-black cursor-pointer transition-colors ${
+                      channelScope === option.id
+                        ? "bg-[#2b5346] text-white"
+                        : "text-[#888] hover:text-[#1a1a1a]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-mono font-semibold text-[#3d3d3d]">EV-prefix only</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={evPrefixOnly}
+                  onClick={() => {
+                    setEvPrefixOnly(value => !value);
+                    setActiveProvince(null);
+                  }}
+                  className={`relative w-10 h-6 rounded-full cursor-pointer transition-colors ${
+                    evPrefixOnly ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
                   }`}
-                />
-              </button>
+                  aria-label="Show EV-prefix event codes only"
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                      evPrefixOnly ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -533,7 +615,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
                 </span>
               )}
               <span className="text-[9px] font-mono text-[#a1a1a1]">
-                BD events: {evPrefixOnly ? "EV-prefix only" : "EV-prefix + BusinessDevelopment channel"}
+                View: {channelScopeLabel}{evPrefixOnly ? " · EV-prefix only" : ""}
               </span>
               <button
                 onClick={onClearCustomer}
@@ -558,7 +640,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
                 </span>
               )}
               <span className="text-[9px] font-mono text-[#a1a1a1]">
-                {evPrefixOnly ? "EV-prefix only" : "EV-prefix + verified BusinessDevelopment codes"}
+                View: {channelScopeLabel}{evPrefixOnly ? " · EV-prefix only" : ""}
               </span>
             </>
           )}
