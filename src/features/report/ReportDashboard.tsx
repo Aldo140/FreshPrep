@@ -184,7 +184,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   const [showSourceModal, setShowSourceModal] = useState(false);
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
   const [channelScope, setChannelScope] = useState<ChannelScope>("all");
-  const [evOverride, setEvOverride] = useState(false);
+  const [evOverride, setEvOverride] = useState(true);
   // Calendar-specific: EV codes count as Events by default; user can opt out with strict mode
   const [calEvStrict, setCalEvStrict] = useState(false);
 
