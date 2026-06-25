@@ -625,7 +625,7 @@ export function CalendarTab({
 
       {/* ── Mobile: Province summary chips ───────────────────────── */}
       {allProvs.length > 0 && (
-        <div className="md:hidden">
+        <div className="md:hidden order-[2] md:order-[0]">
           <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#a1a1a1] mb-2">Provinces</p>
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
             {allProvs.map(p => {
@@ -679,7 +679,7 @@ export function CalendarTab({
           ? ((prevSig - prevPrevSig) / prevPrevSig) * 100
           : null;
         return (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3 order-[8] md:order-[0]">
             {[
               { label: "Total Events",  tip: undefined,                                                                                                                                                    value: visibleEventCount.toString(),   sub: `${coverageStats.years.length} yr${coverageStats.years.length !== 1 ? "s" : ""} of data` },
               { label: "Total Signups", tip: "Total people who registered using any event code across all years shown.",                                                                                    value: totalSignups.toLocaleString(),   sub: "across all events" },
@@ -696,7 +696,7 @@ export function CalendarTab({
       })()}
 
       {/* ── Data coverage ─────────────────────────────────────────  */}
-      <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[9] md:order-[0]">
         {/* Top row: year totals */}
         <div className="px-4 py-3 flex items-center gap-5 flex-wrap border-b border-[#f5f5f3]">
           <div className="flex items-center gap-2 shrink-0">
@@ -818,7 +818,7 @@ export function CalendarTab({
       </div>
 
       {/* ── Data source bar ───────────────────────────────────────  */}
-      <div className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3 flex items-center gap-3 flex-wrap shadow-sm">
+      <div className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3 flex items-center gap-3 flex-wrap shadow-sm order-[10] md:order-[0]">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Database className="w-3.5 h-3.5 shrink-0" style={{ color: isCustomData ? "#2b5346" : "#a1a1a1" }} />
           {isCustomData ? (
@@ -860,7 +860,7 @@ export function CalendarTab({
 
       {/* ── Upload panel ─────────────────────────────────────────── */}
       {showUpload && (
-        <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[11] md:order-[0]">
           <div className="px-5 pt-5 pb-4 border-b border-[#f5f5f3]">
             <p className="text-[11px] font-black text-[#0f0f0f]">Upload the Exportable Client List from Looker Studio</p>
             <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">
@@ -918,7 +918,7 @@ export function CalendarTab({
       )}
 
       {/* ── Filters + view toggle ─────────────────────────────────  */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap order-[3] md:order-[0]">
         {/* Province chips: hidden on mobile (shown in the summary row above), visible on desktop */}
         <span className="hidden md:inline text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
         {allProvs.map(p => (
@@ -972,7 +972,7 @@ export function CalendarTab({
 
       {/* ══ HEATMAP VIEW ════════════════════════════════════════════ */}
       {calView === "heatmap" && (
-        <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[4] md:order-[0]">
           {/* Mobile section header */}
           <div className="md:hidden px-4 pt-3 pb-2 flex items-center justify-between border-b border-[#f5f5f3]">
             <div>
@@ -1080,7 +1080,7 @@ export function CalendarTab({
 
       {/* ══ FAMILIES VIEW ═══════════════════════════════════════════ */}
       {calView === "families" && (
-        <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[4] md:order-[0]">
           {/* Families filter bar */}
           <div className="px-4 py-3 border-b border-[#f5f5f3] flex items-center gap-3 bg-[#fafafa] flex-wrap">
             <div className="flex items-center bg-[#f0f0ee] p-0.5 rounded-lg border border-[#e5e5e5]">
@@ -1280,6 +1280,7 @@ export function CalendarTab({
       )}
 
       {/* ══ HEATMAP CELL DETAIL / COMPARISON ════════════════════════ */}
+      <div className="order-[5] md:order-[0] flex flex-col gap-4">
       {calView === "heatmap" && selected && selectedEvents.length > 0 && (() => {
         const [sy, sm] = selected.month.split("-");
         const selLabel = `${MONTH_ABBR[Number(sm) - 1]} ${sy} · ${selected.prov}`;
@@ -1510,9 +1511,11 @@ export function CalendarTab({
         );
       })()}
 
+      </div>{/* end order-[5] cell detail wrapper */}
+
       {/* Hint */}
       {calView === "heatmap" && !selected && (
-        <div className="flex items-center gap-2 text-[10px] font-mono text-[#c0c0c0]">
+        <div className="flex items-center gap-2 text-[10px] font-mono text-[#c0c0c0] order-[6] md:order-[0]">
           <ChevronRight className="w-3 h-3" />
           Click any cell to see the events inside it. Use "Compare" to pin a cell and compare with another.
         </div>
