@@ -596,7 +596,7 @@ export function CalendarTab({
   }
 
   return (
-    <div className="px-3 md:px-5 py-5 md:py-7 pb-20 md:pb-7 max-w-7xl mx-auto flex flex-col gap-4 md:gap-5 w-full">
+    <div className="px-3 md:px-5 py-5 md:py-7 pb-24 md:pb-7 max-w-7xl mx-auto flex flex-col gap-4 md:gap-5 w-full">
 
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className={`flex items-start justify-between gap-4 flex-wrap ${

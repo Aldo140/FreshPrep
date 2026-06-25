@@ -25,7 +25,7 @@ export function PerformanceTab({ foundReports, summary, channelSummary }: Perfor
   const dashOffset = circumference * (1 - convFraction);
 
   return (
-    <div className="p-4 md:p-5 pb-20 md:pb-5 flex flex-col gap-4 md:gap-5 max-w-6xl mx-auto w-full">
+    <div className="p-4 md:p-5 pb-24 md:pb-5 flex flex-col gap-4 md:gap-5 max-w-6xl mx-auto w-full">
       <div className="flex items-center gap-3">
         <h2 className="text-base font-semibold text-[#1a1a1a]">Performance</h2>
         <span className="text-[10px] text-[#a1a1a1] font-mono">Conversion metrics + code leaderboard</span>

@@ -107,30 +107,165 @@ function GuideView({
   onUpload: () => void;
 }) {
   return (
-    <div className="flex-1 overflow-y-auto bg-[#f8f7f5]">
-      <div className="flex flex-col items-center min-h-full px-5 py-10">
-        <div className="w-full max-w-2xl space-y-5">
+    <div className="flex-1 overflow-y-auto" style={{ background: "#f3f2ef" }}>
 
-          {/* Mobile hero — replaces desktop brand panel */}
-          <div className="md:hidden relative overflow-hidden rounded-2xl" style={{ minHeight: 160 }}>
-            <img
-              src="https://freshprep.imgix.net/landing/carousel/recipe_3.jpg?auto=compress,format&w=600"
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: "saturate(0.9) brightness(0.45)" }}
-            />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, rgba(26,61,46,0.92) 0%, rgba(43,83,70,0.8) 100%)" }} />
-            <div className="relative z-10 px-6 py-7 flex flex-col gap-2">
-              <p className="text-[9px] font-mono text-white/45 uppercase tracking-[0.2em]">FreshPrep · BD Campaign Intelligence</p>
-              <h2 className="text-[1.7rem] font-display font-semibold leading-[1.15] text-white">
+      {/* ══════════════════════════════════════════════════════════
+          MOBILE LAYOUT — native app feel, hidden on md+
+      ══════════════════════════════════════════════════════════ */}
+      <div className="md:hidden flex flex-col min-h-full">
+
+        {/* Hero — full-bleed food image with forest overlay */}
+        <div className="relative overflow-hidden" style={{ minHeight: 280 }}>
+          <img
+            src="https://freshprep.imgix.net/landing/carousel/recipe_3.jpg?auto=compress,format&w=700"
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter: "saturate(0.8) brightness(0.4)" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(165deg,rgba(10,42,30,0.95) 0%,rgba(43,83,70,0.87) 55%,rgba(43,83,70,0.65) 100%)" }}
+          />
+          <div className="relative z-10 flex flex-col justify-between px-6 py-7" style={{ minHeight: 280 }}>
+            {/* Logo + eyebrow */}
+            <div className="flex items-center gap-3">
+              <img
+                src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
+                alt="FreshPrep"
+                style={{ height: 20, width: "auto", filter: "brightness(0) invert(1)", opacity: 0.88 }}
+              />
+              <span style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", color: "rgba(255,255,255,0.38)", textTransform: "uppercase", letterSpacing: "0.22em" }}>
+                Campaign Intelligence
+              </span>
+            </div>
+
+            {/* Headline + stat chips */}
+            <div>
+              <h1
+                className="font-display font-semibold text-white"
+                style={{ fontSize: "clamp(26px,7vw,34px)", lineHeight: 1.12, marginBottom: 16 }}
+              >
                 BD event analysis,<br />built in.
-              </h2>
-              <p className="text-[11px] font-mono text-white/55 mt-1">
-                708 codes · 2 fiscal years · province × month heatmap
-              </p>
+              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                {([
+                  ["708", "event codes"],
+                  ["FY25–FY26", "fiscal years"],
+                  ["6", "provinces"],
+                ] as [string, string][]).map(([val, label]) => (
+                  <div
+                    key={val}
+                    className="flex items-baseline gap-1.5"
+                    style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "4px 10px" }}
+                  >
+                    <span style={{ fontSize: 12, fontFamily: "'DM Mono',monospace", fontWeight: 700, color: "white" }}>{val}</span>
+                    <span style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", color: "rgba(255,255,255,0.5)" }}>{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Actions section */}
+        <div className="flex flex-col gap-3 px-4 pt-5 pb-8">
+
+          {/* Primary CTA — Built-in DB card */}
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ background: "#2b5346", boxShadow: "0 4px 20px rgba(43,83,70,0.28)" }}
+          >
+            <div className="px-5 pt-5 pb-5">
+              {/* Header */}
+              <div className="flex items-start gap-3 mb-5">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(255,255,255,0.11)" }}
+                >
+                  <Database className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span style={{ fontSize: 14, fontFamily: "'DM Sans',sans-serif", fontWeight: 700, color: "white" }}>
+                      Built-in Database
+                    </span>
+                    <span style={{ fontSize: 8, fontFamily: "'DM Mono',monospace", fontWeight: 700, color: "#e7bd27", background: "rgba(231,189,39,0.15)", border: "1px solid rgba(231,189,39,0.3)", padding: "2px 8px", borderRadius: 99, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                      recommended
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                    Jul 2024 – Jun 2026 · 708 codes
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature chips */}
+              <div className="flex flex-wrap gap-1.5 mb-5">
+                {["Province heatmap", "Fiscal year comparison", "Regional breakdown", "Browse all codes"].map(f => (
+                  <span
+                    key={f}
+                    style={{ fontSize: 10, fontFamily: "'DM Sans',sans-serif", fontWeight: 500, color: "rgba(255,255,255,0.72)", background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.07)", padding: "3px 10px", borderRadius: 99 }}
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+
+              {/* CTA button */}
+              <button
+                onClick={onBdOnly}
+                className="w-full flex items-center justify-center gap-2 tap-press cursor-pointer"
+                style={{ background: "white", color: "#2b5346", fontFamily: "'DM Sans',sans-serif", fontWeight: 700, fontSize: 15, borderRadius: 14, minHeight: 54, boxShadow: "0 2px 16px rgba(0,0,0,0.14)", WebkitTapHighlightColor: "transparent" }}
+              >
+                Explore BD Events
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Secondary CTA — Upload */}
+          <button
+            onClick={onUpload}
+            className="w-full flex items-center gap-3 tap-press cursor-pointer"
+            style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 18, padding: "14px 16px", boxShadow: "0 1px 6px rgba(0,0,0,0.05)", WebkitTapHighlightColor: "transparent" }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "#f0efec" }}
+            >
+              <FileSpreadsheet className="w-5 h-5" style={{ color: "#8a9e99" }} />
+            </div>
+            <div className="flex-1 text-left">
+              <p style={{ fontSize: 14, fontFamily: "'DM Sans',sans-serif", fontWeight: 600, color: "#0f1410" }}>
+                Upload Looker File
+              </p>
+              <p style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: "#a1a1a1", marginTop: 1 }}>
+                Adds conversion · LTV · grades
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 shrink-0" style={{ color: "#c8d0cc" }} />
+          </button>
+
+          {/* Footer */}
+          <div className="flex items-center justify-center gap-2 pt-3">
+            <img
+              src="https://freshprep.imgix.net/fresh-prep-logo.svg?auto=compress,format"
+              alt="FreshPrep"
+              style={{ height: 12, width: "auto", filter: "brightness(0)", opacity: 0.2 }}
+            />
+            <span style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", color: "#c0c0c0", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              All analysis runs client-side
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════
+          DESKTOP LAYOUT — hidden on mobile
+      ══════════════════════════════════════════════════════════ */}
+      <div className="hidden md:flex flex-col items-center min-h-full px-5 py-10" style={{ background: "#f8f7f5" }}>
+        <div className="w-full max-w-2xl space-y-5">
 
           {/* Page header */}
           <div className="flex items-center gap-2.5">
@@ -147,7 +282,6 @@ function GuideView({
 
               {/* ── Option A: Built-in ── */}
               <div className="border-t-[3px] border-[#e7bd27] bg-[#eef4f1] p-5 flex flex-col gap-4">
-
                 <div className="flex items-start gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-[#2b5346] flex items-center justify-center shrink-0 mt-0.5">
                     <Database className="w-3.5 h-3.5 text-white" />
@@ -164,7 +298,6 @@ function GuideView({
                     </p>
                   </div>
                 </div>
-
                 <div>
                   <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#2b5346] mb-2">
                     What you can check
@@ -177,7 +310,6 @@ function GuideView({
                     <Yes>Regional signups by province</Yes>
                   </ul>
                 </div>
-
                 <div>
                   <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#b5b5b5] mb-2">
                     Not included
@@ -188,7 +320,6 @@ function GuideView({
                     <No>Events after Jun 24, 2026</No>
                   </ul>
                 </div>
-
                 <div className="mt-auto pt-1 space-y-2.5">
                   <div className="flex items-start gap-1.5 text-[8.5px] font-mono text-[#b08000] leading-relaxed">
                     <AlertCircle className="w-3 h-3 shrink-0 mt-px" />
@@ -207,15 +338,11 @@ function GuideView({
                 </div>
               </div>
 
-              {/* Gold vertical divider (desktop) */}
-              <div className="hidden md:block bg-[#e7bd27]/25" />
-
-              {/* Horizontal divider (mobile) */}
-              <div className="md:hidden h-px bg-[#e5e5e5]" />
+              {/* Gold vertical divider */}
+              <div className="bg-[#e7bd27]/25" />
 
               {/* ── Option B: Upload ── */}
               <div className="bg-white p-5 flex flex-col gap-4">
-
                 <div className="flex items-start gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-[#f2f2f0] flex items-center justify-center shrink-0 mt-0.5">
                     <FileSpreadsheet className="w-3.5 h-3.5 text-[#777]" />
@@ -227,7 +354,6 @@ function GuideView({
                     </p>
                   </div>
                 </div>
-
                 <div>
                   <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#2b5346] mb-2">
                     Everything in Option A, plus
@@ -241,7 +367,6 @@ function GuideView({
                     <Yes>Missing code flags (red badge)</Yes>
                   </ul>
                 </div>
-
                 <div>
                   <p className="text-[7.5px] font-mono font-bold uppercase tracking-[0.18em] text-[#b5b5b5] mb-2">
                     Use when you need
@@ -252,7 +377,6 @@ function GuideView({
                     <No>Revenue &amp; grade analysis</No>
                   </ul>
                 </div>
-
                 <div className="mt-auto pt-1">
                   <button
                     onClick={onUpload}
@@ -285,20 +409,8 @@ function GuideView({
                   {COMPARISON_ROWS.map(([feat, db, upload]) => (
                     <tr key={feat} className="border-b border-[#f0f0ee] last:border-0">
                       <td className="px-3 py-1.5 text-[#3d3d3d]">{feat}</td>
-                      <td className="px-3 py-1.5 text-center">
-                        {db ? (
-                          <span className="text-[#2b5346] font-bold">✓</span>
-                        ) : (
-                          <span className="text-[#d5d5d5]">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-1.5 text-center">
-                        {upload ? (
-                          <span className="text-[#2b5346] font-bold">✓</span>
-                        ) : (
-                          <span className="text-[#d5d5d5]">—</span>
-                        )}
-                      </td>
+                      <td className="px-3 py-1.5 text-center">{db ? <span className="text-[#2b5346] font-bold">✓</span> : <span className="text-[#d5d5d5]">—</span>}</td>
+                      <td className="px-3 py-1.5 text-center">{upload ? <span className="text-[#2b5346] font-bold">✓</span> : <span className="text-[#d5d5d5]">—</span>}</td>
                     </tr>
                   ))}
                 </tbody>

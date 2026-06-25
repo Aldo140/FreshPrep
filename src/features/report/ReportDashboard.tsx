@@ -427,39 +427,71 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </button>
       </div>
 
-      {/* ── Mobile top strip: current page title + scope pill ─── */}
-      <div className="md:hidden shrink-0 bg-white border-b border-[#e5e5e5] px-4 py-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          {(() => {
-            const cur = pages.find(p => p.id === reportPage);
-            const CurIcon = cur?.icon;
-            return CurIcon ? <CurIcon className="w-4 h-4 shrink-0 text-[#2b5346]" /> : null;
-          })()}
-          <span className="text-[13px] font-bold text-[#0f0f0f] truncate">
+      {/* ── Mobile top header — native feel ─────────────────────── */}
+      <div
+        className="md:hidden shrink-0 flex items-center"
+        style={{
+          height: 56,
+          background: "rgba(255,255,255,0.98)",
+          borderBottom: "1px solid rgba(0,0,0,0.06)",
+          boxShadow: "0 1px 0 rgba(0,0,0,0.03)",
+        }}
+      >
+        {/* Back — styled like iOS back button */}
+        <button
+          onClick={onBackToWizard}
+          className="tap-scale cursor-pointer flex items-center gap-0.5 h-full px-3"
+          style={{ minWidth: 56, WebkitTapHighlightColor: "transparent" }}
+        >
+          <ArrowLeft className="w-[18px] h-[18px]" style={{ color: "#2b5346" }} />
+          <span style={{ fontSize: 13, fontFamily: "'DM Sans',sans-serif", fontWeight: 500, color: "#2b5346" }}>
+            Back
+          </span>
+        </button>
+
+        {/* Page title + optional scope badge */}
+        <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-2">
+          <span
+            className="truncate"
+            style={{ fontSize: 15, fontFamily: "'DM Sans',sans-serif", fontWeight: 600, color: "#0f1410" }}
+          >
             {pages.find(p => p.id === reportPage)?.label ?? "Report"}
           </span>
           {channelScope !== "all" && (
-            <span className="shrink-0 text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#eef4f1] text-[#2b5346] border border-[#c0ddd6]">
-              {channelScope === "events" ? "Events" : "BD"}
+            <span
+              className="mt-0.5"
+              style={{
+                fontSize: 9, fontFamily: "'DM Mono',monospace", fontWeight: 500,
+                color: "#2b5346", background: "#eef4f1", borderRadius: 99,
+                padding: "1px 7px",
+              }}
+            >
+              {channelScope === "events" ? "Events only" : "BD only"}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+
+        {/* Right: filter toggle + reset */}
+        <div className="flex items-center h-full pr-1">
           {showScopeControls && (
             <button
               onClick={() => setShowMobileScope(v => !v)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#f8f7f5] border border-[#e8e8e8] text-[10px] font-mono text-[#888] tap-scale cursor-pointer"
+              className="tap-scale cursor-pointer flex items-center justify-center h-full px-3"
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              Filter
-              {showMobileScope ? <ChevronUpIcon className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              <SlidersHorizontal
+                className="w-[18px] h-[18px]"
+                style={{ color: showMobileScope ? "#2b5346" : "#b0b8b4" }}
+              />
             </button>
           )}
           <button
-            onClick={onBackToWizard}
-            className="p-1.5 rounded-lg bg-[#f8f7f5] border border-[#e8e8e8] text-[#888] tap-scale cursor-pointer"
+            onClick={onReset}
+            className="tap-scale cursor-pointer flex items-center justify-center h-full px-3"
+            style={{ WebkitTapHighlightColor: "transparent" }}
+            title="Start over"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <RefreshCw className="w-[16px] h-[16px]" style={{ color: "#c8d0cc" }} />
           </button>
         </div>
       </div>
@@ -586,70 +618,77 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </div>
       )}
 
-      {/* Data source bar — only relevant in BD-only mode (Calendar/Fiscal visible) */}
-      {(foundReports.length === 0 || ["calendar", "fiscal"].includes(reportPage)) && <div className="shrink-0 px-4 py-2 bg-[#f8f7f5] border-b border-[#ececec]">
-        <div className="max-w-6xl mx-auto flex items-center gap-3 flex-wrap">
-          <Database className="w-3.5 h-3.5 shrink-0 text-[#a1a1a1]" />
-          {customerFileName ? (
-            <>
-              <span className="text-[10.5px] font-semibold font-mono text-[#1a1a1a]">{customerFileName}</span>
-              <span className="text-[8.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full">your data</span>
-              {dataThroughLabel && (
-                <span
-                  className={`text-[8.5px] font-mono px-2 py-0.5 rounded-full shrink-0 border ${
-                    dataAgeMonths > 3
-                      ? "text-[#c9a000] bg-[#fffbeb] border-[#f5e09a]"
-                      : "text-[#a1a1a1] bg-[#f5f5f3] border-[#e5e5e5]"
-                  }`}
-                >
-                  data through {dataThroughLabel}
-                  {dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
+      {/* Data source bar — desktop: full; mobile: compact (only if custom file) */}
+      {(foundReports.length === 0 || ["calendar", "fiscal"].includes(reportPage)) && (
+        <>
+          {/* Desktop version — full bar */}
+          <div className="hidden md:block shrink-0 px-4 py-2 bg-[#f8f7f5] border-b border-[#ececec]">
+            <div className="max-w-6xl mx-auto flex items-center gap-3 flex-wrap">
+              <Database className="w-3.5 h-3.5 shrink-0 text-[#a1a1a1]" />
+              {customerFileName ? (
+                <>
+                  <span className="text-[10.5px] font-semibold font-mono text-[#1a1a1a]">{customerFileName}</span>
+                  <span className="text-[8.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full">your data</span>
+                  {dataThroughLabel && (
+                    <span className={`text-[8.5px] font-mono px-2 py-0.5 rounded-full shrink-0 border ${dataAgeMonths > 3 ? "text-[#c9a000] bg-[#fffbeb] border-[#f5e09a]" : "text-[#a1a1a1] bg-[#f5f5f3] border-[#e5e5e5]"}`}>
+                      data through {dataThroughLabel}{dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
+                    </span>
+                  )}
+                  <span className="text-[9px] font-mono text-[#a1a1a1]">View: {channelScopeLabel}</span>
+                  <button onClick={onClearCustomer} className="ml-1 text-[9px] font-mono text-[#a1a1a1] hover:text-[#850b0b] cursor-pointer flex items-center gap-1">
+                    <X className="w-3 h-3" /> Revert to built-in
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-[10.5px] font-mono text-[#3d3d3d]">Built-in BD Events DB</span>
+                  {dataThroughLabel && (
+                    <span className={`text-[8.5px] font-mono px-2 py-0.5 rounded-full shrink-0 border ${dataAgeMonths > 3 ? "text-[#c9a000] bg-[#fffbeb] border-[#f5e09a]" : "text-[#a1a1a1] bg-[#f5f5f3] border-[#e5e5e5]"}`}>
+                      data through {dataThroughLabel}{dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
+                    </span>
+                  )}
+                  <span className="text-[9px] font-mono text-[#a1a1a1]">View: {channelScopeLabel}</span>
+                </>
+              )}
+              {["calendar", "fiscal"].includes(reportPage) && (
+                <span className="text-[9px] font-mono text-[#888]">
+                  Calendar and Fiscal use the Exportable Client List—a separate file from Client LTV.
                 </span>
               )}
-              <span className="text-[9px] font-mono text-[#a1a1a1]">
-                View: {channelScopeLabel}
-              </span>
-              <button
-                onClick={onClearCustomer}
-                className="ml-1 text-[9px] font-mono text-[#a1a1a1] hover:text-[#850b0b] cursor-pointer flex items-center gap-1"
-              >
-                <X className="w-3 h-3" /> Revert to built-in
+              <button onClick={() => setShowCustomerModal(true)} className="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all bg-white text-[#2b5346] border-[#d0e8e2] hover:bg-[#eef4f1]">
+                <Upload className="w-3 h-3" />
+                {customerFileName ? "Change data file" : "Upload newer data"}
               </button>
-            </>
-          ) : (
-            <>
-              <span className="text-[10.5px] font-mono text-[#3d3d3d]">Built-in BD Events DB</span>
+            </div>
+          </div>
+
+          {/* Mobile version — compact strip only when custom file is active */}
+          {customerFileName && (
+            <div className="md:hidden shrink-0 flex items-center gap-2 px-4 py-2" style={{ background: "#f3f2ef", borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+              <span className="text-[9px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full border border-[#c5dcd6] shrink-0">
+                {customerFileName}
+              </span>
               {dataThroughLabel && (
-                <span
-                  className={`text-[8.5px] font-mono px-2 py-0.5 rounded-full shrink-0 border ${
-                    dataAgeMonths > 3
-                      ? "text-[#c9a000] bg-[#fffbeb] border-[#f5e09a]"
-                      : "text-[#a1a1a1] bg-[#f5f5f3] border-[#e5e5e5]"
-                  }`}
-                >
-                  data through {dataThroughLabel}
-                  {dataAgeMonths > 3 ? " · consider uploading newer data" : ""}
+                <span className={`text-[8.5px] font-mono shrink-0 ${dataAgeMonths > 3 ? "text-[#c9a000]" : "text-[#a1a1a1]"}`}>
+                  through {dataThroughLabel}
                 </span>
               )}
-              <span className="text-[9px] font-mono text-[#a1a1a1]">
-                View: {channelScopeLabel}
-              </span>
-            </>
+              <button onClick={onClearCustomer} className="ml-auto text-[8.5px] font-mono text-[#a1a1a1] cursor-pointer flex items-center gap-1 tap-scale">
+                <X className="w-3 h-3" /> Revert
+              </button>
+            </div>
           )}
-          {["calendar", "fiscal"].includes(reportPage) && (
-            <span className="text-[9px] font-mono text-[#888]">
-              Calendar and Fiscal use the Exportable Client List—a separate file from Client LTV.
-            </span>
+          {/* Mobile built-in hint — only show when stale data */}
+          {!customerFileName && dataAgeMonths > 3 && dataThroughLabel && (
+            <div className="md:hidden shrink-0 flex items-center gap-2 px-4 py-1.5" style={{ background: "#fffbeb", borderBottom: "1px solid #f5e09a" }}>
+              <span className="text-[8.5px] font-mono text-[#b08000]">Data through {dataThroughLabel} ·</span>
+              <button onClick={() => setShowCustomerModal(true)} className="text-[8.5px] font-mono text-[#2b5346] underline cursor-pointer tap-scale">
+                Upload newer data
+              </button>
+            </div>
           )}
-          <button
-            onClick={() => setShowCustomerModal(true)}
-            className="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all bg-white text-[#2b5346] border-[#d0e8e2] hover:bg-[#eef4f1]"
-          >
-            <Upload className="w-3 h-3" />
-            {customerFileName ? "Change data file" : "Upload newer data"}
-          </button>
-        </div>
-      </div>}
+        </>
+      )}
 
       {/* Page content — key= triggers slide-up on page change */}
       <div
@@ -844,61 +883,56 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </div>
       )}
 
-      {/* ── Mobile Bottom Navigation ──────────────────────────── */}
+      {/* ── Mobile Bottom Navigation — shelf style ───────────────── */}
       <nav
-        className="md:hidden shrink-0 mobile-nav-blur border-t border-[#e5e5e5]"
-        style={{
-          boxShadow: "0 -1px 0 rgba(0,0,0,0.06), 0 -4px 20px rgba(0,0,0,0.07)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        }}
+        className="md:hidden shrink-0 mobile-nav-shelf"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="flex items-stretch">
+        <div className="flex items-stretch px-1" style={{ height: 60 }}>
           {pages.map(page => {
             const PageIcon = page.icon;
             const isActive = reportPage === page.id;
-            const isSpecial = foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id);
+            const isGold = foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id);
+            const activeColor  = isGold ? "#b8920a" : "#2b5346";
+            const activeBg     = isGold ? "rgba(231,189,39,0.13)" : "rgba(43,83,70,0.09)";
+            const inactiveColor = "#9fb8af";
             return (
               <button
                 key={page.id}
                 onClick={() => setReportPage(page.id)}
-                className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 cursor-pointer relative tap-scale"
-                style={{ minHeight: 52 }}
+                className="flex-1 relative flex flex-col items-center justify-center gap-[3px] tap-scale cursor-pointer"
+                style={{ WebkitTapHighlightColor: "transparent", minWidth: 0 }}
               >
+                {/* Pill background for active state */}
                 {isActive && (
-                  <span
-                    className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-full"
-                    style={{
-                      backgroundColor: isSpecial ? "#e7bd27" : "#2b5346",
-                      animation: "scaleIn 0.2s cubic-bezier(0.23, 1, 0.32, 1) both",
-                    }}
+                  <div
+                    className="nav-active-pill"
+                    style={{ background: activeBg }}
                   />
                 )}
                 <PageIcon
-                  className="w-[18px] h-[18px]"
-                  style={{ color: isActive ? (isSpecial ? "#e7bd27" : "#2b5346") : "#b0b0b0" }}
+                  className="relative z-10"
+                  style={{ width: 22, height: 22, color: isActive ? activeColor : inactiveColor }}
                 />
                 <span
-                  className="text-[9px] font-mono font-semibold leading-none"
-                  style={{ color: isActive ? (isSpecial ? "#c9a000" : "#2b5346") : "#b0b0b0" }}
+                  className="relative z-10 leading-none whitespace-nowrap"
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "'DM Sans',sans-serif",
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? activeColor : inactiveColor,
+                  }}
                 >
                   {page.shortLabel}
                 </span>
                 {page.id === "data" && scopedMissingCodes.length > 0 && (
-                  <span className="absolute top-1 right-[calc(50%-14px)] min-w-[14px] h-3.5 px-1 bg-[#850b0b] text-white text-[7px] font-bold rounded-full flex items-center justify-center font-mono">
+                  <span className="absolute top-1.5 right-[calc(50%-15px)] z-20 min-w-[15px] h-[15px] px-1 bg-[#dc2626] text-white text-[7px] font-bold rounded-full flex items-center justify-center font-mono">
                     {scopedMissingCodes.length}
                   </span>
                 )}
               </button>
             );
           })}
-          <button
-            onClick={onReset}
-            className="shrink-0 flex flex-col items-center justify-center py-2 gap-0.5 cursor-pointer border-l border-[#f0f0ee] px-3 tap-scale"
-            style={{ minHeight: 52 }}
-          >
-            <RefreshCw className="w-[18px] h-[18px] text-[#b0b0b0]" />
-            <span className="text-[9px] font-mono text-[#b0b0b0]">Reset</span>
-          </button>
         </div>
       </nav>
 

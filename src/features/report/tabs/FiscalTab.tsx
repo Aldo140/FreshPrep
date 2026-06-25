@@ -567,7 +567,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
 
   return (
     <React.Fragment>
-    <div className="px-4 md:px-5 py-6 md:py-7 pb-20 md:pb-7 max-w-6xl mx-auto flex flex-col gap-6 md:gap-8 w-full">
+    <div className="px-4 md:px-5 py-6 md:py-7 pb-24 md:pb-7 max-w-6xl mx-auto flex flex-col gap-6 md:gap-8 w-full">
 
       {/* ── Header ────────────────────────────────────────────────── */}
       <div className={`flex items-start justify-between gap-4 flex-wrap ${

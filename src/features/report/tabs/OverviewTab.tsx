@@ -59,7 +59,7 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
   const pressUp = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLButtonElement).style.transform = ""; };
 
   return (
-    <div className="p-4 md:p-5 pb-20 md:pb-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
+    <div className="p-4 md:p-5 pb-24 md:pb-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
       <div className="rounded-2xl overflow-hidden flex shadow-md" style={{ minHeight: "clamp(180px, 30vw, 260px)" }}>
