@@ -276,7 +276,8 @@ export default function App(): React.ReactElement {
   return (
     <div
       id="saas-applet-root"
-      className="flex flex-col h-screen w-full bg-[#f8f7f5] text-[#1a1a1a] overflow-hidden font-sans selection:bg-[#eef4f1] selection:text-[#2b5346]"
+      className="flex flex-col w-full bg-[#f8f7f5] text-[#1a1a1a] overflow-hidden font-sans selection:bg-[#eef4f1] selection:text-[#2b5346]"
+      style={{ height: "100vh", minHeight: "-webkit-fill-available" }}
     >
       <header
         id="app-global-nav"

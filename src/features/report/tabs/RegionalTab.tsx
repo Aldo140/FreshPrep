@@ -206,10 +206,44 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
     const totalEvents = bdProvinceStats.reduce((s, p) => s + p.events, 0);
 
     return (
-      <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+      <div className="p-4 md:p-5 pb-24 md:pb-5 flex flex-col gap-4 md:gap-5 max-w-6xl mx-auto w-full">
 
-        {/* Header */}
-        <div className="flex items-end justify-between gap-4 flex-wrap">
+        {/* ── MOBILE: summary hero strip ── DESKTOP: original header ── */}
+        {/* Mobile hero */}
+        <div
+          className="md:hidden rounded-2xl px-5 py-5 flex flex-col gap-1 animate-slide-up-in"
+          style={{ background: "#2b5346" }}
+        >
+          <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-white/60">Regional · BD Events Database</p>
+          <div className="flex items-end justify-between gap-3 mt-1">
+            <div>
+              <p
+                className="text-[38px] font-black font-mono text-white leading-none animate-num-rise"
+                style={{ fontFamily: "DM Mono, monospace" }}
+              >
+                {grandTotal.toLocaleString()}
+              </p>
+              <p className="text-[11px] text-white/70 mt-1" style={{ fontFamily: "DM Sans, sans-serif" }}>
+                signups across Canada
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p
+                className="text-[26px] font-black text-white/90 leading-none"
+                style={{ fontFamily: "DM Mono, monospace" }}
+              >
+                {filteredProvs.length}
+              </p>
+              <p className="text-[9px] text-white/55 uppercase tracking-wide mt-0.5" style={{ fontFamily: "DM Mono, monospace" }}>
+                provinces
+              </p>
+            </div>
+          </div>
+          <p className="text-[9px] font-mono text-white/45 mt-2">{dbDateRange}</p>
+        </div>
+
+        {/* Desktop header (unchanged) */}
+        <div className="hidden md:flex items-end justify-between gap-4 flex-wrap">
           <div>
             <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Regional · BD Events Database</p>
             <h2 className="text-[20px] font-black text-[#0f0f0f]">Province Summary</h2>
@@ -233,7 +267,8 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
           {onUploadLooker && (
             <button
               onClick={onUploadLooker}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all bg-white text-[#2b5346] border-[#d0e8e2] hover:bg-[#eef4f1] shrink-0"
+              className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all bg-white text-[#2b5346] border-[#d0e8e2] hover:bg-[#eef4f1] shrink-0 tap-scale"
+              style={{ minHeight: "44px" }}
             >
               <Upload className="w-3 h-3 shrink-0" />
               Upload Looker file for LTV &amp; conversion
@@ -291,7 +326,8 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                           setSelectedLookupCode(event.code);
                           setCodeLookupQuery(event.code);
                         }}
-                        className="w-full px-4 py-3 flex items-center justify-between gap-4 text-left hover:bg-[#f7faf8] cursor-pointer"
+                        className="w-full px-4 py-3 flex items-center justify-between gap-4 text-left hover:bg-[#f7faf8] cursor-pointer tap-scale"
+                        style={{ minHeight: "44px" }}
                       >
                         <div className="min-w-0">
                           <p className="text-xs font-black font-mono text-[#0f0f0f] truncate">{event.code}</p>
@@ -395,8 +431,121 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
           </div>
         </section>
 
-        {/* Province signups grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {/* ── MOBILE: province filter pills (horizontal scroll) ── */}
+        {allProvinces.length > 1 && (
+          <div className="md:hidden snap-x-scroll no-scrollbar flex gap-2 pb-1">
+            {allProvinces.map(p => {
+              const isActive = activeProvinces.has(p);
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => toggleProvince(p)}
+                  className="snap-start shrink-0 flex items-center gap-1.5 px-3 rounded-full text-[11px] font-black font-mono cursor-pointer tap-scale border transition-all"
+                  style={{
+                    minHeight: "44px",
+                    color: isActive ? "#fff" : provColor(p),
+                    backgroundColor: isActive ? provColor(p) : provColor(p) + "14",
+                    borderColor: provColor(p) + (isActive ? "ff" : "40"),
+                  }}
+                  aria-pressed={isActive}
+                >
+                  {p}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── MOBILE: province tiles ── DESKTOP: original 2-col grid ── */}
+
+        {/* Mobile tiles */}
+        <div className="md:hidden flex flex-col gap-3">
+          {filteredProvs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white rounded-2xl border border-[#e8e8e8] shadow-sm animate-slide-up-in">
+              <MapPin className="w-8 h-8 text-[#d0d0d0]" />
+              <p className="text-sm font-semibold text-[#3d3d3d]">No provinces selected</p>
+              <p className="text-[10px] font-mono text-[#a1a1a1]">Tap a province pill above to show data</p>
+            </div>
+          ) : (
+            filteredProvs.map(row => {
+              const shareW = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
+              const PROV_FULL: Record<string, string> = {
+                BC: "British Columbia", AB: "Alberta", ON: "Ontario",
+                QC: "Quebec", SK: "Saskatchewan", MB: "Manitoba",
+                NS: "Nova Scotia", NB: "New Brunswick",
+              };
+              const fullName = PROV_FULL[row.province] ?? row.province;
+              return (
+                <div
+                  key={row.province}
+                  className="bg-white border border-[#e8e8e8] overflow-hidden animate-slide-up-in"
+                  style={{ borderRadius: "14px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", minHeight: "72px" }}
+                >
+                  {/* Tile body */}
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    {/* Left: colored square + province abbr */}
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                      <div
+                        className="rounded-[3px]"
+                        style={{ width: "12px", height: "12px", backgroundColor: provColor(row.province) }}
+                      />
+                      <span
+                        className="font-black"
+                        style={{ fontFamily: "DM Mono, monospace", fontSize: "13px", color: provColor(row.province) }}
+                      >
+                        {row.province}
+                      </span>
+                    </div>
+
+                    {/* Center: full name + event count */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-[#3d3d3d] truncate"
+                        style={{ fontFamily: "DM Sans, sans-serif", fontSize: "12px" }}
+                      >
+                        {fullName}
+                      </p>
+                      <p
+                        className="text-[#a1a1a1] mt-0.5"
+                        style={{ fontFamily: "DM Mono, monospace", fontSize: "10px" }}
+                      >
+                        {row.events} event{row.events !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+
+                    {/* Right: signup count */}
+                    <div className="shrink-0 text-right">
+                      <p
+                        className="font-black text-[#1a1a1a] leading-none"
+                        style={{ fontFamily: "DM Mono, monospace", fontSize: "18px" }}
+                      >
+                        {row.signups.toLocaleString()}
+                      </p>
+                      <p
+                        className="text-[#a1a1a1] mt-0.5"
+                        style={{ fontFamily: "DM Mono, monospace", fontSize: "9px" }}
+                      >
+                        signups
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Full-width progress bar */}
+                  <div className="h-[3px] bg-[#f0f0f0] w-full">
+                    <div
+                      className="h-full bar-grow"
+                      style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }}
+                    />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop: original 2-col grid (unchanged) */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredProvs.map(row => {
             const shareW = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
             return (
@@ -422,15 +571,15 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
 
         {/* Link to BD Fiscal for full breakdown */}
         {onNavigate && (
-          <div className="bg-[#eef4f1] border border-[#2b5346]/20 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+          <div className="bg-[#eef4f1] border border-[#2b5346]/20 rounded-xl px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-sm font-semibold text-[#2b5346]">Full fiscal breakdown available in BD Fiscal</p>
               <p className="text-[10px] text-[#3d3d3d] font-mono mt-0.5">Province × year table with YTD comparison and cost analysis</p>
             </div>
             <button
               onClick={() => onNavigate?.("fiscal")}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer bg-[#2b5346] text-white hover:bg-[#1a3d2f]"
-              style={{ transition: "background-color 150ms var(--ease-out)" }}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer bg-[#2b5346] text-white hover:bg-[#1a3d2f] tap-scale"
+              style={{ transition: "background-color 150ms var(--ease-out)", minHeight: "44px" }}
             >
               Open BD Fiscal →
             </button>

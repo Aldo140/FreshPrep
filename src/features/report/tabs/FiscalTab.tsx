@@ -636,42 +636,103 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         </div>
       </div>
 
+      {/* ── Mobile top stat strip (built-in DB mode only) ─────────── */}
+      {!hasLookerData && volume.totalEvents > 0 && (
+        <div
+          className="md:hidden rounded-2xl px-5 py-4 flex items-stretch justify-around gap-3 animate-num-rise"
+          style={{ backgroundColor: "#1a3d2f" }}
+        >
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="text-[28px] font-black leading-none text-white" style={{ fontFamily: "DM Mono, monospace" }}>
+              {volume.totalEvents.toLocaleString()}
+            </span>
+            <span className="text-[9px] uppercase tracking-widest text-white/50" style={{ fontFamily: "DM Sans, sans-serif" }}>
+              Events
+            </span>
+          </div>
+          <div className="w-px bg-white/10 self-stretch" />
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="text-[28px] font-black leading-none text-white" style={{ fontFamily: "DM Mono, monospace" }}>
+              {fmtBig(volume.totalSignups)}
+            </span>
+            <span className="text-[9px] uppercase tracking-widest text-white/50" style={{ fontFamily: "DM Sans, sans-serif" }}>
+              Signups
+            </span>
+          </div>
+          <div className="w-px bg-white/10 self-stretch" />
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <span className="text-[13px] font-black leading-none text-white text-center" style={{ fontFamily: "DM Mono, monospace" }}>
+              {dateRangeLabel}
+            </span>
+            <span className="text-[9px] uppercase tracking-widest text-white/50" style={{ fontFamily: "DM Sans, sans-serif" }}>
+              Range
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ── FY + Team filter bar ─────────────────────────────────── */}
-      <div className="flex flex-wrap gap-x-5 gap-y-2 items-center">
+      <div className="flex flex-col md:flex-row gap-2 md:gap-x-5 md:flex-wrap md:items-center">
         {volume.years.length >= 1 && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">Fiscal Year</span>
-            {([null, ...volume.years] as (string | null)[]).map(fy => (
-              <button key={fy ?? "all"}
-                onClick={() => setSelectedFY(fy)}
-                className="px-3 py-1 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
-                style={selectedFY === fy
+          <div className="flex items-center gap-1.5 w-full md:w-auto">
+            <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">FY</span>
+            <div className="flex items-center gap-1 flex-1 md:flex-initial flex-wrap">
+              {([null, ...volume.years] as (string | null)[]).map(fy => (
+                <button key={fy ?? "all"}
+                  onClick={() => setSelectedFY(fy)}
+                  className="tap-scale flex-1 md:flex-initial px-3 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
+                  style={{
+                    minHeight: 36,
+                    ...(selectedFY === fy
+                      ? { backgroundColor: "#2b5346", color: "#fff", borderColor: "#2b5346" }
+                      : { backgroundColor: "#fff", color: "#888", borderColor: "#e8e8e8" })
+                  }}
+                >
+                  {fy ?? "All"}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-1.5 w-full md:w-auto">
+          <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">Team</span>
+          <div className="flex items-center gap-1 flex-1 md:flex-initial flex-wrap">
+            {([
+              { id: "all"    as const, label: "All" },
+              { id: "ib"     as const, label: "IB"  },
+              { id: "events" as const, label: "Evts" },
+              { id: "bd"     as const, label: "BD"  },
+            ]).map(t => (
+              <button key={t.id}
+                onClick={() => setTeamFilter(t.id)}
+                className="tap-scale flex-1 md:flex-initial px-3 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer md:hidden"
+                style={{
+                  minHeight: 36,
+                  ...(teamFilter === t.id
+                    ? { backgroundColor: "#2b5346", color: "#fff", borderColor: "#2b5346" }
+                    : { backgroundColor: "#fff", color: "#888", borderColor: "#e8e8e8" })
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+            {([
+              { id: "all"    as const, label: "All Teams" },
+              { id: "ib"     as const, label: "IB Team"   },
+              { id: "events" as const, label: "Events"    },
+              { id: "bd"     as const, label: "BD Direct" },
+            ]).map(t => (
+              <button key={t.id}
+                onClick={() => setTeamFilter(t.id)}
+                className="hidden md:inline-flex items-center px-3 py-1 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
+                style={teamFilter === t.id
                   ? { backgroundColor: "#2b5346", color: "#fff", borderColor: "#2b5346" }
                   : { backgroundColor: "#fff", color: "#888", borderColor: "#e8e8e8" }}
               >
-                {fy ?? "All"}
+                {t.label}
               </button>
             ))}
           </div>
-        )}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">Team</span>
-          {([
-            { id: "all"    as const, label: "All Teams" },
-            { id: "ib"     as const, label: "IB Team"   },
-            { id: "events" as const, label: "Events"    },
-            { id: "bd"     as const, label: "BD Direct" },
-          ]).map(t => (
-            <button key={t.id}
-              onClick={() => setTeamFilter(t.id)}
-              className="px-3 py-1 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
-              style={teamFilter === t.id
-                ? { backgroundColor: "#2b5346", color: "#fff", borderColor: "#2b5346" }
-                : { backgroundColor: "#fff", color: "#888", borderColor: "#e8e8e8" }}
-            >
-              {t.label}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -720,7 +781,12 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       {/* ── Monthly Signups Chart ────────────────────────────────── */}
       {volume.years.length > 0 && Object.keys(volume.byMonth).length > 0 && (
         <Section title="Monthly Signups" sub="by fiscal year · Jul → Jun">
-          <MonthlySignupsChart years={volume.years} byMonthByFY={volume.byMonthByFY} />
+          {/* Mobile: horizontally scrollable so the 700-wide SVG isn't squished */}
+          <div className="overflow-x-auto snap-x-scroll md:overflow-visible">
+            <div style={{ minWidth: 700 }} className="md:min-w-0">
+              <MonthlySignupsChart years={volume.years} byMonthByFY={volume.byMonthByFY} />
+            </div>
+          </div>
         </Section>
       )}
 
@@ -954,17 +1020,27 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               const sig   = volume.signupsByProv[prov] ?? 0;
               const ev    = volume.eventsByProv[prov]  ?? 0;
               const convPct = fin && fin.signups > 0 ? (fin.paying / fin.signups) * 100 : null;
+              const isActive = prov === activeProvince;
               return (
                 <div key={prov}
-                  className="bg-white rounded-2xl border overflow-hidden shadow-sm cursor-pointer"
-                  style={{ borderColor: prov === activeProvince ? color : "#e8e8e8", borderTopWidth: prov === activeProvince ? 3 : 1 }}
+                  className="tap-scale bg-white rounded-2xl border overflow-hidden shadow-sm cursor-pointer flex flex-col"
+                  style={{
+                    /* Mobile: 4px left colored border; desktop: top border when active */
+                    borderColor: isActive ? color : "#e8e8e8",
+                    borderLeftWidth: 4,
+                    borderLeftColor: color,
+                    borderTopWidth: 1,
+                    borderRightWidth: 1,
+                    borderBottomWidth: 1,
+                    minHeight: 100,
+                  }}
                   onClick={() => onProvinceChange?.(prov === activeProvince ? null : prov)}
                 >
                   <div className="px-4 py-3 flex items-center justify-between" style={{ backgroundColor: color + "14" }}>
                     <span className="text-[24px] font-black font-mono leading-none" style={{ color }}>{prov}</span>
                     <span className="text-[9px] font-mono text-[#888]">{ev} event{ev !== 1 ? "s" : ""}</span>
                   </div>
-                  <div className="px-4 py-3 flex flex-col gap-2.5">
+                  <div className="px-4 py-3 flex flex-col gap-2.5 flex-1">
                     <div className="flex items-baseline justify-between">
                       <span className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wider">Signups</span>
                       <span className="text-[14px] font-black font-mono text-[#0f0f0f]">{sig.toLocaleString()}</span>
@@ -978,13 +1054,14 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                             {convPct.toFixed(1)}%
                           </span>
                         </div>
-                        <div className="h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden">
+                        {/* Full-width conversion bar on mobile */}
+                        <div className="h-2 bg-[#f0f0ee] rounded-full overflow-hidden w-full">
                           <div className="h-full rounded-full" style={{ width: `${Math.min(100, (convPct / 50) * 100)}%`, backgroundColor: color }} />
                         </div>
                       </div>
                     )}
                     {fin && fin.paying > 0 && (
-                      <div className="flex items-center justify-between pt-1.5 border-t border-[#f5f5f3]">
+                      <div className="flex items-center justify-between pt-1.5 border-t border-[#f5f5f3] mt-auto">
                         <div>
                           <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Paying</p>
                           <p className="text-[12px] font-bold font-mono text-[#3d3d3d]">{fin.paying.toLocaleString()}</p>
@@ -1183,7 +1260,57 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       {/* ── Team Breakdown ───────────────────────────────────────── */}
       {hasLookerData && teamFilter === "all" && teamBreakdown.some(t => t.events > 0) && (
         <Section title="By Team" sub="IB · Events · BD Direct">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Mobile: horizontal snap-scroll row of cards; md+: 3-col grid */}
+          <div className="snap-x-scroll flex gap-3 pb-1 md:hidden">
+            {teamBreakdown.map(t => (
+              <div key={t.id}
+                className="tap-scale bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden cursor-pointer flex-none flex flex-col"
+                style={{
+                  width: 155,
+                  borderLeftWidth: 4,
+                  borderLeftColor: t.color,
+                  borderTopWidth: 1,
+                  borderRightWidth: 1,
+                  borderBottomWidth: 1,
+                }}
+                onClick={() => setTeamFilter(t.id)}
+              >
+                <div className="px-4 py-4 flex flex-col gap-3 flex-1">
+                  <p className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: t.color }}>{t.label}</p>
+                  <div className="flex flex-col gap-2">
+                    <div>
+                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Events</p>
+                      <p className="text-[20px] font-black font-mono text-[#0f0f0f] leading-tight">{t.events.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</p>
+                      <p className="text-[20px] font-black font-mono text-[#0f0f0f] leading-tight">{fmtBig(t.signups)}</p>
+                    </div>
+                    {t.paying > 0 && (
+                      <>
+                        <div>
+                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Conv</p>
+                          <p className="text-[20px] font-black font-mono leading-tight"
+                            style={{ color: t.conv >= 35 ? "#2b5346" : t.conv >= 25 ? "#c9a000" : "#9b4a1c" }}>
+                            {t.conv.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="pt-1 border-t border-[#f5f5f3]">
+                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Avg LTV</p>
+                          <p className="text-[16px] font-black font-mono leading-tight" style={{ color: t.color }}>{currency(t.avgLtv)}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="px-4 py-2 bg-[#fafafa] border-t border-[#f5f5f3]">
+                  <span className="text-[8px] font-mono text-[#b0b0b0]">Filter →</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: 3-col grid */}
+          <div className="hidden md:grid grid-cols-3 gap-3">
             {teamBreakdown.map(t => (
               <div key={t.id}
                 className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden cursor-pointer"

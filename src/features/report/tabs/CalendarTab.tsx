@@ -623,6 +623,50 @@ export function CalendarTab({
         </div>
       </div>
 
+      {/* ── Mobile: Province summary chips ───────────────────────── */}
+      {allProvs.length > 0 && (
+        <div className="md:hidden">
+          <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#a1a1a1] mb-2">Provinces</p>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+            {allProvs.map(p => {
+              const provSignups = visibleStats
+                .filter(e => e.homeProvince === p)
+                .reduce((s, e) => s + e.totalSignups, 0);
+              const isActive = selProvs.has(p);
+              return (
+                <button
+                  key={p}
+                  onClick={() => toggleProv(p)}
+                  className="tap-scale flex items-center gap-1.5 px-3 py-2 rounded-full border shrink-0 transition-all"
+                  style={{
+                    minHeight: 44,
+                    backgroundColor: isActive ? provColor(p) : "white",
+                    borderColor: isActive ? provColor(p) : "#e5e5e5",
+                    color: isActive ? "#fff" : "#3d3d3d",
+                  }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: isActive ? "rgba(255,255,255,0.6)" : provColor(p) }}
+                  />
+                  <span className="text-[11px] font-mono font-bold">{p}</span>
+                  <span className="text-[10px] font-mono opacity-80">{provSignups.toLocaleString()}</span>
+                </button>
+              );
+            })}
+            {activeProvs !== null && (
+              <button
+                onClick={() => { setActiveProvs(null); setSelected(null); setPinned(null); }}
+                className="tap-scale shrink-0 px-3 py-2 rounded-full border border-[#e5e5e5] text-[10px] font-mono text-[#2b5346] bg-white"
+                style={{ minHeight: 44 }}
+              >
+                All
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── BD Summary banner (BD-only mode) ─────────────────────── */}
       {foundReports.length === 0 && allProvs.length > 0 && (() => {
         const currentYear = String(new Date().getFullYear());
@@ -875,12 +919,13 @@ export function CalendarTab({
 
       {/* ── Filters + view toggle ─────────────────────────────────  */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
+        {/* Province chips: hidden on mobile (shown in the summary row above), visible on desktop */}
+        <span className="hidden md:inline text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
         {allProvs.map(p => (
           <button
             key={p}
             onClick={() => toggleProv(p)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-mono font-semibold cursor-pointer border transition-all"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-mono font-semibold cursor-pointer border transition-all"
             style={selProvs.has(p)
               ? { backgroundColor: provColor(p), color: "#fff", borderColor: provColor(p) }
               : { backgroundColor: "white", color: "#a1a1a1", borderColor: "#e5e5e5" }}
@@ -890,7 +935,7 @@ export function CalendarTab({
         ))}
         {activeProvs !== null && (
           <button onClick={() => { setActiveProvs(null); setSelected(null); setPinned(null); }}
-            className="text-[10px] font-mono text-[#2b5346] hover:underline cursor-pointer">
+            className="hidden md:inline text-[10px] font-mono text-[#2b5346] hover:underline cursor-pointer">
             Show all
           </button>
         )}
@@ -928,7 +973,22 @@ export function CalendarTab({
       {/* ══ HEATMAP VIEW ════════════════════════════════════════════ */}
       {calView === "heatmap" && (
         <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile section header */}
+          <div className="md:hidden px-4 pt-3 pb-2 flex items-center justify-between border-b border-[#f5f5f3]">
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#a1a1a1]">Province × Month Heatmap</p>
+              <p className="text-[9px] font-mono text-[#c0c0c0] mt-0.5">Scroll → to see all months</p>
+            </div>
+            {/* Inline legend on mobile */}
+            <div className="flex items-center gap-1">
+              {[0, 0.25, 0.5, 0.75, 1.0].map((t, i) => (
+                <div key={i} className="w-4 h-3 rounded-sm border border-[#f0f0f0]"
+                  style={{ backgroundColor: t === 0 ? "#f8f8f8" : `rgb(${Math.round(255 - t * 212)},${Math.round(255 - t * 172)},${Math.round(255 - t * 185)})` }} />
+              ))}
+              <span className="text-[8px] font-mono text-[#bbb] ml-1">L→H</span>
+            </div>
+          </div>
+          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <table className="w-full border-collapse" style={{ minWidth: Math.max(600, MONTH_SLOTS.length * 44 + 140) }}>
               <TableHeader />
               <tbody>
@@ -954,9 +1014,10 @@ export function CalendarTab({
                             backgroundColor: style.bg,
                             outline: isSel ? `2px solid ${provColor(prov)}` : isPinned ? `2px dashed ${provColor(prov)}` : "none",
                             outlineOffset: -2,
+                            minWidth: 36,
                           }}
                         >
-                          <div className="py-2 px-0.5">
+                          <div className="px-0.5" style={{ paddingTop: 6, paddingBottom: 6, minHeight: 28 }}>
                             {sig > 0 ? (
                               <>
                                 <p className="text-[11px] font-black font-mono leading-none" style={{ color: style.text }}>
@@ -996,8 +1057,8 @@ export function CalendarTab({
               </tbody>
             </table>
           </div>
-          {/* Legend */}
-          <div className="px-4 py-2.5 border-t border-[#f5f5f3] flex items-center gap-3">
+          {/* Legend — desktop only (mobile has inline legend in header) */}
+          <div className="hidden md:flex px-4 py-2.5 border-t border-[#f5f5f3] items-center gap-3">
             <span className="text-[9px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</span>
             <div className="flex items-center gap-0.5">
               {[0, 0.15, 0.3, 0.5, 0.7, 1.0].map((t, i) => (
@@ -1008,6 +1069,12 @@ export function CalendarTab({
             <span className="text-[9px] font-mono text-[#888]">Low → High</span>
             {pinned && <span className="text-[9px] font-mono text-[#a1a1a1] ml-2">Dashed outline = pinned for comparison</span>}
           </div>
+          {/* Mobile legend footer */}
+          {pinned && (
+            <div className="md:hidden px-4 py-2 border-t border-[#f5f5f3]">
+              <span className="text-[9px] font-mono text-[#a1a1a1]">Dashed outline = pinned for comparison</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -1306,14 +1373,14 @@ export function CalendarTab({
         // ── Normal cell detail ──
         return (
           <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#f5f5f3] flex items-center justify-between gap-4"
+            <div className="px-4 md:px-5 py-3 md:py-4 border-b border-[#f5f5f3] flex items-center justify-between gap-3 md:gap-4"
               style={{ borderLeft: `3px solid ${provColor(selected.prov)}` }}>
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-2 md:gap-3 min-w-0">
                 <span className="text-xs font-black text-[#0f0f0f]">{selLabel}</span>
                 <span className="text-[10px] font-mono text-[#a1a1a1]">{selectedEvents.length} event{selectedEvents.length !== 1 ? "s" : ""}</span>
               </div>
-              <div className="flex items-center gap-4 shrink-0">
-                {/* Province breakdown mini-bars */}
+              <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                {/* Province breakdown mini-bars — desktop only */}
                 <div className="hidden sm:flex items-end gap-1.5 h-7">
                   {cellProvTotals.map(([p, n]) => (
                     <div key={p} className="flex flex-col items-center gap-0.5">
@@ -1330,27 +1397,32 @@ export function CalendarTab({
                 <button
                   onClick={() => setPinned(prev => (prev?.prov === selected.prov && prev.month === selected.month ? null : selected))}
                   title={pinned?.prov === selected.prov && pinned.month === selected.month ? "Unpin" : "Pin this cell to compare with another"}
-                  className="flex items-center gap-1 text-[9.5px] font-mono cursor-pointer px-2 py-1 rounded border transition-all"
-                  style={pinned?.prov === selected.prov && pinned.month === selected.month
-                    ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
-                    : { backgroundColor: "white", color: "#888", borderColor: "#e5e5e5" }}
+                  className="tap-scale flex items-center gap-1 text-[9.5px] font-mono cursor-pointer px-2 py-1 rounded border transition-all"
+                  style={{
+                    minHeight: 44,
+                    ...(pinned?.prov === selected.prov && pinned.month === selected.month
+                      ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
+                      : { backgroundColor: "white", color: "#888", borderColor: "#e5e5e5" })
+                  }}
                 >
                   <Pin className="w-3 h-3" />
-                  {pinned?.prov === selected.prov && pinned.month === selected.month ? "Pinned" : "Compare"}
+                  <span className="hidden md:inline">{pinned?.prov === selected.prov && pinned.month === selected.month ? "Pinned" : "Compare"}</span>
                 </button>
-                <button onClick={() => setSelected(null)} className="text-[#c0c0c0] hover:text-[#888] cursor-pointer">
+                <button onClick={() => setSelected(null)} className="tap-scale text-[#c0c0c0] hover:text-[#888] cursor-pointer p-2" style={{ minHeight: 44, minWidth: 44 }}>
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
             {pinned && (pinned.prov !== selected.prov || pinned.month !== selected.month) === false && (
-              <div className="px-5 py-2 bg-[#eef4f1] border-b border-[#d0e8e2]">
+              <div className="px-4 md:px-5 py-2 bg-[#eef4f1] border-b border-[#d0e8e2]">
                 <p className="text-[9.5px] font-mono text-[#2b5346]">
                   This cell is pinned. Click another cell to compare side-by-side.
                 </p>
               </div>
             )}
-            <div className="divide-y divide-[#f8f8f8]">
+            {/* Mobile: section label above event list */}
+            <p className="md:hidden px-4 pt-3 pb-1 text-[9px] font-mono uppercase tracking-[0.18em] text-[#a1a1a1]">Events</p>
+            <div className="divide-y divide-[#f0f0ee]">
               {selectedEvents.map(event => {
                 const enriched = reportByCode.get(event.code);
                 const barPct = Math.max(3, (event.totalSignups / maxEv) * 100);
@@ -1360,40 +1432,75 @@ export function CalendarTab({
                 const famName = famStem.replace(/^EV/, "");
                 const isRecurringCode = eventFamilies.find(f => f.stem === famStem)?.isRecurring;
                 return (
-                  <div key={event.code} className="px-5 py-3 flex items-center gap-4"
-                    style={{ opacity: isFilteredPaste && !isPasted ? 0.45 : 1 }}>
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      {isPasted && <span className="text-[7.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-1.5 py-0.5 rounded font-semibold shrink-0">yours</span>}
-                      <span className="font-mono font-black text-[11px] text-[#0f0f0f] truncate">{event.code}</span>
-                      <span className="text-[9px] font-mono text-[#c0c0c0] shrink-0">{event.eventDateLabel}</span>
-                      {isRecurringCode && (
-                        <span className="text-[7.5px] font-mono text-[#a1a1a1] bg-[#f5f5f3] border border-[#e5e5e5] px-1.5 py-0.5 rounded shrink-0" title="Part of recurring event family">
-                          ↻ {famName}
-                        </span>
-                      )}
+                  <div
+                    key={event.code}
+                    className="flex items-center gap-3 md:gap-4"
+                    style={{
+                      opacity: isFilteredPaste && !isPasted ? 0.45 : 1,
+                      minHeight: 56,
+                      paddingLeft: 0,
+                    }}
+                  >
+                    {/* Mobile: left province color bar */}
+                    <div
+                      className="md:hidden self-stretch w-1 shrink-0 rounded-r"
+                      style={{ backgroundColor: provColor(event.homeProvince) }}
+                    />
+                    {/* Desktop padding replacement */}
+                    <div className="hidden md:block w-5 shrink-0" />
+                    <div className="flex items-center gap-2 min-w-0 flex-1 py-3 md:py-0">
+                      {/* Mobile layout: stacked code + meta */}
+                      <div className="flex flex-col min-w-0 flex-1 md:hidden">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {isPasted && <span className="text-[7.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-1 py-0.5 rounded font-semibold shrink-0">yours</span>}
+                          <span className="font-mono font-bold text-[12px] text-[#0f0f0f] truncate" style={{ fontFamily: "DM Mono, monospace" }}>{event.code}</span>
+                        </div>
+                        <p className="text-[10px] text-[#a1a1a1] mt-0.5 truncate">
+                          <span style={{ color: provColor(event.homeProvince), fontWeight: 700 }}>{event.homeProvince}</span>
+                          {" · "}{event.eventDateLabel}
+                          {isRecurringCode && <span className="ml-1 text-[#c0c0c0]">↻ {famName}</span>}
+                        </p>
+                      </div>
+                      {/* Desktop layout: inline */}
+                      <div className="hidden md:flex items-center gap-2 min-w-0 flex-1">
+                        {isPasted && <span className="text-[7.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-1.5 py-0.5 rounded font-semibold shrink-0">yours</span>}
+                        <span className="font-mono font-black text-[11px] text-[#0f0f0f] truncate">{event.code}</span>
+                        <span className="text-[9px] font-mono text-[#c0c0c0] shrink-0">{event.eventDateLabel}</span>
+                        {isRecurringCode && (
+                          <span className="text-[7.5px] font-mono text-[#a1a1a1] bg-[#f5f5f3] border border-[#e5e5e5] px-1.5 py-0.5 rounded shrink-0" title="Part of recurring event family">
+                            ↻ {famName}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {enriched && (
-                      <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-2 md:gap-3 shrink-0">
                         <span className="text-[10px] font-semibold font-mono" style={{ color: convGradeColor(enriched.calculatedConversion) }}>
                           {enriched.calculatedConversion.toFixed(1)}%
                         </span>
                         {enriched["Avg LTV 12"] > 0 && (
-                          <span className="text-[10px] font-mono text-[#888]">${enriched["Avg LTV 12"].toFixed(0)} LTV</span>
+                          <span className="hidden md:inline text-[10px] font-mono text-[#888]">${enriched["Avg LTV 12"].toFixed(0)} LTV</span>
                         )}
                       </div>
                     )}
-                    <div className="flex items-center gap-2 shrink-0 w-28">
-                      <div className="h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden flex-1">
+                    {/* Signup count — prominent on mobile */}
+                    <div className="flex items-center gap-2 shrink-0 pr-4 md:pr-0 md:w-28">
+                      <div className="hidden md:flex h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden flex-1">
                         <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: color, opacity: 0.75 }} />
                       </div>
-                      <span className="text-[10px] font-mono font-semibold text-[#3d3d3d] w-7 text-right">{event.totalSignups}</span>
+                      <span
+                        className="font-mono font-bold text-[14px] md:text-[10px] md:font-semibold text-right"
+                        style={{ color: "#1a1a1a", fontFamily: "DM Mono, monospace", minWidth: 32 }}
+                      >
+                        {event.totalSignups}
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
             {!foundReports.length && (
-              <div className="px-5 py-3 border-t border-[#f8f8f8]">
+              <div className="px-4 md:px-5 py-3 border-t border-[#f8f8f8]">
                 <p className="text-[9px] font-mono text-[#c0c0c0]">
                   Upload your Looker performance dataset on the Overview tab to see conversion rates and LTV here.
                 </p>

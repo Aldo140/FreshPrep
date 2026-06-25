@@ -26,6 +26,19 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* Chrome mobile: override 100vh with dynamic viewport height where supported */
+@supports (height: 100dvh) {
+  #saas-applet-root {
+    height: 100dvh !important;
+  }
+}
+
+/* Prevent scroll bleed from content into outer container on mobile */
+.mobile-scroll-contain {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: 0ms !important;
@@ -196,14 +209,13 @@
   backdrop-filter: blur(12px);
 }
 
-/* New shelf nav: rounded top corners, glass blur, shadow */
+/* Nav: glass blur, clean flat top edge (no border-radius — avoids Chrome gap artifact) */
 .mobile-nav-shelf {
   background: rgba(255, 255, 255, 0.97);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 0 -1px 0 rgba(0,0,0,0.05), 0 -8px 32px rgba(0,0,0,0.07);
-  border-radius: 20px 20px 0 0;
-  overflow: hidden;
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.06), 0 -6px 24px rgba(0,0,0,0.06);
+  border-top: 1px solid rgba(0,0,0,0.06);
 }
 
 /* Active pill inside nav button */

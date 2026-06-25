@@ -693,7 +693,8 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
       {/* Page content — key= triggers slide-up on page change */}
       <div
         key={reportPage}
-        className="flex-1 overflow-y-auto bg-[#f8f7f5] animate-slide-up-in"
+        className="flex-1 overflow-y-auto bg-[#f8f7f5] animate-slide-up-in mobile-scroll-contain"
+        style={{ minHeight: 0 }}
       >
 
         {reportPage === "fiscal" && (
