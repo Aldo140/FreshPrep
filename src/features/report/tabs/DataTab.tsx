@@ -361,7 +361,7 @@ export function DataTab({ foundReports, uniqueChannels, dbRows, fileName, select
   const expandedData = expandedTier ? tierCounts.find(t => t.rating === expandedTier) : null;
 
   return (
-    <div className="p-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
+    <div className="p-4 md:p-5 pb-20 md:pb-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
 
       {/* Full-screen modal */}
       {fullscreenOpen && <FullscreenView reports={foundReports} onClose={() => setFullscreenOpen(false)} selectedFlow={selectedFlow} />}

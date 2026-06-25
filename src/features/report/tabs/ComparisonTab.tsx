@@ -222,7 +222,7 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
   const VIcon = verdict.direction === "up" ? TrendingUp : verdict.direction === "down" ? TrendingDown : Minus;
 
   return (
-    <div className="px-6 py-8 max-w-4xl mx-auto flex flex-col gap-10">
+    <div className="px-4 md:px-6 py-6 md:py-8 pb-20 md:pb-8 max-w-4xl mx-auto flex flex-col gap-8 md:gap-10">
 
       {/* Header */}
       <div>

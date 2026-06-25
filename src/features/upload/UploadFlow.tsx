@@ -111,11 +111,25 @@ function GuideView({
       <div className="flex flex-col items-center min-h-full px-5 py-10">
         <div className="w-full max-w-2xl space-y-5">
 
-          {/* Mobile eyebrow */}
-          <div className="md:hidden text-center">
-            <p className="text-[11px] font-mono text-[#a1a1a1] uppercase tracking-widest">
-              BD Campaign Intelligence
-            </p>
+          {/* Mobile hero — replaces desktop brand panel */}
+          <div className="md:hidden relative overflow-hidden rounded-2xl" style={{ minHeight: 160 }}>
+            <img
+              src="https://freshprep.imgix.net/landing/carousel/recipe_3.jpg?auto=compress,format&w=600"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: "saturate(0.9) brightness(0.45)" }}
+            />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, rgba(26,61,46,0.92) 0%, rgba(43,83,70,0.8) 100%)" }} />
+            <div className="relative z-10 px-6 py-7 flex flex-col gap-2">
+              <p className="text-[9px] font-mono text-white/45 uppercase tracking-[0.2em]">FreshPrep · BD Campaign Intelligence</p>
+              <h2 className="text-[1.7rem] font-display font-semibold leading-[1.15] text-white">
+                BD event analysis,<br />built in.
+              </h2>
+              <p className="text-[11px] font-mono text-white/55 mt-1">
+                708 codes · 2 fiscal years · province × month heatmap
+              </p>
+            </div>
           </div>
 
           {/* Page header */}
@@ -182,8 +196,8 @@ function GuideView({
                   </div>
                   <button
                     onClick={onBdOnly}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold cursor-pointer text-white transition-colors"
-                    style={{ backgroundColor: "#2b5346" }}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold cursor-pointer text-white transition-colors tap-scale"
+                    style={{ backgroundColor: "#2b5346", minHeight: 48 }}
                     onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1a3d2f")}
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#2b5346")}
                   >
@@ -242,7 +256,8 @@ function GuideView({
                 <div className="mt-auto pt-1">
                   <button
                     onClick={onUpload}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold cursor-pointer text-[#1a1a1a] border-2 border-[#dedede] hover:border-[#2b5346] hover:text-[#2b5346] transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold cursor-pointer text-[#1a1a1a] border-2 border-[#dedede] hover:border-[#2b5346] hover:text-[#2b5346] transition-colors tap-scale"
+                    style={{ minHeight: 48 }}
                   >
                     Upload Your File
                     <ArrowRight className="w-4 h-4" />

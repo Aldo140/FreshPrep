@@ -59,12 +59,12 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
   const pressUp = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLButtonElement).style.transform = ""; };
 
   return (
-    <div className="p-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
+    <div className="p-4 md:p-5 pb-20 md:pb-5 flex flex-col gap-4 max-w-6xl mx-auto w-full">
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl overflow-hidden flex shadow-md" style={{ minHeight: 220 }}>
+      <div className="rounded-2xl overflow-hidden flex shadow-md" style={{ minHeight: "clamp(180px, 30vw, 260px)" }}>
         {/* Left brand panel */}
-        <div className="flex-1 bg-[#2b5346] relative flex flex-col justify-between px-8 py-7"
+        <div className="flex-1 bg-[#2b5346] relative flex flex-col justify-between px-5 md:px-8 py-5 md:py-7"
           style={{ background: "linear-gradient(135deg, #1a3d31 0%, #2b5346 50%, #3a6b58 100%)" }}
         >
           {/* Subtle texture grid */}
@@ -114,10 +114,10 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
           </div>
 
           {/* KPI numbers */}
-          <div className="relative grid grid-cols-3 gap-px mt-6 pt-6 border-t border-white/10">
+          <div className="relative grid grid-cols-3 gap-px mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/10">
             {/* Conversion — includes grade tag */}
             <div>
-              <p className="text-4xl font-bold font-mono text-white leading-none tracking-tight">
+              <p className="text-[1.75rem] md:text-4xl font-bold font-mono text-white leading-none tracking-tight animate-num-rise">
                 {summary.blendedConversionRate.toFixed(1)}%
               </p>
               <div className="flex items-center gap-2 mt-2">
@@ -136,7 +136,7 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
               { label: "Total signups", value: summary.totalSignups.toLocaleString(), tip: "Everyone who registered using one of your promo codes — includes people still in their free trial, not just paying customers." },
             ].map(k => (
               <div key={k.label}>
-                <p className="text-4xl font-bold font-mono text-white leading-none tracking-tight">{k.value}</p>
+                <p className="text-[1.75rem] md:text-4xl font-bold font-mono text-white leading-none tracking-tight animate-num-rise">{k.value}</p>
                 <p className="text-[9px] text-white/45 uppercase tracking-widest font-mono mt-2 flex items-center gap-1">{k.label} <MetricInfo text={k.tip} className="opacity-60 hover:opacity-100" /></p>
               </div>
             ))}
@@ -284,8 +284,8 @@ export function OverviewTab({ foundReports, summary, fileName, dbRowCount, portf
             <button
               key={item.page}
               onClick={() => onNavigate(item.page)}
-              className="group text-left bg-white rounded-xl border border-[#e8e8e8] p-5 cursor-pointer flex flex-col gap-4 shadow-sm hover:shadow-md"
-              style={{ transition: "box-shadow 150ms var(--ease-out), border-color 150ms var(--ease-out), transform 100ms var(--ease-out)" }}
+              className="group text-left bg-white rounded-xl border border-[#e8e8e8] p-4 md:p-5 cursor-pointer flex flex-col gap-3 md:gap-4 shadow-sm hover:shadow-md tap-scale"
+              style={{ transition: "box-shadow 150ms var(--ease-out), border-color 150ms var(--ease-out), transform 120ms var(--ease-out)", minHeight: 80 }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = item.hoverBorder + "55"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "#e8e8e8"; pressUp(e); }}
               onMouseDown={pressMd}

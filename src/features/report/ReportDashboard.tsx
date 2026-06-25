@@ -11,7 +11,12 @@ import {
 } from "../../types";
 import { PortfolioHealth } from "../../hooks/useAnalysis";
 import { TAB_RELEVANCE } from "../../config/flowRelevance";
-import { RefreshCw, ArrowLeft, Database, Upload, X } from "lucide-react";
+import {
+  RefreshCw, ArrowLeft, Database, Upload, X,
+  LayoutDashboard, TrendingUp, DollarSign, CalendarDays,
+  BarChart3, MapPin, BarChart2, SlidersHorizontal,
+  ChevronDown, ChevronUp as ChevronUpIcon,
+} from "lucide-react";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PerformanceTab } from "./tabs/PerformanceTab";
 import { RevenueTab } from "./tabs/RevenueTab";
@@ -324,15 +329,17 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         ? "BusinessDevelopment channel"
         : "Events + BusinessDevelopment";
 
-  const allPages: { id: ReportPage; label: string }[] = [
-    { id: "comparison", label: "Comparison" },
-    { id: "overview", label: "Overview" },
-    { id: "performance", label: "Performance" },
-    { id: "revenue", label: "Revenue" },
-    { id: "calendar", label: "Calendar" },
-    { id: "fiscal",   label: "BD Fiscal" },
-    { id: "regional", label: "Regional" },
-    { id: "data", label: "All Codes" },
+  const [showMobileScope, setShowMobileScope] = useState(false);
+
+  const allPages: { id: ReportPage; label: string; shortLabel: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
+    { id: "comparison", label: "Comparison", shortLabel: "Compare", icon: BarChart2 },
+    { id: "overview",   label: "Overview",   shortLabel: "Overview", icon: LayoutDashboard },
+    { id: "performance",label: "Performance",shortLabel: "Perform",  icon: TrendingUp },
+    { id: "revenue",    label: "Revenue",    shortLabel: "Revenue",  icon: DollarSign },
+    { id: "calendar",   label: "Calendar",   shortLabel: "Calendar", icon: CalendarDays },
+    { id: "fiscal",     label: "BD Fiscal",  shortLabel: "Fiscal",   icon: BarChart3 },
+    { id: "regional",   label: "Regional",   shortLabel: "Regional", icon: MapPin },
+    { id: "data",       label: "All Codes",  shortLabel: "Codes",    icon: Database },
   ];
 
   const pages = allPages.filter(p => {
@@ -360,66 +367,106 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
   return (
     <div className="flex-1 overflow-hidden flex flex-col" id="report-dashboard">
 
-      {/* Sticky page navigation */}
-      <div className="shrink-0 bg-white border-b border-[#e5e5e5] px-4 flex items-center gap-1 overflow-x-auto no-scrollbar">
-        {pages.map(page => (
-          <button
-            key={page.id}
-            onClick={() => setReportPage(page.id)}
-            className={`shrink-0 px-4 py-3 text-xs font-semibold border-b-2 cursor-pointer flex items-center gap-1.5 ${
-              foundReports.length > 0 && page.id === "calendar"
-                ? "border-l border-l-[#b9d3c8]"
-                : foundReports.length > 0 && page.id === "fiscal"
-                  ? "-ml-1"
-                : ""
-            } ${
-              foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id)
-                ? reportPage === page.id
-                  ? "bg-[#1a3d2f] border-[#e7bd27] text-white"
-                  : "bg-[#2b5346] border-[#2b5346] text-white hover:bg-[#1f4739]"
-                : reportPage === page.id
-                  ? "border-[#2b5346] text-[#2b5346]"
-                  : "border-transparent text-[#3d3d3d] hover:text-[#1a1a1a]"
-            }`}
-            style={{ transition: "color 150ms var(--ease-out), border-color 150ms var(--ease-out), background-color 150ms var(--ease-out)" }}
-          >
-            {page.label}
-            {page.id === "data" && scopedMissingCodes.length > 0 && (
-              <span className="min-w-[16px] h-4 px-1 bg-[#850b0b] text-white text-[8px] font-bold rounded-full flex items-center justify-center font-mono shrink-0">
-                {scopedMissingCodes.length}
-              </span>
-            )}
-            {TAB_RELEVANCE[page.id][selectedFlow] === "partial" && (
-              <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e5e5e5] px-1.5 py-0.5 rounded">
-                partial
-              </span>
-            )}
-          </button>
-        ))}
+      {/* ── Desktop sticky page navigation (hidden on mobile) ─── */}
+      <div className="hidden md:flex shrink-0 bg-white border-b border-[#e5e5e5] px-4 items-center gap-1 overflow-x-auto no-scrollbar">
+        {pages.map(page => {
+          const PageIcon = page.icon;
+          return (
+            <button
+              key={page.id}
+              onClick={() => setReportPage(page.id)}
+              className={`shrink-0 px-4 py-3 text-xs font-semibold border-b-2 cursor-pointer flex items-center gap-1.5 tap-scale ${
+                foundReports.length > 0 && page.id === "calendar"
+                  ? "border-l border-l-[#b9d3c8]"
+                  : foundReports.length > 0 && page.id === "fiscal"
+                    ? "-ml-1"
+                  : ""
+              } ${
+                foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id)
+                  ? reportPage === page.id
+                    ? "bg-[#1a3d2f] border-[#e7bd27] text-white"
+                    : "bg-[#2b5346] border-[#2b5346] text-white hover:bg-[#1f4739]"
+                  : reportPage === page.id
+                    ? "border-[#2b5346] text-[#2b5346]"
+                    : "border-transparent text-[#3d3d3d] hover:text-[#1a1a1a]"
+              }`}
+              style={{ transition: "color 150ms var(--ease-out), border-color 150ms var(--ease-out), background-color 150ms var(--ease-out)" }}
+            >
+              <PageIcon className="w-3.5 h-3.5 shrink-0" />
+              {page.label}
+              {page.id === "data" && scopedMissingCodes.length > 0 && (
+                <span className="min-w-[16px] h-4 px-1 bg-[#850b0b] text-white text-[8px] font-bold rounded-full flex items-center justify-center font-mono shrink-0">
+                  {scopedMissingCodes.length}
+                </span>
+              )}
+              {TAB_RELEVANCE[page.id][selectedFlow] === "partial" && (
+                <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e5e5e5] px-1.5 py-0.5 rounded">
+                  partial
+                </span>
+              )}
+            </button>
+          );
+        })}
         <div className="flex-1" />
         <button
           onClick={onBackToWizard}
-          className="shrink-0 text-[11px] text-[#2b5346] font-semibold flex items-center gap-1 cursor-pointer px-2.5 py-1 rounded-md hover:bg-[#eef4f1]"
+          className="shrink-0 text-[11px] text-[#2b5346] font-semibold flex items-center gap-1 cursor-pointer px-2.5 py-1 rounded-md hover:bg-[#eef4f1] tap-scale"
           style={{ transition: "background-color 150ms var(--ease-out)" }}
-          title="Go back and change codes or settings"
         >
           <ArrowLeft className="w-3 h-3" />
-          <span className="hidden sm:inline">Edit analysis</span>
+          Edit analysis
         </button>
         <div className="w-px h-4 bg-[#e5e5e5] mx-1 shrink-0" />
         <button
           onClick={onReset}
-          className="shrink-0 text-[11px] text-[#a1a1a1] hover:text-[#1a1a1a] font-medium flex items-center gap-1 cursor-pointer ml-1"
+          className="shrink-0 text-[11px] text-[#a1a1a1] hover:text-[#1a1a1a] font-medium flex items-center gap-1 cursor-pointer ml-1 tap-scale"
           style={{ transition: "color 150ms var(--ease-out)" }}
         >
           <RefreshCw className="w-3 h-3" />
-          <span className="hidden sm:inline">New dataset</span>
+          New dataset
         </button>
       </div>
 
-      {/* Channel scope (Events / BD / All) — visible on all pages whenever there is data */}
+      {/* ── Mobile top strip: current page title + scope pill ─── */}
+      <div className="md:hidden shrink-0 bg-white border-b border-[#e5e5e5] px-4 py-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {(() => {
+            const cur = pages.find(p => p.id === reportPage);
+            const CurIcon = cur?.icon;
+            return CurIcon ? <CurIcon className="w-4 h-4 shrink-0 text-[#2b5346]" /> : null;
+          })()}
+          <span className="text-[13px] font-bold text-[#0f0f0f] truncate">
+            {pages.find(p => p.id === reportPage)?.label ?? "Report"}
+          </span>
+          {channelScope !== "all" && (
+            <span className="shrink-0 text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#eef4f1] text-[#2b5346] border border-[#c0ddd6]">
+              {channelScope === "events" ? "Events" : "BD"}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {showScopeControls && (
+            <button
+              onClick={() => setShowMobileScope(v => !v)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#f8f7f5] border border-[#e8e8e8] text-[10px] font-mono text-[#888] tap-scale cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Filter
+              {showMobileScope ? <ChevronUpIcon className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          )}
+          <button
+            onClick={onBackToWizard}
+            className="p-1.5 rounded-lg bg-[#f8f7f5] border border-[#e8e8e8] text-[#888] tap-scale cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Channel scope (Events / BD / All) — desktop always visible, mobile collapsible */}
       {showScopeControls && (
-        <div className="shrink-0 px-4 py-2 bg-white border-b border-[#ececec]">
+        <div className={`shrink-0 px-4 py-2 bg-white border-b border-[#ececec] ${!showMobileScope ? "hidden md:block" : ""}`}>
           <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-[10.5px] font-semibold text-[#1a1a1a]">Channel scope</p>
@@ -604,11 +651,10 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
         </div>
       </div>}
 
-      {/* Page content — key= triggers fade on page change */}
+      {/* Page content — key= triggers slide-up on page change */}
       <div
         key={reportPage}
-        className="flex-1 overflow-y-auto bg-[#f8f7f5]"
-        style={{ animation: "fadeIn 180ms var(--ease-out)" }}
+        className="flex-1 overflow-y-auto bg-[#f8f7f5] animate-slide-up-in"
       >
 
         {reportPage === "fiscal" && (
@@ -797,6 +843,64 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
           </div>
         </div>
       )}
+
+      {/* ── Mobile Bottom Navigation ──────────────────────────── */}
+      <nav
+        className="md:hidden shrink-0 mobile-nav-blur border-t border-[#e5e5e5]"
+        style={{
+          boxShadow: "0 -1px 0 rgba(0,0,0,0.06), 0 -4px 20px rgba(0,0,0,0.07)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
+        <div className="flex items-stretch">
+          {pages.map(page => {
+            const PageIcon = page.icon;
+            const isActive = reportPage === page.id;
+            const isSpecial = foundReports.length > 0 && ["calendar", "fiscal"].includes(page.id);
+            return (
+              <button
+                key={page.id}
+                onClick={() => setReportPage(page.id)}
+                className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 cursor-pointer relative tap-scale"
+                style={{ minHeight: 52 }}
+              >
+                {isActive && (
+                  <span
+                    className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-full"
+                    style={{
+                      backgroundColor: isSpecial ? "#e7bd27" : "#2b5346",
+                      animation: "scaleIn 0.2s cubic-bezier(0.23, 1, 0.32, 1) both",
+                    }}
+                  />
+                )}
+                <PageIcon
+                  className="w-[18px] h-[18px]"
+                  style={{ color: isActive ? (isSpecial ? "#e7bd27" : "#2b5346") : "#b0b0b0" }}
+                />
+                <span
+                  className="text-[9px] font-mono font-semibold leading-none"
+                  style={{ color: isActive ? (isSpecial ? "#c9a000" : "#2b5346") : "#b0b0b0" }}
+                >
+                  {page.shortLabel}
+                </span>
+                {page.id === "data" && scopedMissingCodes.length > 0 && (
+                  <span className="absolute top-1 right-[calc(50%-14px)] min-w-[14px] h-3.5 px-1 bg-[#850b0b] text-white text-[7px] font-bold rounded-full flex items-center justify-center font-mono">
+                    {scopedMissingCodes.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          <button
+            onClick={onReset}
+            className="shrink-0 flex flex-col items-center justify-center py-2 gap-0.5 cursor-pointer border-l border-[#f0f0ee] px-3 tap-scale"
+            style={{ minHeight: 52 }}
+          >
+            <RefreshCw className="w-[18px] h-[18px] text-[#b0b0b0]" />
+            <span className="text-[9px] font-mono text-[#b0b0b0]">Reset</span>
+          </button>
+        </div>
+      </nav>
 
     </div>
   );

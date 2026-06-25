@@ -441,7 +441,7 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
   }
 
   return (
-    <div className="p-5 flex flex-col gap-5 max-w-6xl mx-auto w-full">
+    <div className="p-4 md:p-5 pb-20 md:pb-5 flex flex-col gap-4 md:gap-5 max-w-6xl mx-auto w-full">
 
       {/* Header */}
       <div className="flex items-end justify-between gap-4 flex-wrap">
