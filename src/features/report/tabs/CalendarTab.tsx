@@ -765,85 +765,100 @@ export function CalendarTab({
       {calView === "heatmap" && (
         <div className="flex flex-row bg-[#f5f4f1] border-b border-[#e8e8e8]">
 
-          {/* ── Mobile: Province heat cards ─────────────────────────── */}
-          <div className="md:hidden flex-1 flex flex-col gap-2.5 px-3 py-4">
-            {visProvs.map(prov => {
-              const mobCells = MONTH_SLOTS.map((mo, i) => {
-                const c = matrix.get(`${prov}||${mo}`);
-                return { mo, signups: c?.signups ?? 0, isYearBound: yearBounds.has(i) };
-              });
-              const rowTotal = mobCells.reduce((s, c) => s + c.signups, 0);
+          {/* ── Mobile: Transposed calendar grid (months↓ × provinces→) ── */}
+          <div className="md:hidden flex-1 flex flex-col bg-[#f5f4f1]">
+            {/* Sticky province header row */}
+            <div className="flex items-center sticky top-0 z-10 bg-[#f5f4f1] border-b-2 border-[#e0ded8] px-3 pt-3 pb-2">
+              <div style={{ width: 44, minWidth: 44 }} />
+              {visProvs.map(prov => (
+                <div key={prov} className="flex-1 text-center">
+                  <span className="text-[11px] font-black font-mono" style={{ color: provColor(prov) }}>{prov}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Month rows */}
+            {MONTH_SLOTS.map((mo, mi) => {
+              const yr = mo.slice(0, 4);
+              const isFirstOfYear = mi === 0 || MONTH_SLOTS[mi - 1].slice(0, 4) !== yr;
               return (
-                <div key={prov} className="bg-white rounded-2xl shadow-sm overflow-hidden"
-                  style={{ borderLeft: `4px solid ${provColor(prov)}` }}>
-                  <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-3">
-                    <div>
-                      <span className="text-[16px] font-black font-mono" style={{ color: provColor(prov) }}>{prov}</span>
-                      <span className="text-[10px] font-mono text-[#888] ml-2.5">
-                        {rowTotal > 0 ? rowTotal.toLocaleString() : "—"} signups
-                      </span>
+                <React.Fragment key={mo}>
+                  {isFirstOfYear && (
+                    <div className="flex items-center px-3 py-1.5" style={{ borderTop: mi > 0 ? "2px solid #e0ded8" : "none", marginTop: mi > 0 ? 2 : 0 }}>
+                      <div style={{ width: 44 }} />
+                      <div className="flex-1 flex items-center gap-2">
+                        <div className="h-px flex-1" style={{ backgroundColor: "#d8d5cc" }} />
+                        <span className="text-[8px] font-mono font-bold tracking-[0.22em] uppercase px-2.5 py-0.5 rounded-full text-white"
+                          style={{ backgroundColor: "#2b5346" }}>{yr}</span>
+                        <div className="h-px flex-1" style={{ backgroundColor: "#d8d5cc" }} />
+                      </div>
                     </div>
-                    <span className="text-[8.5px] font-mono text-[#c0c0c0]">
-                      {mobCells.filter(c => c.signups > 0).length} months active
-                    </span>
-                  </div>
-                  {/* Month heat timeline */}
-                  <div className="flex px-4 pb-1.5" style={{ gap: 2 }}>
-                    {mobCells.map(({ mo, signups, isYearBound }) => {
+                  )}
+                  <div className="flex items-center gap-1 px-3 border-b border-[#eeede8]" style={{ minHeight: 38 }}>
+                    {/* Month label */}
+                    <div style={{ width: 44, minWidth: 44 }}>
+                      <span className="text-[9px] font-mono text-[#999]">{monthLabel(mo)}</span>
+                    </div>
+                    {/* Province cells */}
+                    {visProvs.map(prov => {
+                      const k = `${prov}||${mo}`;
+                      const cell = matrix.get(k);
+                      const sig = cell?.signups ?? 0;
+                      const evCount = cell?.events.length ?? 0;
                       const isSel = selected?.prov === prov && selected.month === mo;
                       const isPinned = pinned?.prov === prov && pinned.month === mo;
-                      const s2 = heatStyle(signups, maxCellSignups);
+                      const s2 = heatStyle(sig, maxCellSignups);
+                      const t = sig > 0 ? Math.pow(sig / maxCellSignups, 0.55) : 0;
                       return (
-                        <div key={mo}
-                          onClick={() => signups > 0 && selectCell(prov, mo)}
-                          className={`flex-1 rounded-sm transition-all ${signups > 0 ? "cursor-pointer active:opacity-80" : ""} ${isYearBound ? "ml-[3px]" : ""}`}
+                        <div key={prov}
+                          onClick={() => sig > 0 && selectCell(prov, mo)}
+                          className={`flex-1 flex flex-col items-center justify-center rounded-md select-none ${sig > 0 ? "cursor-pointer" : ""}`}
                           style={{
-                            height: 28,
-                            backgroundColor: isSel ? provColor(prov) : signups > 0 ? s2.bg : "#f0efed",
-                            outline: isSel ? `2px solid ${provColor(prov)}` : isPinned ? `2px dashed ${provColor(prov)}` : "none",
+                            height: 30,
+                            backgroundColor: isSel ? provColor(prov) : sig > 0 ? s2.bg : "transparent",
+                            boxShadow: sig > 0 && !isSel ? `0 1px ${Math.round(2 + t * 6)}px rgba(43,83,70,${(t * 0.18).toFixed(2)})` : "none",
+                            outline: isPinned ? `2px dashed ${provColor(prov)}` : "none",
                             outlineOffset: -2,
-                          }}
-                        />
+                            transform: isSel ? "scale(1.06)" : "scale(1)",
+                            transition: "transform 0.1s ease",
+                          }}>
+                          {sig > 0 && (
+                            <>
+                              <span className="text-[9.5px] font-black font-mono leading-none"
+                                style={{ color: isSel ? "#fff" : s2.text }}>
+                                {sig >= 1000 ? `${(sig / 1000).toFixed(1)}k` : sig}
+                              </span>
+                              {evCount > 1 && (
+                                <span className="text-[6.5px] font-mono leading-none mt-0.5"
+                                  style={{ color: isSel ? "rgba(255,255,255,0.6)" : s2.subtext }}>
+                                  {evCount}ev
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
-                  {/* Year labels */}
-                  <div className="flex px-4 pb-3">
-                    {yearSpans.map(span => (
-                      <div key={span.year} className="text-[7.5px] font-mono text-[#c0c0c0]" style={{ flex: span.count }}>
-                        {span.year}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                </React.Fragment>
               );
             })}
-            {/* Monthly totals summary */}
-            <div className="bg-white rounded-2xl shadow-sm px-4 py-3">
-              <p className="text-[8px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-3">Monthly Totals</p>
-              <div className="flex items-end gap-[2px]" style={{ height: 44 }}>
-                {monthTotals.map((tot, i) => {
-                  const h = tot > 0 ? Math.max(4, (tot / maxMonthTotal) * 36) : 2;
-                  return (
-                    <div key={MONTH_SLOTS[i]}
-                      className={`flex-1 rounded-sm ${yearBounds.has(i) ? "ml-[3px]" : ""}`}
-                      style={{
-                        height: h,
-                        backgroundColor: tot > 0 ? "#2b5346" : "#f0efed",
-                        opacity: tot > 0 ? 0.45 + (tot / maxMonthTotal) * 0.55 : 1,
-                      }}
-                    />
-                  );
-                })}
+
+            {/* Province totals footer */}
+            <div className="flex items-center gap-1 px-3 py-3 border-t-2 border-[#d8d5cc]" style={{ backgroundColor: "#dedad1" }}>
+              <div style={{ width: 44, minWidth: 44 }}>
+                <span className="text-[7.5px] font-mono uppercase tracking-wider text-[#a0a0a0]">Total</span>
               </div>
-              <div className="flex pt-1">
-                {yearSpans.map(span => (
-                  <div key={span.year} className="text-[7.5px] font-mono text-[#c0c0c0]" style={{ flex: span.count }}>{span.year}</div>
-                ))}
-              </div>
-              <p className="text-[11px] font-black font-mono text-[#1a1a1a] mt-2">
-                {monthTotals.reduce((s, n) => s + n, 0).toLocaleString()} total signups
-              </p>
+              {visProvs.map(prov => {
+                const provTotal = MONTH_SLOTS.reduce((s, mo) => s + (matrix.get(`${prov}||${mo}`)?.signups ?? 0), 0);
+                return (
+                  <div key={prov} className="flex-1 text-center">
+                    <span className="text-[10px] font-black font-mono" style={{ color: provColor(prov) }}>
+                      {provTotal > 0 ? (provTotal >= 1000 ? `${(provTotal / 1000).toFixed(1)}k` : provTotal) : "—"}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
