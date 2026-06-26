@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   TrendingUp, Users, CalendarDays, Target, DollarSign,
   Award, Printer, AlertCircle, X, Copy, Check, Info,
@@ -251,18 +252,12 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   const [topPerfView, setTopPerfView] = useState<"volume" | "conversion" | "ltv">("volume");
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectedFY, setSelectedFY] = useState<string | null>(null);
-  const [teamFilter, setTeamFilter] = useState<"all" | "ib" | "events" | "bd">("all");
-
   const visibleEventStats = useMemo(() =>
     eventStats.filter(e => {
       if (selectedFY && e.eventMonth && fiscalYear(e.eventMonth) !== selectedFY) return false;
-      const u = e.code.toUpperCase();
-      if (teamFilter === "ib")     return u.startsWith("EVIB");
-      if (teamFilter === "events") return u.startsWith("EV") && !u.startsWith("EVIB");
-      if (teamFilter === "bd")     return u.startsWith("BD");
       return true;
     }),
-    [eventStats, selectedFY, teamFilter]
+    [eventStats, selectedFY]
   );
 
   const visibleReports = useMemo(() => {
@@ -271,13 +266,9 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       : null;
     return foundReports.filter(r => {
       if (fySet && !fySet.has(r.discount_code)) return false;
-      const u = r.discount_code.toUpperCase();
-      if (teamFilter === "ib")     return u.startsWith("EVIB");
-      if (teamFilter === "events") return u.startsWith("EV") && !u.startsWith("EVIB");
-      if (teamFilter === "bd")     return u.startsWith("BD");
       return true;
     });
-  }, [foundReports, eventStats, selectedFY, teamFilter]);
+  }, [foundReports, eventStats, selectedFY]);
 
   function openModal(fy: string, prov: string | null) {
     setEventModal({ fy, prov });
@@ -471,34 +462,27 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   // ── Team breakdown ────────────────────────────────────────────
 
   const teamBreakdown = useMemo(() => {
-    const classify = (code: string): "ib" | "events" | "bd" | null => {
+    const isBDEvent = (code: string) => {
       const u = code.toUpperCase();
-      if (u.startsWith("EVIB")) return "ib";
-      if (u.startsWith("EV"))   return "events";
-      if (u.startsWith("BD"))   return "bd";
-      return null;
+      return u.startsWith("EV") || u.startsWith("BD");
     };
     const data = {
-      ib:     { label: "IB Team",     color: "#c9a000", events: 0, signups: 0, paying: 0, lookerSig: 0, ltv12: 0 },
-      events: { label: "Events Team", color: "#2b5346", events: 0, signups: 0, paying: 0, lookerSig: 0, ltv12: 0 },
-      bd:     { label: "BD Direct",   color: "#6b8e9f", events: 0, signups: 0, paying: 0, lookerSig: 0, ltv12: 0 },
+      events: { label: "BD Events", color: "#2b5346", events: 0, signups: 0, paying: 0, lookerSig: 0, ltv12: 0 },
     };
     for (const e of visibleEventStats) {
-      const t = classify(e.code);
-      if (t) { data[t].events++; data[t].signups += e.totalSignups; }
+      if (isBDEvent(e.code)) { data.events.events++; data.events.signups += e.totalSignups; }
     }
     for (const r of visibleReports) {
-      const t = classify(r.discount_code);
-      if (t) {
-        data[t].paying    += r["Paying cx"];
-        data[t].lookerSig += r.Signups;
-        data[t].ltv12     += r["Sum LTV 12"];
+      if (isBDEvent(r.discount_code)) {
+        data.events.paying    += r["Paying cx"];
+        data.events.lookerSig += r.Signups;
+        data.events.ltv12     += r["Sum LTV 12"];
       }
     }
-    return (["ib", "events", "bd"] as const).map(id => ({
-      id, ...data[id],
-      conv:   data[id].lookerSig > 0 ? (data[id].paying   / data[id].lookerSig) * 100 : 0,
-      avgLtv: data[id].paying    > 0 ? data[id].ltv12     / data[id].paying          : 0,
+    return ([{ id: "events" as const, ...data.events }]).map(t => ({
+      ...t,
+      conv:   t.lookerSig > 0 ? (t.paying   / t.lookerSig) * 100 : 0,
+      avgLtv: t.paying    > 0 ? t.ltv12     / t.paying          : 0,
     }));
   }, [visibleEventStats, visibleReports]);
 
@@ -567,10 +551,75 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
 
   return (
     <React.Fragment>
-    <div className="px-4 md:px-5 py-6 md:py-7 pb-24 md:pb-7 max-w-6xl mx-auto flex flex-col gap-6 md:gap-8 w-full">
+    <div className="flex flex-col w-full pb-24 md:pb-7">
 
-      {/* ── Header ────────────────────────────────────────────────── */}
-      <div className={`flex items-start justify-between gap-4 flex-wrap ${
+      {/* ── Mobile Hero ───────────────────────────────────────────── */}
+      <div className="md:hidden bg-[#1a3d2f] px-5 pt-5 pb-5 flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-white/50 mb-0.5">Business Development · Fiscal Year Jul – Jun</p>
+            <h2 className="text-[26px] font-black text-white leading-tight">BD Fiscal</h2>
+            <p className="text-[10.5px] font-mono text-white/55 mt-0.5">{dateRangeLabel}</p>
+          </div>
+          <button
+            onClick={() => setShowPrintModal(true)}
+            className="shrink-0 flex items-center gap-1.5 mt-1 px-3 py-2 rounded-xl border border-white/20 text-white/70 text-[10px] font-semibold cursor-pointer tap-scale"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Print
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[30px] font-black font-mono text-white leading-none">
+              {volume.totalEvents > 0 ? volume.totalEvents.toLocaleString() : "—"}
+            </span>
+            <span className="text-[8.5px] font-mono uppercase tracking-widest text-white/50">Events</span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[30px] font-black font-mono text-white leading-none">{fmtBig(volume.totalSignups)}</span>
+            <span className="text-[8.5px] font-mono uppercase tracking-widest text-white/50">Signups</span>
+          </div>
+          {financials ? (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[28px] font-black font-mono leading-none"
+                style={{ color: financials.blendedConv >= 35 ? "#7fc9a8" : financials.blendedConv >= 25 ? "#e7bd27" : "#e07070" }}>
+                {financials.blendedConv.toFixed(1)}%
+              </span>
+              <span className="text-[8.5px] font-mono uppercase tracking-widest text-white/50">Conv</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-0.5 justify-end">
+              <span className="text-[9px] font-mono text-white/60 leading-tight">{dateRangeLabel}</span>
+              <span className="text-[8.5px] font-mono uppercase tracking-widest text-white/50">Range</span>
+            </div>
+          )}
+        </div>
+        {financials && (
+          <div className="flex items-center gap-4 pt-3 border-t border-white/10">
+            <div className="flex-1">
+              <p className="text-[8px] font-mono text-white/40 uppercase tracking-wider">12-mo Revenue</p>
+              <p className="text-[20px] font-black font-mono text-white">{currency(financials.totalLTV12)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[8px] font-mono text-white/40 uppercase tracking-wider">Avg LTV / Cx</p>
+              <p className="text-[20px] font-black font-mono text-[#e7bd27]">{currency(financials.avgLTV12)}</p>
+            </div>
+          </div>
+        )}
+        {!hasLookerData && (
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-[#e7bd27]/10 border border-[#e7bd27]/30 rounded-xl">
+            <AlertCircle className="w-3.5 h-3.5 text-[#e7bd27] shrink-0" />
+            <span className="text-[9.5px] font-mono text-[#e7bd27]/90">Upload Looker data for financial metrics</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Main content ──────────────────────────────────────────── */}
+      <div className="px-4 md:px-5 py-4 md:py-7 max-w-6xl mx-auto flex flex-col gap-6 md:gap-8 w-full">
+
+      {/* ── Header (desktop only) ─────────────────────────────────── */}
+      <div className={`hidden md:flex items-start justify-between gap-4 flex-wrap ${
         hasClientLtvUpload ? "bg-[#2b5346] rounded-2xl px-6 py-5 shadow-md" : ""
       }`}>
         <div className="flex flex-col gap-2 flex-1 min-w-0">
@@ -636,105 +685,28 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         </div>
       </div>
 
-      {/* ── Mobile top stat strip (built-in DB mode only) ─────────── */}
-      {!hasLookerData && volume.totalEvents > 0 && (
-        <div
-          className="md:hidden rounded-2xl px-5 py-4 flex items-stretch justify-around gap-3 animate-num-rise"
-          style={{ backgroundColor: "#1a3d2f" }}
-        >
-          <div className="flex flex-col items-center gap-1 flex-1">
-            <span className="text-[28px] font-black leading-none text-white" style={{ fontFamily: "DM Mono, monospace" }}>
-              {volume.totalEvents.toLocaleString()}
-            </span>
-            <span className="text-[9px] uppercase tracking-widest text-white/50" style={{ fontFamily: "DM Sans, sans-serif" }}>
-              Events
-            </span>
-          </div>
-          <div className="w-px bg-white/10 self-stretch" />
-          <div className="flex flex-col items-center gap-1 flex-1">
-            <span className="text-[28px] font-black leading-none text-white" style={{ fontFamily: "DM Mono, monospace" }}>
-              {fmtBig(volume.totalSignups)}
-            </span>
-            <span className="text-[9px] uppercase tracking-widest text-white/50" style={{ fontFamily: "DM Sans, sans-serif" }}>
-              Signups
-            </span>
-          </div>
-          <div className="w-px bg-white/10 self-stretch" />
-          <div className="flex flex-col items-center gap-1 flex-1">
-            <span className="text-[13px] font-black leading-none text-white text-center" style={{ fontFamily: "DM Mono, monospace" }}>
-              {dateRangeLabel}
-            </span>
-            <span className="text-[9px] uppercase tracking-widest text-white/50" style={{ fontFamily: "DM Sans, sans-serif" }}>
-              Range
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* ── FY + Team filter bar ─────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row gap-2 md:gap-x-5 md:flex-wrap md:items-center">
-        {volume.years.length >= 1 && (
-          <div className="flex items-center gap-1.5 w-full md:w-auto">
-            <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">FY</span>
-            <div className="flex items-center gap-1 flex-1 md:flex-initial flex-wrap">
-              {([null, ...volume.years] as (string | null)[]).map(fy => (
-                <button key={fy ?? "all"}
-                  onClick={() => setSelectedFY(fy)}
-                  className="tap-scale flex-1 md:flex-initial px-3 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
-                  style={{
-                    minHeight: 36,
-                    ...(selectedFY === fy
-                      ? { backgroundColor: "#2b5346", color: "#fff", borderColor: "#2b5346" }
-                      : { backgroundColor: "#fff", color: "#888", borderColor: "#e8e8e8" })
-                  }}
-                >
-                  {fy ?? "All"}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* ── FY filter bar ───────────────────────────────────────── */}
+      {volume.years.length >= 1 && (
         <div className="flex items-center gap-1.5 w-full md:w-auto">
-          <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">Team</span>
+          <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">FY</span>
           <div className="flex items-center gap-1 flex-1 md:flex-initial flex-wrap">
-            {([
-              { id: "all"    as const, label: "All" },
-              { id: "ib"     as const, label: "IB"  },
-              { id: "events" as const, label: "Evts" },
-              { id: "bd"     as const, label: "BD"  },
-            ]).map(t => (
-              <button key={t.id}
-                onClick={() => setTeamFilter(t.id)}
-                className="tap-scale flex-1 md:flex-initial px-3 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer md:hidden"
+            {([null, ...volume.years] as (string | null)[]).map(fy => (
+              <button key={fy ?? "all"}
+                onClick={() => setSelectedFY(fy)}
+                className="tap-scale flex-1 md:flex-initial px-3 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
                 style={{
                   minHeight: 36,
-                  ...(teamFilter === t.id
+                  ...(selectedFY === fy
                     ? { backgroundColor: "#2b5346", color: "#fff", borderColor: "#2b5346" }
                     : { backgroundColor: "#fff", color: "#888", borderColor: "#e8e8e8" })
                 }}
               >
-                {t.label}
-              </button>
-            ))}
-            {([
-              { id: "all"    as const, label: "All Teams" },
-              { id: "ib"     as const, label: "IB Team"   },
-              { id: "events" as const, label: "Events"    },
-              { id: "bd"     as const, label: "BD Direct" },
-            ]).map(t => (
-              <button key={t.id}
-                onClick={() => setTeamFilter(t.id)}
-                className="hidden md:inline-flex items-center px-3 py-1 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
-                style={teamFilter === t.id
-                  ? { backgroundColor: "#2b5346", color: "#fff", borderColor: "#2b5346" }
-                  : { backgroundColor: "#fff", color: "#888", borderColor: "#e8e8e8" }}
-              >
-                {t.label}
+                {fy ?? "All"}
               </button>
             ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── Section 1: Volume KPIs ────────────────────────────────── */}
       <Section title="Event Volume" sub="from event signup data">
@@ -884,7 +856,8 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       {volume.years.length >= 2 && (
         <Section title="Fiscal Year over Year" sub="Jul 1 – Jun 30">
           <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-            <table className="w-full border-collapse">
+            <div className="overflow-x-auto">
+            <table className="w-full border-collapse" style={{ minWidth: 380 }}>
               <thead>
                 <tr className="border-b border-[#f0f0ee] bg-[#fafafa]">
                   <th className="text-left px-5 py-3 text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">Metric</th>
@@ -1001,6 +974,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                 })()}
               </tbody>
             </table>
+            </div>
             {financials && (
               <div className="px-5 py-2.5 border-t border-[#f5f5f3] flex items-center gap-2">
                 <span className="text-[8.5px] font-mono text-[#c0c0c0]">Financial metrics (paying, conversion, revenue) are all-time totals — Looker export is not segmented by fiscal year.</span>
@@ -1013,7 +987,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       {/* ── Province visual cards (Looker view) ──────────────────── */}
       {allProvs.length > 0 && hasLookerData && (
         <Section title="By Province" sub="event reach · conversion · revenue">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {allProvs.map(prov => {
               const color = provColor(prov);
               const fin   = financials?.provMap[prov];
@@ -1084,6 +1058,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       {allProvs.length > 0 && (
         <Section title={hasLookerData ? "Province Detail Table" : "By Province"}>
           <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 {/* FY group headers */}
@@ -1248,6 +1223,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                 </tr>
               </tbody>
             </table>
+            </div>
             {financials && (
               <p className="px-5 py-2 text-[8.5px] font-mono text-[#c0c0c0] border-t border-[#f5f5f3]">
                 Province-level paying/LTV is approximate — multi-province codes are split proportionally.
@@ -1257,112 +1233,45 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         </Section>
       )}
 
-      {/* ── Team Breakdown ───────────────────────────────────────── */}
-      {hasLookerData && teamFilter === "all" && teamBreakdown.some(t => t.events > 0) && (
-        <Section title="By Team" sub="IB · Events · BD Direct">
-          {/* Mobile: horizontal snap-scroll row of cards; md+: 3-col grid */}
-          <div className="snap-x-scroll flex gap-3 pb-1 md:hidden">
-            {teamBreakdown.map(t => (
-              <div key={t.id}
-                className="tap-scale bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden cursor-pointer flex-none flex flex-col"
-                style={{
-                  width: 155,
-                  borderLeftWidth: 4,
-                  borderLeftColor: t.color,
-                  borderTopWidth: 1,
-                  borderRightWidth: 1,
-                  borderBottomWidth: 1,
-                }}
-                onClick={() => setTeamFilter(t.id)}
-              >
-                <div className="px-4 py-4 flex flex-col gap-3 flex-1">
-                  <p className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: t.color }}>{t.label}</p>
-                  <div className="flex flex-col gap-2">
+      {/* ── BD Events Summary (Looker) ────────────────────────────── */}
+      {hasLookerData && teamBreakdown.some(t => t.events > 0) && teamBreakdown.map(t => (
+        <Section key={t.id} title="BD Events Summary" sub="all event codes · Looker data">
+          <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden"
+            style={{ borderTopWidth: 3, borderTopColor: t.color }}>
+            <div className="px-5 py-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
+                <div>
+                  <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Events</p>
+                  <p className="text-[22px] font-black font-mono text-[#0f0f0f]">{t.events.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</p>
+                  <p className="text-[22px] font-black font-mono text-[#0f0f0f]">{fmtBig(t.signups)}</p>
+                </div>
+                {t.paying > 0 && (
+                  <>
                     <div>
-                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Events</p>
-                      <p className="text-[20px] font-black font-mono text-[#0f0f0f] leading-tight">{t.events.toLocaleString()}</p>
+                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Paying</p>
+                      <p className="text-[22px] font-black font-mono text-[#0f0f0f]">{t.paying.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</p>
-                      <p className="text-[20px] font-black font-mono text-[#0f0f0f] leading-tight">{fmtBig(t.signups)}</p>
+                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Conversion</p>
+                      <p className="text-[22px] font-black font-mono"
+                        style={{ color: t.conv >= 35 ? "#2b5346" : t.conv >= 25 ? "#c9a000" : "#9b4a1c" }}>
+                        {t.conv.toFixed(1)}%
+                      </p>
                     </div>
-                    {t.paying > 0 && (
-                      <>
-                        <div>
-                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Conv</p>
-                          <p className="text-[20px] font-black font-mono leading-tight"
-                            style={{ color: t.conv >= 35 ? "#2b5346" : t.conv >= 25 ? "#c9a000" : "#9b4a1c" }}>
-                            {t.conv.toFixed(1)}%
-                          </p>
-                        </div>
-                        <div className="pt-1 border-t border-[#f5f5f3]">
-                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Avg LTV</p>
-                          <p className="text-[16px] font-black font-mono leading-tight" style={{ color: t.color }}>{currency(t.avgLtv)}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="px-4 py-2 bg-[#fafafa] border-t border-[#f5f5f3]">
-                  <span className="text-[8px] font-mono text-[#b0b0b0]">Filter →</span>
-                </div>
+                    <div className="col-span-2">
+                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Avg LTV / Customer</p>
+                      <p className="text-[22px] font-black font-mono" style={{ color: t.color }}>{currency(t.avgLtv)}</p>
+                    </div>
+                  </>
+                )}
               </div>
-            ))}
-          </div>
-          {/* Desktop: 3-col grid */}
-          <div className="hidden md:grid grid-cols-3 gap-3">
-            {teamBreakdown.map(t => (
-              <div key={t.id}
-                className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden cursor-pointer"
-                style={{ borderTopWidth: 3, borderTopColor: t.color }}
-                onClick={() => setTeamFilter(t.id)}
-              >
-                <div className="px-5 py-4">
-                  <p className="text-[9px] font-mono uppercase tracking-[0.18em] mb-3" style={{ color: t.color }}>{t.label}</p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <div>
-                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Events</p>
-                      <p className="text-[18px] font-black font-mono text-[#0f0f0f]">{t.events.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</p>
-                      <p className="text-[18px] font-black font-mono text-[#0f0f0f]">{fmtBig(t.signups)}</p>
-                    </div>
-                    {t.paying > 0 && (
-                      <>
-                        <div>
-                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Paying</p>
-                          <p className="text-[18px] font-black font-mono text-[#0f0f0f]">{t.paying.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Conv</p>
-                          <p className="text-[18px] font-black font-mono"
-                            style={{ color: t.conv >= 35 ? "#2b5346" : t.conv >= 25 ? "#c9a000" : "#9b4a1c" }}>
-                            {t.conv.toFixed(1)}%
-                          </p>
-                        </div>
-                        <div className="col-span-2 pt-1 border-t border-[#f5f5f3]">
-                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Avg LTV / Customer</p>
-                          <p className="text-[18px] font-black font-mono" style={{ color: t.color }}>{currency(t.avgLtv)}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="px-5 py-2 bg-[#fafafa] border-t border-[#f5f5f3]">
-                  <span className="text-[8.5px] font-mono text-[#b0b0b0]">Tap to filter to {t.label} →</span>
-                </div>
-              </div>
-            ))}
+            </div>
           </div>
         </Section>
-      )}
-      {hasLookerData && teamFilter !== "all" && (
-        <div className="flex items-center gap-2 -mt-2">
-          <span className="text-[9px] font-mono text-[#888]">Filtered to {teamBreakdown.find(t => t.id === teamFilter)?.label}</span>
-          <button onClick={() => setTeamFilter("all")} className="text-[9px] font-mono text-[#2b5346] underline cursor-pointer">Clear filter</button>
-        </div>
-      )}
+      ))}
 
       {/* ── Section 6: Top BD Codes ──────────────────────────────── */}
       {financials && topPerfRows !== null && (
@@ -1453,7 +1362,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               <li><span className="font-bold text-[#555]">Paying / Conv / LTV:</span> Looker export you uploaded. Looker data is not segmented by FY — all-time totals.</li>
               <li><span className="font-bold text-[#555]">Conversion:</span> Looker paying ÷ Looker signups per code (same source for numerator and denominator).</li>
               <li><span className="font-bold text-[#555]">Province attribution:</span> Majority signup province from the static export. Multi-province codes split proportionally.</li>
-              <li><span className="font-bold text-[#555]">Teams:</span> EVIB* = IB Team · EV* (non-IB) = Events Team · BD* = BD Direct.</li>
+              <li><span className="font-bold text-[#555]">BD Events:</span> All EV* and BD* codes are counted as BD Events.</li>
             </ul>
           </div>
         </div>
@@ -1464,16 +1373,18 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         All analysis client-side · Revenue figures are estimated 12-month LTV projections, not realized revenue
       </p>
 
+      </div>
     </div>
 
     {/* ── Event list modal ──────────────────────────────────────── */}
-    {eventModal && (
+    {eventModal && createPortal(
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
         onClick={() => setEventModal(null)}
       >
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col"
+          style={{ maxHeight: "90vh" }}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -1632,11 +1543,12 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
 
     {/* ── Print modal ───────────────────────────────────────────── */}
-    {showPrintModal && (
+    {showPrintModal && createPortal(
       <FiscalPrintModal
         onClose={() => setShowPrintModal(false)}
         volume={{
@@ -1675,7 +1587,8 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         currentFY={currentFY}
         nowMk={nowMk}
         showYTD={showYTD}
-      />
+      />,
+      document.body
     )}
     </React.Fragment>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { MetricInfo } from "../../../components/MetricInfo";
+import { createPortal } from "react-dom";
 import {
   Loader2, ChevronRight, Upload, X, ChevronDown, ChevronUp,
   Database, Pin, PinOff, BarChart2, CalendarDays,
@@ -537,7 +537,48 @@ export function CalendarTab({
     return f === l ? f : `${f} – ${l}`;
   }, [MONTH_SLOTS]);
 
-  // ── Table header (shared between heatmap + families) ──────────
+  const provSparklines = useMemo(() => {
+    const byProvYear: Record<string, Record<string, number>> = {};
+    for (const e of visibleStats) {
+      if (!e.homeProvince || e.homeProvince === "??") continue;
+      const yr = e.eventMonth?.slice(0, 4) ?? "";
+      if (!yr) continue;
+      if (!byProvYear[e.homeProvince]) byProvYear[e.homeProvince] = {};
+      byProvYear[e.homeProvince][yr] = (byProvYear[e.homeProvince][yr] ?? 0) + e.totalSignups;
+    }
+    const years = coverageStats.years;
+    const result: Record<string, number[]> = {};
+    for (const p of allProvs) {
+      result[p] = years.map(y => byProvYear[p]?.[y] ?? 0);
+    }
+    return result;
+  }, [visibleStats, allProvs, coverageStats.years]);
+
+  const yearBandColors = useMemo(() => {
+    const colors: string[] = [];
+    let idx = 0;
+    let lastYear = "";
+    for (const mk of MONTH_SLOTS) {
+      const yr = mk.slice(0, 4);
+      if (yr !== lastYear) { if (lastYear) idx++; lastYear = yr; }
+      colors.push(idx % 2 === 0 ? "#ffffff" : "#f9f8f6");
+    }
+    return colors;
+  }, [MONTH_SLOTS]);
+
+  const headerYoyPct = useMemo(() => {
+    const currentYear = String(new Date().getFullYear());
+    const completedYears = coverageStats.years.filter(y => y !== currentYear);
+    const prevY = completedYears[completedYears.length - 1];
+    const prevPrevY = completedYears[completedYears.length - 2];
+    const prevSig = prevY ? (coverageStats.byYear[prevY]?.signups ?? 0) : 0;
+    const prevPrevSig = prevPrevY ? (coverageStats.byYear[prevPrevY]?.signups ?? 0) : 0;
+    return prevSig > 0 && prevPrevSig > 0
+      ? ((prevSig - prevPrevSig) / prevPrevSig) * 100
+      : null;
+  }, [coverageStats]);
+
+  // ── Table header (shared with families view) ──────────────────
 
   const TableHeader = () => (
     <thead>
@@ -596,493 +637,641 @@ export function CalendarTab({
   }
 
   return (
-    <div className="px-3 md:px-5 py-5 md:py-7 pb-24 md:pb-7 max-w-7xl mx-auto flex flex-col gap-4 md:gap-5 w-full">
+    <div className="flex flex-col w-full pb-24 md:pb-0">
 
-      {/* ── Header ──────────────────────────────────────────────── */}
-      <div className={`flex items-start justify-between gap-4 flex-wrap ${
-        hasClientLtvUpload ? "bg-[#2b5346] rounded-2xl px-5 py-4 shadow-sm" : ""
-      }`}>
-        <div>
-          <p className={`text-[9px] font-mono uppercase tracking-[0.2em] mb-1 ${hasClientLtvUpload ? "text-white/60" : "text-[#a1a1a1]"}`}>Event Calendar</p>
-          <h2 className={`text-[20px] font-black ${hasClientLtvUpload ? "text-white" : "text-[#0f0f0f]"}`}>BD Events · {dateRangeLabel}</h2>
-          <p className={`text-[10px] font-mono mt-1 ${hasClientLtvUpload ? "text-white/65" : "text-[#a1a1a1]"}`}>
-            {calView === "heatmap"
-              ? "Each cell = total signups for that province × month. Click any cell to drill in."
-              : "Events grouped by recurring family. Expand any row to compare instances."}
-          </p>
-        </div>
-        <div className="flex items-center gap-5 shrink-0 flex-wrap">
-          <div className="text-right">
-            <p className={`text-2xl font-black font-mono ${hasClientLtvUpload ? "text-[#e7bd27]" : "text-[#2b5346]"}`}>{visibleEventCount}</p>
-            <p className={`text-[9px] font-mono uppercase tracking-wide ${hasClientLtvUpload ? "text-white/55" : "text-[#a1a1a1]"}`}>events</p>
+      {/* ══ HERO HEADER ══════════════════════════════════════════════ */}
+      <div className="bg-[#1a3d2f] px-4 md:px-8 pt-5 pb-4 flex flex-col gap-3.5 shrink-0">
+        {/* Row 1: title + stats */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[8px] font-mono uppercase tracking-[0.28em] text-white/40 mb-1.5">Event Calendar</p>
+            <h2 className="text-[22px] md:text-[28px] font-black text-white leading-none tracking-tight">
+              BD Events
+            </h2>
+            <p className="text-[10px] font-mono text-white/40 mt-1">{dateRangeLabel}</p>
           </div>
-          <div className="text-right">
-            <p className={`text-2xl font-black font-mono ${hasClientLtvUpload ? "text-white" : "text-[#1a1a1a]"}`}>{totalSignups.toLocaleString()}</p>
-            <p className={`text-[9px] font-mono uppercase tracking-wide ${hasClientLtvUpload ? "text-white/55" : "text-[#a1a1a1]"}`}>signups</p>
+          <div className="flex items-start gap-5 md:gap-7">
+            <div>
+              <p className="text-[26px] md:text-[34px] font-black font-mono text-[#e7bd27] leading-none tabular-nums">{visibleEventCount.toLocaleString()}</p>
+              <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">events</p>
+            </div>
+            <div>
+              <p className="text-[26px] md:text-[34px] font-black font-mono text-white leading-none tabular-nums">{totalSignups.toLocaleString()}</p>
+              <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">signups</p>
+            </div>
+            {headerYoyPct !== null && (
+              <div>
+                <p className="text-[26px] md:text-[34px] font-black font-mono leading-none tabular-nums"
+                  style={{ color: headerYoyPct >= 0 ? "#4d8970" : "#d97070" }}>
+                  {headerYoyPct >= 0 ? "+" : ""}{headerYoyPct.toFixed(0)}%
+                </p>
+                <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">YoY</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* ── Mobile: Province summary chips ───────────────────────── */}
-      {allProvs.length > 0 && (
-        <div className="md:hidden order-[2] md:order-[0]">
-          <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#a1a1a1] mb-2">Provinces</p>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+        {/* Row 2: province chips + view toggle */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap flex-1 overflow-x-auto no-scrollbar">
             {allProvs.map(p => {
-              const provSignups = visibleStats
-                .filter(e => e.homeProvince === p)
-                .reduce((s, e) => s + e.totalSignups, 0);
+              const provSig = visibleStats.filter(e => e.homeProvince === p).reduce((s, e) => s + e.totalSignups, 0);
               const isActive = selProvs.has(p);
               return (
-                <button
-                  key={p}
-                  onClick={() => toggleProv(p)}
-                  className="tap-scale flex items-center gap-1.5 px-3 py-2 rounded-full border shrink-0 transition-all"
+                <button key={p} onClick={() => toggleProv(p)}
+                  className="tap-scale flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer shrink-0"
                   style={{
-                    minHeight: 44,
-                    backgroundColor: isActive ? provColor(p) : "white",
-                    borderColor: isActive ? provColor(p) : "#e5e5e5",
-                    color: isActive ? "#fff" : "#3d3d3d",
-                  }}
-                >
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: isActive ? "rgba(255,255,255,0.6)" : provColor(p) }}
-                  />
-                  <span className="text-[11px] font-mono font-bold">{p}</span>
-                  <span className="text-[10px] font-mono opacity-80">{provSignups.toLocaleString()}</span>
+                    minHeight: 36,
+                    backgroundColor: isActive ? provColor(p) : "rgba(255,255,255,0.09)",
+                    color: isActive ? "#fff" : "rgba(255,255,255,0.55)",
+                    border: `1px solid ${isActive ? provColor(p) : "rgba(255,255,255,0.12)"}`,
+                  }}>
+                  {p}
+                  <span className="text-[9px] font-normal opacity-80">{provSig.toLocaleString()}</span>
                 </button>
               );
             })}
             {activeProvs !== null && (
-              <button
-                onClick={() => { setActiveProvs(null); setSelected(null); setPinned(null); }}
-                className="tap-scale shrink-0 px-3 py-2 rounded-full border border-[#e5e5e5] text-[10px] font-mono text-[#2b5346] bg-white"
-                style={{ minHeight: 44 }}
-              >
-                All
+              <button onClick={() => { setActiveProvs(null); setSelected(null); setPinned(null); }}
+                className="text-[9px] font-mono text-white/40 hover:text-white/70 cursor-pointer transition-colors px-2 py-1.5 shrink-0">
+                Show all
               </button>
             )}
+            {isFilteredPaste && (
+              <>
+                <div className="w-px h-4 bg-white/15 mx-0.5 shrink-0" />
+                <button onClick={() => setPasteOnly(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-semibold cursor-pointer transition-all shrink-0"
+                  style={pasteOnly
+                    ? { backgroundColor: "rgba(255,255,255,0.9)", color: "#1a3d2f" }
+                    : { backgroundColor: "rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                  Your events only
+                </button>
+              </>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* ── BD Summary banner (BD-only mode) ─────────────────────── */}
-      {foundReports.length === 0 && allProvs.length > 0 && (() => {
-        const currentYear = String(new Date().getFullYear());
-        const completedYears = coverageStats.years.filter(y => y !== currentYear);
-        const prevY = completedYears[completedYears.length - 1];
-        const prevPrevY = completedYears[completedYears.length - 2];
-        const prevSig = prevY ? (coverageStats.byYear[prevY]?.signups ?? 0) : 0;
-        const prevPrevSig = prevPrevY ? (coverageStats.byYear[prevPrevY]?.signups ?? 0) : 0;
-        const yoyPct = prevSig > 0 && prevPrevSig > 0
-          ? ((prevSig - prevPrevSig) / prevPrevSig) * 100
-          : null;
-        return (
-          <div className="grid grid-cols-3 gap-3 order-[8] md:order-[0]">
-            {[
-              { label: "Total Events",  tip: undefined,                                                                                                                                                    value: visibleEventCount.toString(),   sub: `${coverageStats.years.length} yr${coverageStats.years.length !== 1 ? "s" : ""} of data` },
-              { label: "Total Signups", tip: "Total people who registered using any event code across all years shown.",                                                                                    value: totalSignups.toLocaleString(),   sub: "across all events" },
-              { label: "YoY Growth",    tip: "Year-over-Year: how much signup volume changed between the two most recent full calendar years. Compares completed years only — not the current partial year.", value: yoyPct !== null ? `${yoyPct >= 0 ? "+" : ""}${yoyPct.toFixed(0)}%` : "—", sub: prevPrevY && prevY ? `${prevPrevY} → ${prevY} (completed yrs)` : "insufficient data", accent: yoyPct !== null ? (yoyPct >= 0 ? "#2b5346" : "#850b0b") : undefined },
-            ].map((stat, i) => (
-              <div key={i} className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3.5 shadow-sm">
-                <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-1 flex items-center gap-1">{stat.label}{stat.tip && <MetricInfo text={stat.tip} side="bottom" />}</p>
-                <p className="text-xl font-black font-mono leading-none" style={{ color: stat.accent ?? "#1a1a1a" }}>{stat.value}</p>
-                <p className="text-[9px] font-mono text-[#b0b0b0] mt-1">{stat.sub}</p>
-              </div>
-            ))}
-          </div>
-        );
-      })()}
-
-      {/* ── Data coverage ─────────────────────────────────────────  */}
-      <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[9] md:order-[0]">
-        {/* Top row: year totals */}
-        <div className="px-4 py-3 flex items-center gap-5 flex-wrap border-b border-[#f5f5f3]">
-          <div className="flex items-center gap-2 shrink-0">
-            <BarChart2 className="w-3.5 h-3.5 text-[#a1a1a1]" />
-            <span className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1]">Data coverage</span>
-          </div>
-          {coverageStats.years.map(y => {
-            const yd = coverageStats.byYear[y];
-            const isLatest = y === coverageStats.latestYear;
-            const isYTD = isLatest && coverageStats.isYTD;
-            return (
-              <div key={y} className="flex items-baseline gap-2">
-                <span className="text-[9px] font-mono text-[#a1a1a1]">{y}{isYTD ? " YTD" : ""}:</span>
-                <span className="text-[13px] font-black font-mono text-[#1a1a1a]">{yd.signups.toLocaleString()}</span>
-                <span className="text-[9px] font-mono text-[#c0c0c0]">signups</span>
-                <span className="text-[9px] font-mono text-[#d8d8d8]">·</span>
-                <span className="text-[9px] font-mono text-[#a1a1a1]">{yd.events} events</span>
-              </div>
-            );
-          })}
-          {coverageStats.years.length >= 2 && !coverageStats.isYTD && (() => {
-            const yrs = coverageStats.years;
-            const prev = coverageStats.byYear[yrs[yrs.length - 2]];
-            const curr = coverageStats.byYear[yrs[yrs.length - 1]];
-            if (!prev || !curr || curr.signups < 50) return null;
-            const delta = curr.signups - prev.signups;
-            const pct = prev.signups > 0 ? Math.round((delta / prev.signups) * 100) : 0;
-            const up = delta >= 0;
-            return (
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold"
-                style={{ backgroundColor: up ? "#eef4f1" : "#fff0f0", color: up ? "#2b5346" : "#850b0b" }}>
-                {up ? "↑" : "↓"} {Math.abs(pct)}% YoY
-              </div>
-            );
-          })()}
-          <div className="ml-auto flex items-center gap-1.5 shrink-0">
-            <CalendarDays className="w-3 h-3 text-[#c0c0c0]" />
-            <span className="text-[9px] font-mono text-[#c0c0c0]">{dateRangeLabel}</span>
+          {/* View toggle */}
+          <div className="flex items-center bg-white/10 rounded-lg p-0.5 shrink-0">
+            <button
+              onClick={() => { setCalView("heatmap"); setFamilySearch(""); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold cursor-pointer transition-all ${calView === "heatmap" ? "bg-white text-[#1a3d2f]" : "text-white/60 hover:text-white"}`}>
+              <BarChart2 className="w-3 h-3" /> Heatmap
+            </button>
+            <button
+              onClick={() => setCalView("families")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold cursor-pointer transition-all ${calView === "families" ? "bg-white text-[#1a3d2f]" : "text-white/60 hover:text-white"}`}>
+              <CalendarDays className="w-3 h-3" /> Families
+            </button>
           </div>
         </div>
 
-        {/* Province × year breakdown table */}
-        {provinceYearStats.rows.length > 0 && (
-          <div className="px-4 py-3">
-            <div className="grid gap-1.5" style={{ gridTemplateColumns: `80px repeat(${provinceYearStats.years.length}, 1fr) 72px` }}>
-              {/* Column headers */}
-              <div />
-              {provinceYearStats.years.map(y => {
-                const isLatest = y === coverageStats.latestYear;
-                const isYTD = isLatest && coverageStats.isYTD;
-                return (
-                  <div key={y} className="text-right text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-wide pb-1 border-b border-[#f0f0ee]">
-                    {y}{isYTD ? " YTD" : ""}
-                  </div>
-                );
-              })}
-              <div className="text-right text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-wide pb-1 border-b border-[#f0f0ee]">Total</div>
-
-              {/* Province rows */}
-              {provinceYearStats.rows.map(row => {
-                const barPct = (row.total / provinceYearStats.maxTotal) * 100;
-                return (
-                  <React.Fragment key={row.prov}>
-                    {/* Province label + bar */}
-                    <div className="flex items-center gap-2 pr-2">
-                      <span className="text-[10px] font-mono font-bold shrink-0" style={{ color: provColor(row.prov) }}>{row.prov}</span>
-                      <div className="flex-1 h-1 bg-[#f0f0ee] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: provColor(row.prov), opacity: 0.6 }} />
-                      </div>
-                    </div>
-                    {/* Year columns */}
-                    {provinceYearStats.years.map(y => {
-                      const n = row.byYear[y] ?? 0;
-                      const ev = row.eventsByYear[y] ?? 0;
-                      const isLatest = y === coverageStats.latestYear;
-                      const yIdx = provinceYearStats.years.indexOf(y);
-                      const prevY = yIdx > 0 ? provinceYearStats.years[yIdx - 1] : null;
-                      const prevN = prevY ? (row.byYear[prevY] ?? 0) : null;
-                      // Suppress YoY arrow for the current YTD year — partial year vs full year is misleading
-                      const delta = prevN !== null && prevN > 0 && !(isLatest && coverageStats.isYTD)
-                        ? Math.round(((n - prevN) / prevN) * 100) : null;
-                      return (
-                        <div key={y} className="text-right">
-                          {n > 0 ? (
-                            <>
-                              <div className="flex items-baseline justify-end gap-1">
-                                <span className="text-[11px] font-black font-mono" style={{ color: isLatest ? "#1a1a1a" : "#888" }}>
-                                  {n.toLocaleString()}
-                                </span>
-                                {delta !== null && (
-                                  <span className="text-[8px] font-mono" style={{ color: delta >= 0 ? "#2b5346" : "#850b0b" }}>
-                                    {delta >= 0 ? "↑" : "↓"}{Math.abs(delta)}%
-                                  </span>
-                                )}
-                              </div>
-                              {ev > 0 && (
-                                <div className="text-[8px] font-mono text-[#b0b0b0]">{ev} ev</div>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-[#d8d8d8] text-[11px] font-mono">—</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                    {/* Total */}
-                    <div className="text-right">
-                      <div className="text-[11px] font-black font-mono text-[#1a1a1a]">{row.total.toLocaleString()}</div>
-                      {row.totalEvents > 0 && (
-                        <div className="text-[8px] font-mono text-[#b0b0b0]">{row.totalEvents} ev</div>
-                      )}
-                    </div>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Data source bar ───────────────────────────────────────  */}
-      <div className="bg-white rounded-xl border border-[#e8e8e8] px-4 py-3 flex items-center gap-3 flex-wrap shadow-sm order-[10] md:order-[0]">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Database className="w-3.5 h-3.5 shrink-0" style={{ color: isCustomData ? "#2b5346" : "#a1a1a1" }} />
+        {/* Row 3: data source indicator */}
+        <div className="flex items-center gap-2 pt-1 border-t border-white/10 flex-wrap">
+          <Database className="w-3 h-3 shrink-0" style={{ color: isCustomData ? "#4d8970" : "rgba(255,255,255,0.3)" }} />
           {isCustomData ? (
             <>
-              <span className="text-[11px] font-semibold text-[#1a1a1a] font-mono truncate">{customerFileName}</span>
-              <span className="text-[9px] font-mono text-[#2b5346] bg-[#eef4f1] px-2 py-0.5 rounded-full shrink-0">your data</span>
-              <span className="text-[9px] font-mono text-[#a1a1a1]">BD codes = {eventScopeLabel}</span>
+              <span className="text-[10px] font-mono text-white/70 truncate">{customerFileName}</span>
+              <span className="text-[8px] font-mono text-[#4d8970] bg-[#4d8970]/20 px-1.5 py-0.5 rounded-full">your data</span>
+              <span className="text-[8.5px] font-mono text-white/30">{eventScopeLabel}</span>
             </>
           ) : (
             <>
-              <span className="text-[11px] font-mono text-[#3d3d3d]">Built-in dataset</span>
-              <span className="text-[9px] font-mono text-[#a1a1a1] bg-[#f8f7f5] border border-[#e8e8e8] px-2 py-0.5 rounded-full shrink-0">{dateRangeLabel}</span>
-              <span className="text-[9px] font-mono text-[#a1a1a1]">{eventScopeLabel}</span>
+              <span className="text-[9px] font-mono text-white/35">Built-in dataset</span>
+              <span className="text-[8px] font-mono text-white/25 px-1.5 py-0.5 rounded-full border border-white/10">{dateRangeLabel}</span>
+              <span className="text-[8.5px] font-mono text-white/25">{eventScopeLabel}</span>
             </>
           )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {isCustomData && (
-            <button
-              onClick={() => { onClearCustomer(); setSelected(null); setPinned(null); }}
-              className="text-[10px] font-mono text-[#a1a1a1] hover:text-[#850b0b] cursor-pointer flex items-center gap-1"
-            >
-              <X className="w-3 h-3" /> Revert to built-in
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            {isCustomData && (
+              <button onClick={() => { onClearCustomer(); setSelected(null); setPinned(null); }}
+                className="text-[9px] font-mono text-white/40 hover:text-white/70 cursor-pointer transition-colors flex items-center gap-1">
+                <X className="w-2.5 h-2.5" /> Revert
+              </button>
+            )}
+            <button onClick={() => setShowUpload(v => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9.5px] font-semibold cursor-pointer border transition-all"
+              style={showUpload
+                ? { backgroundColor: "rgba(255,255,255,0.15)", color: "white", borderColor: "rgba(255,255,255,0.25)" }
+                : { backgroundColor: "transparent", color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.15)" }}>
+              <Upload className="w-3 h-3" />
+              {showUpload ? "Close" : "Upload data"}
+              {showUpload ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
             </button>
-          )}
-          <button
-            onClick={() => setShowUpload(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-semibold cursor-pointer border transition-all"
-            style={showUpload
-              ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
-              : { backgroundColor: "white", color: "#2b5346", borderColor: "#d0e8e2" }}
-          >
-            <Upload className="w-3 h-3" />
-            {showUpload ? "Close" : "Upload newer data"}
-            {showUpload ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-        </div>
-      </div>
-
-      {/* ── Upload panel ─────────────────────────────────────────── */}
-      {showUpload && (
-        <div className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[11] md:order-[0]">
-          <div className="px-5 pt-5 pb-4 border-b border-[#f5f5f3]">
-            <p className="text-[11px] font-black text-[#0f0f0f]">Upload the Exportable Client List from Looker Studio</p>
-            <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">
-              Built-in data covers {dateRangeLabel}. Export a fresh Exportable Client List to extend the calendar to today.
-            </p>
           </div>
-          <div className="px-5 py-4 grid grid-cols-1 gap-3 sm:grid-cols-2 border-b border-[#f5f5f3]">
-            {LOOKER_STEPS.map(s => (
-              <div key={s.step} className="flex gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black font-mono text-white mt-0.5" style={{ backgroundColor: "#2b5346" }}>{s.step}</span>
-                <div>
-                  <p className="text-[11px] font-semibold text-[#1a1a1a]">{s.title}</p>
-                  <p className="text-[10px] text-[#888] leading-relaxed mt-0.5">{s.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="px-5 py-4 border-b border-[#f5f5f3]">
-            <div
-              onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={e => { e.preventDefault(); setIsDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }}
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2.5 cursor-pointer transition-colors"
-              style={isDragOver ? { borderColor: "#2b5346", backgroundColor: "#eef4f1" } : { borderColor: "#e5e5e5", backgroundColor: "#fafafa" }}
-            >
-              {isLoadingCustomer ? (
-                <div className="flex items-center gap-2"><Loader2 className="w-4 h-4 text-[#2b5346] animate-spin" /><span className="text-xs font-mono text-[#a1a1a1]">Parsing file…</span></div>
-              ) : (
-                <>
-                  <div className="w-8 h-8 rounded-lg bg-[#eef4f1] flex items-center justify-center"><Upload className="w-4 h-4 text-[#2b5346]" /></div>
-                  <div className="text-center">
-                    <p className="text-xs font-semibold text-[#1a1a1a]">Drop CSV or XLSX here</p>
-                    <p className="text-[9.5px] text-[#a1a1a1] font-mono mt-0.5">or click to browse</p>
-                  </div>
-                </>
-              )}
-            </div>
-            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
-              onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
-          </div>
-          <div className="px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-2.5">Expected columns</p>
-            <div className="grid grid-cols-1 gap-0 divide-y divide-[#f5f5f3] border border-[#f0f0ee] rounded-xl overflow-hidden sm:grid-cols-2 sm:divide-y-0">
-              {EXPECTED_COLS.map(col => (
-                <div key={col.name} className="flex items-baseline gap-2.5 px-3 py-2 bg-white border-b border-[#f5f5f3]">
-                  <span className="font-mono text-[10px] text-[#2b5346] font-semibold shrink-0 w-36">{col.name}</span>
-                  <span className="text-[10px] text-[#a1a1a1] leading-snug">{col.note}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-[9px] font-mono text-[#c8c8c8] mt-2.5">Parsed client-side · no data leaves your browser</p>
-          </div>
-        </div>
-      )}
-
-      {/* ── Filters + view toggle ─────────────────────────────────  */}
-      <div className="flex items-center gap-2 flex-wrap order-[3] md:order-[0]">
-        {/* Province chips: hidden on mobile (shown in the summary row above), visible on desktop */}
-        <span className="hidden md:inline text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] shrink-0">Province</span>
-        {allProvs.map(p => (
-          <button
-            key={p}
-            onClick={() => toggleProv(p)}
-            className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-mono font-semibold cursor-pointer border transition-all"
-            style={selProvs.has(p)
-              ? { backgroundColor: provColor(p), color: "#fff", borderColor: provColor(p) }
-              : { backgroundColor: "white", color: "#a1a1a1", borderColor: "#e5e5e5" }}
-          >
-            {p}
-          </button>
-        ))}
-        {activeProvs !== null && (
-          <button onClick={() => { setActiveProvs(null); setSelected(null); setPinned(null); }}
-            className="hidden md:inline text-[10px] font-mono text-[#2b5346] hover:underline cursor-pointer">
-            Show all
-          </button>
-        )}
-        {isFilteredPaste && (
-          <>
-            <div className="w-px h-4 bg-[#e5e5e5] mx-1" />
-            <button
-              onClick={() => setPasteOnly(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-mono font-semibold cursor-pointer border transition-all"
-              style={pasteOnly
-                ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
-                : { backgroundColor: "white", color: "#3d3d3d", borderColor: "#e5e5e5" }}
-            >
-              Your events only
-            </button>
-          </>
-        )}
-        {/* View toggle */}
-        <div className="ml-auto flex items-center bg-[#f5f5f3] p-0.5 rounded-lg border border-[#e5e5e5] shrink-0">
-          <button
-            onClick={() => { setCalView("heatmap"); setFamilySearch(""); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold cursor-pointer transition-all ${calView === "heatmap" ? "bg-white text-[#2b5346] shadow-sm" : "text-[#888] hover:text-[#1a1a1a]"}`}
-          >
-            <BarChart2 className="w-3 h-3" /> Heatmap
-          </button>
-          <button
-            onClick={() => setCalView("families")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold cursor-pointer transition-all ${calView === "families" ? "bg-white text-[#2b5346] shadow-sm" : "text-[#888] hover:text-[#1a1a1a]"}`}
-          >
-            <CalendarDays className="w-3 h-3" /> Families
-          </button>
         </div>
       </div>
 
       {/* ══ HEATMAP VIEW ════════════════════════════════════════════ */}
       {calView === "heatmap" && (
-        <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[4] md:order-[0]">
-          {/* Mobile section header */}
-          <div className="md:hidden px-4 pt-3 pb-2 flex items-center justify-between border-b border-[#f5f5f3]">
-            <div>
-              <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#a1a1a1]">Province × Month Heatmap</p>
-              <p className="text-[9px] font-mono text-[#c0c0c0] mt-0.5">Scroll → to see all months</p>
-            </div>
-            {/* Inline legend on mobile */}
-            <div className="flex items-center gap-1">
-              {[0, 0.25, 0.5, 0.75, 1.0].map((t, i) => (
-                <div key={i} className="w-4 h-3 rounded-sm border border-[#f0f0f0]"
-                  style={{ backgroundColor: t === 0 ? "#f8f8f8" : `rgb(${Math.round(255 - t * 212)},${Math.round(255 - t * 172)},${Math.round(255 - t * 185)})` }} />
-              ))}
-              <span className="text-[8px] font-mono text-[#bbb] ml-1">L→H</span>
-            </div>
-          </div>
-          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-            <table className="w-full border-collapse" style={{ minWidth: Math.max(600, MONTH_SLOTS.length * 44 + 140) }}>
-              <TableHeader />
+        <div className="flex flex-row bg-white border-b border-[#e8e8e8]">
+          {/* Heatmap table */}
+          <div className="flex-1 overflow-x-auto min-w-0" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="border-collapse" style={{ minWidth: Math.max(600, MONTH_SLOTS.length * 52 + 160) }}>
+              <thead>
+                {/* Year header row */}
+                <tr>
+                  <th className="sticky left-0 z-20 bg-white border-b border-r border-[#ebebeb]" style={{ width: 120, minWidth: 120 }} />
+                  {yearSpans.map((span, si) => (
+                    <th key={span.year} colSpan={span.count}
+                      className={`border-b border-[#ebebeb] py-2 text-center ${si > 0 ? "border-l-2 border-l-[#2b5346]/25" : ""}`}
+                      style={{ backgroundColor: si % 2 === 0 ? "#fafaf8" : "#f4f3f0" }}>
+                      <span className="text-[9px] font-mono font-bold tracking-[0.22em] uppercase" style={{ color: "#2b5346" }}>{span.year}</span>
+                    </th>
+                  ))}
+                  <th className="border-b border-[#ebebeb] w-16" style={{ backgroundColor: "#fafaf8" }} />
+                </tr>
+                {/* Month header row */}
+                <tr>
+                  <th className="sticky left-0 z-20 bg-white border-b-2 border-r border-[#ebebeb] text-left px-3 py-2"
+                    style={{ width: 120, minWidth: 120 }}>
+                    <span className="text-[7.5px] font-mono uppercase tracking-[0.22em] text-[#c8c8c8]">Province</span>
+                  </th>
+                  {MONTH_SLOTS.map((mk, i) => (
+                    <th key={mk}
+                      style={{ minWidth: 52, backgroundColor: yearBandColors[i] }}
+                      className={`border-b-2 border-[#e0e0de] text-center py-2 ${yearBounds.has(i) ? "border-l-2 border-l-[#2b5346]/20" : ""}`}>
+                      <span className="text-[8.5px] font-mono text-[#999]">{monthLabel(mk)}</span>
+                    </th>
+                  ))}
+                  <th className="border-b-2 border-[#e0e0de] text-right pr-3 py-2"
+                    style={{ backgroundColor: "#fafaf8" }}>
+                    <span className="text-[7.5px] font-mono uppercase tracking-wide text-[#b0b0b0]">Total</span>
+                  </th>
+                </tr>
+              </thead>
               <tbody>
-                {visProvs.map(prov => (
-                  <tr key={prov}>
-                    <td className="text-right pr-3 border-r border-b border-[#f0f0ee] text-[10px] font-mono font-bold" style={{ color: provColor(prov) }}>
-                      {prov}
-                    </td>
-                    {MONTH_SLOTS.map((mo, i) => {
-                      const k = `${prov}||${mo}`;
-                      const cell = matrix.get(k);
-                      const sig = cell?.signups ?? 0;
-                      const evCount = cell?.events.length ?? 0;
-                      const style = heatStyle(sig, maxCellSignups);
-                      const isSel = selected?.prov === prov && selected.month === mo;
-                      const isPinned = pinned?.prov === prov && pinned.month === mo;
-                      return (
-                        <td
-                          key={mo}
-                          onClick={() => sig > 0 && selectCell(prov, mo)}
-                          className={`border-b border-[#f0f0ee] text-center relative select-none ${sig > 0 ? "cursor-pointer" : ""} ${yearBounds.has(i) ? "border-l-2 border-l-[#d0d0d0]" : ""}`}
-                          style={{
-                            backgroundColor: style.bg,
-                            outline: isSel ? `2px solid ${provColor(prov)}` : isPinned ? `2px dashed ${provColor(prov)}` : "none",
-                            outlineOffset: -2,
-                            minWidth: 36,
-                          }}
-                        >
-                          <div className="px-0.5" style={{ paddingTop: 6, paddingBottom: 6, minHeight: 28 }}>
-                            {sig > 0 ? (
-                              <>
-                                <p className="text-[11px] font-black font-mono leading-none" style={{ color: style.text }}>
-                                  {sig >= 1000 ? `${(sig / 1000).toFixed(1)}k` : sig}
-                                </p>
-                                {evCount > 0 && (
-                                  <p className="text-[7.5px] font-mono leading-none mt-0.5" style={{ color: style.subtext }}>
-                                    {evCount === 1 ? "1 ev" : `${evCount} ev`}
-                                  </p>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-[10px] font-mono" style={{ color: style.text }}>—</p>
-                            )}
+                {visProvs.map(prov => {
+                  const spark = provSparklines[prov] ?? [];
+                  const rowTotal = MONTH_SLOTS.reduce((s, mo) => s + (matrix.get(`${prov}||${mo}`)?.signups ?? 0), 0);
+                  return (
+                    <tr key={prov} className="group">
+                      {/* Province sticky column with sparkline */}
+                      <td className="sticky left-0 z-10 border-b border-r border-[#ebebeb] px-3 py-2 bg-white group-hover:bg-[#fafaf8] transition-colors"
+                        style={{ minWidth: 120 }}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-[13px] font-black font-mono leading-none" style={{ color: provColor(prov) }}>{prov}</p>
+                            <p className="text-[8px] font-mono text-[#c0c0c0] mt-0.5 tabular-nums">{rowTotal > 0 ? rowTotal.toLocaleString() : ""}</p>
                           </div>
-                        </td>
-                      );
-                    })}
-                    <td className="border-b border-[#f0f0ee]" />
-                  </tr>
-                ))}
-                {/* Totals row */}
-                <tr className="bg-[#f8f7f5]">
-                  <td className="text-right pr-3 py-2.5 border-r border-[#f0f0ee] text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">Total</td>
+                          {spark.length >= 2 && (() => {
+                            const max = Math.max(1, ...spark);
+                            const W = 36, H = 18, n = spark.length;
+                            const bw = Math.max(3, (W - (n - 1) * 2) / n);
+                            return (
+                              <svg width={W} height={H} className="shrink-0 hidden md:block opacity-60">
+                                {spark.map((v, i) => {
+                                  const h = Math.max(2, (v / max) * H);
+                                  return <rect key={i} x={i * (bw + 2)} y={H - h} width={bw} height={h} rx={1} fill={provColor(prov)} />;
+                                })}
+                              </svg>
+                            );
+                          })()}
+                        </div>
+                      </td>
+                      {/* Data cells */}
+                      {MONTH_SLOTS.map((mo, i) => {
+                        const k = `${prov}||${mo}`;
+                        const cell = matrix.get(k);
+                        const sig = cell?.signups ?? 0;
+                        const evCount = cell?.events.length ?? 0;
+                        const style = heatStyle(sig, maxCellSignups);
+                        const isSel = selected?.prov === prov && selected.month === mo;
+                        const isPinned = pinned?.prov === prov && pinned.month === mo;
+                        return (
+                          <td key={mo}
+                            onClick={() => sig > 0 && selectCell(prov, mo)}
+                            style={{
+                              minWidth: 52,
+                              backgroundColor: isSel ? provColor(prov) : isPinned ? provColor(prov) + "22" : sig > 0 ? style.bg : yearBandColors[i],
+                              outline: isSel ? `2px solid ${provColor(prov)}` : isPinned ? `2px dashed ${provColor(prov)}` : "none",
+                              outlineOffset: -2,
+                            }}
+                            className={`border-b border-[#ebebeb] text-center select-none transition-colors ${sig > 0 ? "cursor-pointer hover:opacity-90" : ""} ${yearBounds.has(i) ? "border-l-2 border-l-[#2b5346]/15" : ""}`}>
+                            <div style={{ paddingTop: 9, paddingBottom: 9, minHeight: 40 }}>
+                              {sig > 0 ? (
+                                <>
+                                  <p className="text-[12px] font-black font-mono leading-none"
+                                    style={{ color: isSel ? "#fff" : style.text }}>
+                                    {sig >= 1000 ? `${(sig / 1000).toFixed(1)}k` : sig}
+                                  </p>
+                                  {evCount > 1 && (
+                                    <p className="text-[7px] font-mono leading-none mt-0.5"
+                                      style={{ color: isSel ? "rgba(255,255,255,0.65)" : style.subtext }}>
+                                      {evCount} ev
+                                    </p>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-[12px] font-mono" style={{ color: "#e8e8e8" }}>·</span>
+                              )}
+                            </div>
+                          </td>
+                        );
+                      })}
+                      {/* Row total */}
+                      <td className="border-b border-[#ebebeb] text-right pr-3 py-2" style={{ backgroundColor: "#fafaf8" }}>
+                        {rowTotal > 0 && (
+                          <span className="text-[11px] font-black font-mono" style={{ color: provColor(prov) }}>
+                            {rowTotal.toLocaleString()}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {/* Monthly totals row */}
+                <tr>
+                  <td className="sticky left-0 z-10 bg-[#f5f4f2] border-t-2 border-r border-[#e0e0de] px-3 py-2.5">
+                    <span className="text-[7.5px] font-mono uppercase tracking-[0.22em] text-[#a0a0a0]">Total</span>
+                  </td>
                   {monthTotals.map((tot, i) => (
-                    <td key={MONTH_SLOTS[i]} className={`text-center pb-1.5 pt-1 ${yearBounds.has(i) ? "border-l-2 border-l-[#d0d0d0]" : ""}`}>
+                    <td key={MONTH_SLOTS[i]}
+                      style={{ backgroundColor: yearBandColors[i] === "#ffffff" ? "#f9f8f6" : "#f4f3f0" }}
+                      className={`border-t-2 border-[#e0e0de] text-center py-1.5 ${yearBounds.has(i) ? "border-l-2 border-l-[#2b5346]/15" : ""}`}>
                       {tot > 0 && (
                         <div className="flex flex-col items-center gap-0.5">
-                          <div className="w-2 rounded-sm mx-auto" style={{ height: Math.max(3, (tot / maxMonthTotal) * 22), backgroundColor: "#2b5346", opacity: 0.45 }} />
-                          <p className="text-[8px] font-mono text-[#888]">{tot >= 1000 ? `${(tot / 1000).toFixed(1)}k` : tot}</p>
+                          <div className="w-3 rounded-sm mx-auto"
+                            style={{ height: Math.max(3, (tot / maxMonthTotal) * 20), backgroundColor: "#2b5346", opacity: 0.45 }} />
+                          <p className="text-[8px] font-mono text-[#777] tabular-nums">
+                            {tot >= 1000 ? `${(tot / 1000).toFixed(1)}k` : tot}
+                          </p>
                         </div>
                       )}
                     </td>
                   ))}
-                  <td />
+                  <td className="border-t-2 border-[#e0e0de] text-right pr-3 py-2.5" style={{ backgroundColor: "#f5f4f2" }}>
+                    <span className="text-[12px] font-black font-mono text-[#1a1a1a]">
+                      {monthTotals.reduce((s, n) => s + n, 0).toLocaleString()}
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>
-          </div>
-          {/* Legend — desktop only (mobile has inline legend in header) */}
-          <div className="hidden md:flex px-4 py-2.5 border-t border-[#f5f5f3] items-center gap-3">
-            <span className="text-[9px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</span>
-            <div className="flex items-center gap-0.5">
-              {[0, 0.15, 0.3, 0.5, 0.7, 1.0].map((t, i) => (
-                <div key={i} className="w-5 h-3 rounded-sm border border-[#f0f0f0]"
-                  style={{ backgroundColor: t === 0 ? "#f8f8f8" : `rgb(${Math.round(255 - t * 212)},${Math.round(255 - t * 172)},${Math.round(255 - t * 185)})` }} />
-              ))}
+            {/* Legend */}
+            <div className="px-4 py-2.5 flex items-center gap-2.5 border-t border-[#ebebeb] bg-white">
+              <span className="text-[7.5px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</span>
+              <div className="flex items-center gap-0.5">
+                {[0, 0.15, 0.3, 0.5, 0.7, 1.0].map((t, i) => (
+                  <div key={i} className="w-5 h-3 rounded-sm border border-[#f0f0ee]"
+                    style={{ backgroundColor: t === 0 ? "#f5f5f3" : `rgb(${Math.round(255 - t * 212)},${Math.round(255 - t * 172)},${Math.round(255 - t * 185)})` }} />
+                ))}
+              </div>
+              <span className="text-[8px] font-mono text-[#a0a0a0]">Low → High</span>
+              {!selected && <span className="text-[8px] font-mono text-[#c8c8c8] ml-3 hidden md:inline">Click any cell to drill in · Pin + click another to compare</span>}
+              {pinned && <span className="text-[8.5px] font-mono text-[#a0a0a0] ml-3">Dashed = pinned for comparison</span>}
             </div>
-            <span className="text-[9px] font-mono text-[#888]">Low → High</span>
-            {pinned && <span className="text-[9px] font-mono text-[#a1a1a1] ml-2">Dashed outline = pinned for comparison</span>}
           </div>
-          {/* Mobile legend footer */}
-          {pinned && (
-            <div className="md:hidden px-4 py-2 border-t border-[#f5f5f3]">
-              <span className="text-[9px] font-mono text-[#a1a1a1]">Dashed outline = pinned for comparison</span>
+
+          {/* Desktop detail/comparison panel — slides in from right */}
+          <div className="hidden md:block shrink-0 border-l border-[#e8e8e8] overflow-hidden"
+            style={{
+              width: (selected && selectedEvents.length > 0) ? 320 : 0,
+              transition: "width 0.26s cubic-bezier(0.23,1,0.32,1)",
+            }}>
+            <div style={{ width: 320 }}>
+              {selected && selectedEvents.length > 0 && (() => {
+                const [sy, sm] = selected.month.split("-");
+                const selLabel = `${MONTH_ABBR[Number(sm) - 1]} ${sy} · ${selected.prov}`;
+                const selSignups = selectedEvents.reduce((s, e) => s + e.totalSignups, 0);
+                const maxEv = Math.max(1, ...selectedEvents.map(e => e.totalSignups));
+                const maxProv = Math.max(1, ...cellProvTotals.map(([, n]) => n));
+
+                if (pinned && pinnedEvents.length > 0 && (pinned.prov !== selected.prov || pinned.month !== selected.month)) {
+                  const [py, pm] = pinned.month.split("-");
+                  const pinLabel = `${MONTH_ABBR[Number(pm) - 1]} ${py} · ${pinned.prov}`;
+                  const pinSignups = pinnedEvents.reduce((s, e) => s + e.totalSignups, 0);
+                  const allCodes = Array.from(new Set([...selectedEvents.map(e => e.code), ...pinnedEvents.map(e => e.code)])).sort();
+                  const selMap = new Map(selectedEvents.map(e => [e.code, e]));
+                  const pinMap = new Map(pinnedEvents.map(e => [e.code, e]));
+                  return (
+                    <div className="flex flex-col">
+                      <div className="border-b border-[#f0f0ee] divide-y divide-[#f5f5f3]">
+                        {[
+                          { label: pinLabel, signups: pinSignups, prov: pinned.prov, isPinned: true },
+                          { label: selLabel, signups: selSignups, prov: selected.prov, isPinned: false },
+                        ].map(col => (
+                          <div key={col.label} className="px-4 py-3 flex items-center justify-between gap-2"
+                            style={{ borderLeft: `3px solid ${provColor(col.prov)}` }}>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] font-black text-[#0f0f0f]">{col.label}</span>
+                                {col.isPinned && <span className="text-[7.5px] font-mono text-[#a1a1a1] bg-[#f5f5f3] px-1.5 py-0.5 rounded">pinned</span>}
+                              </div>
+                              <p className="text-[18px] font-black font-mono tabular-nums" style={{ color: provColor(col.prov) }}>
+                                {col.signups.toLocaleString()}<span className="text-[9px] font-normal text-[#a1a1a1] ml-1">sig</span>
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="overflow-y-auto divide-y divide-[#f8f8f8]">
+                        {allCodes.map(code => {
+                          const a = pinMap.get(code);
+                          const b = selMap.get(code);
+                          const maxSig = Math.max(1, a?.totalSignups ?? 0, b?.totalSignups ?? 0);
+                          const delta = (b?.totalSignups ?? 0) - (a?.totalSignups ?? 0);
+                          const CompCell = ({ ev, prov }: { ev: EventStats | undefined; prov: string }) => (
+                            <div className="px-3 py-2.5 flex items-center gap-2">
+                              {ev ? (
+                                <>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-mono font-black text-[10px] text-[#0f0f0f] truncate">{ev.code}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0 w-20">
+                                    <div className="h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden flex-1">
+                                      <div className="h-full rounded-full" style={{ width: `${Math.max(3, (ev.totalSignups / maxSig) * 100)}%`, backgroundColor: provColor(prov), opacity: 0.7 }} />
+                                    </div>
+                                    <span className="text-[10px] font-mono font-semibold text-[#3d3d3d] w-6 text-right shrink-0">{ev.totalSignups}</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <span className="text-[9px] font-mono text-[#d0d0d0]">—</span>
+                              )}
+                            </div>
+                          );
+                          return (
+                            <div key={code} className="grid grid-cols-2 divide-x divide-[#f8f8f8] items-center">
+                              <CompCell ev={a} prov={pinned.prov} />
+                              <div className="relative">
+                                <CompCell ev={b} prov={selected.prov} />
+                                {a && b && (
+                                  <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[7.5px] font-mono font-bold px-1 py-0.5 rounded-full"
+                                    style={{ backgroundColor: delta >= 0 ? "#eef4f1" : "#fff0f0", color: delta >= 0 ? "#2b5346" : "#850b0b" }}>
+                                    {delta >= 0 ? "+" : ""}{delta}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="px-4 py-2.5 border-t border-[#f0f0ee] flex items-center justify-between shrink-0">
+                        <span className="text-[8.5px] font-mono text-[#a1a1a1]">Δ = selected vs pinned</span>
+                        <button onClick={() => setPinned(null)}
+                          className="text-[8.5px] font-mono text-[#a1a1a1] hover:text-[#850b0b] cursor-pointer flex items-center gap-1">
+                          <PinOff className="w-2.5 h-2.5" /> Clear
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex flex-col">
+                    <div className="px-4 py-3.5 border-b border-[#ebebeb] flex items-start justify-between gap-3"
+                      style={{ borderLeft: `3px solid ${provColor(selected.prov)}` }}>
+                      <div>
+                        <p className="text-[8px] font-mono uppercase tracking-[0.2em] text-[#b0b0b0] mb-0.5">{selected.prov}</p>
+                        <p className="text-[15px] font-black text-[#0f0f0f] leading-tight">
+                          {MONTH_ABBR[Number(sm) - 1]} {sy}
+                        </p>
+                        <p className="text-[13px] font-black font-mono mt-0.5 tabular-nums" style={{ color: provColor(selected.prov) }}>
+                          {selSignups.toLocaleString()}<span className="text-[9px] font-normal text-[#a1a1a1] ml-1">signups</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="hidden sm:flex items-end gap-1 h-7">
+                          {cellProvTotals.map(([p, n]) => (
+                            <div key={p} className="flex flex-col items-center gap-0.5">
+                              <div className="w-3 rounded-sm" style={{ height: Math.max(2, (n / maxProv) * 18), backgroundColor: provColor(p) }} />
+                              <span className="text-[6.5px] font-mono" style={{ color: provColor(p) }}>{p}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setPinned(prev => (prev?.prov === selected.prov && prev.month === selected.month ? null : selected))}
+                          title={pinned?.prov === selected.prov && pinned.month === selected.month ? "Unpin" : "Pin to compare"}
+                          className="tap-scale p-2 rounded-lg border cursor-pointer transition-all"
+                          style={pinned?.prov === selected.prov && pinned.month === selected.month
+                            ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
+                            : { backgroundColor: "white", color: "#a0a0a0", borderColor: "#e5e5e5" }}>
+                          <Pin className="w-3 h-3" />
+                        </button>
+                        <button onClick={() => setSelected(null)}
+                          className="tap-scale p-2 text-[#c0c0c0] hover:text-[#888] cursor-pointer">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    {pinned && (pinned.prov !== selected.prov || pinned.month !== selected.month) === false && (
+                      <div className="px-4 py-2 bg-[#eef4f1] border-b border-[#d0e8e2]">
+                        <p className="text-[8.5px] font-mono text-[#2b5346]">Pinned · click another cell to compare</p>
+                      </div>
+                    )}
+                    <div className="divide-y divide-[#f3f3f1]">
+                      {selectedEvents.map(event => {
+                        const enriched = reportByCode.get(event.code);
+                        const barPct = Math.max(3, (event.totalSignups / maxEv) * 100);
+                        const isPasted = isFilteredPaste && pastedSet.has(event.code);
+                        const color = enriched ? convGradeColor(enriched.calculatedConversion) : provColor(event.homeProvince);
+                        const famStem = detectFamily(event.code);
+                        const famName = famStem.replace(/^EV/, "");
+                        const isRecurringCode = eventFamilies.find(f => f.stem === famStem)?.isRecurring;
+                        return (
+                          <div key={event.code}
+                            className="flex items-center gap-3 px-4 py-3"
+                            style={{ opacity: isFilteredPaste && !isPasted ? 0.4 : 1 }}>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {isPasted && <span className="text-[7px] font-mono text-[#2b5346] bg-[#eef4f1] px-1 py-0.5 rounded shrink-0">yours</span>}
+                                <span className="font-mono font-black text-[11px] text-[#0f0f0f] truncate">{event.code}</span>
+                              </div>
+                              <p className="text-[8.5px] font-mono text-[#b0b0b0] mt-0.5">
+                                {event.eventDateLabel}
+                                {isRecurringCode && <span className="ml-1 text-[#c8c8c8]">↻ {famName}</span>}
+                              </p>
+                            </div>
+                            {enriched && (
+                              <div className="text-right shrink-0">
+                                <span className="text-[10px] font-semibold font-mono" style={{ color: convGradeColor(enriched.calculatedConversion) }}>
+                                  {enriched.calculatedConversion.toFixed(1)}%
+                                </span>
+                                {enriched["Avg LTV 12"] > 0 && (
+                                  <p className="text-[8.5px] font-mono text-[#b0b0b0]">${enriched["Avg LTV 12"].toFixed(0)}</p>
+                                )}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 shrink-0 w-20">
+                              <div className="h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden flex-1">
+                                <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: color, opacity: 0.75 }} />
+                              </div>
+                              <span className="text-[11px] font-black font-mono text-[#1a1a1a] tabular-nums w-7 text-right">{event.totalSignups}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {!foundReports.length && (
+                      <div className="px-4 py-2.5 border-t border-[#f3f3f1]">
+                        <p className="text-[8.5px] font-mono text-[#c0c0c0]">Upload Looker data to see conversion rates.</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
-          )}
+          </div>
         </div>
+      )}
+
+      {/* Mobile bottom sheet (portal — escapes transform stacking context) */}
+      {calView === "heatmap" && selected && selectedEvents.length > 0 && createPortal(
+        (() => {
+          const [sy, sm] = selected.month.split("-");
+          const selSignups = selectedEvents.reduce((s, e) => s + e.totalSignups, 0);
+          const maxEv = Math.max(1, ...selectedEvents.map(e => e.totalSignups));
+
+          if (pinned && pinnedEvents.length > 0 && (pinned.prov !== selected.prov || pinned.month !== selected.month)) {
+            const [py, pm] = pinned.month.split("-");
+            const selLabel = `${MONTH_ABBR[Number(sm) - 1]} ${sy} · ${selected.prov}`;
+            const pinLabel = `${MONTH_ABBR[Number(pm) - 1]} ${py} · ${pinned.prov}`;
+            const pinSignups = pinnedEvents.reduce((s, e) => s + e.totalSignups, 0);
+            const allCodes = Array.from(new Set([...selectedEvents.map(e => e.code), ...pinnedEvents.map(e => e.code)])).sort();
+            const selMap = new Map(selectedEvents.map(e => [e.code, e]));
+            const pinMap = new Map(pinnedEvents.map(e => [e.code, e]));
+            return (
+              <div className="md:hidden fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl shadow-2xl flex flex-col"
+                style={{ maxHeight: "72vh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-[#e0e0e0] rounded-full" />
+                <div className="flex-none px-4 pt-5 pb-3 border-b border-[#f0f0ee] flex items-center justify-between">
+                  <span className="text-[11px] font-black text-[#0f0f0f]">Comparison</span>
+                  <button onClick={() => setPinned(null)} className="text-[9px] font-mono text-[#850b0b] cursor-pointer">Clear</button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <div className="grid grid-cols-2 divide-x divide-[#f0f0ee] border-b border-[#f0f0ee]">
+                    {[{ label: pinLabel, signups: pinSignups, prov: pinned.prov }, { label: selLabel, signups: selSignups, prov: selected.prov }].map(col => (
+                      <div key={col.label} className="px-3 py-2.5" style={{ borderLeft: `3px solid ${provColor(col.prov)}` }}>
+                        <p className="text-[9.5px] font-black text-[#1a1a1a]">{col.label}</p>
+                        <p className="text-[14px] font-black font-mono" style={{ color: provColor(col.prov) }}>{col.signups.toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {allCodes.map(code => {
+                    const a = pinMap.get(code);
+                    const b = selMap.get(code);
+                    const maxSig = Math.max(1, a?.totalSignups ?? 0, b?.totalSignups ?? 0);
+                    const delta = (b?.totalSignups ?? 0) - (a?.totalSignups ?? 0);
+                    const MobCell = ({ ev, prov }: { ev: EventStats | undefined; prov: string }) => (
+                      <div className="px-3 py-2.5 flex items-center gap-2">
+                        {ev ? (
+                          <>
+                            <span className="font-mono text-[10px] font-black text-[#0f0f0f] flex-1 min-w-0 truncate">{ev.code}</span>
+                            <span className="text-[10px] font-mono font-semibold shrink-0">{ev.totalSignups}</span>
+                          </>
+                        ) : <span className="text-[9px] font-mono text-[#ccc]">—</span>}
+                      </div>
+                    );
+                    return (
+                      <div key={code} className="grid grid-cols-2 divide-x divide-[#f8f8f8] border-b border-[#f5f5f3] items-center">
+                        <MobCell ev={a} prov={pinned.prov} />
+                        <div className="relative">
+                          <MobCell ev={b} prov={selected.prov} />
+                          {a && b && (
+                            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[7.5px] font-mono font-bold px-1 py-0.5 rounded-full"
+                              style={{ backgroundColor: delta >= 0 ? "#eef4f1" : "#fff0f0", color: delta >= 0 ? "#2b5346" : "#850b0b" }}>
+                              {delta >= 0 ? "+" : ""}{delta}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="md:hidden fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl shadow-2xl flex flex-col"
+              style={{ maxHeight: "68vh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-[#e0e0e0] rounded-full" />
+              <div className="flex-none px-4 pt-5 pb-3 border-b border-[#f0f0ee] flex items-center justify-between gap-3"
+                style={{ borderLeft: `3px solid ${provColor(selected.prov)}` }}>
+                <div>
+                  <p className="text-[8px] font-mono uppercase tracking-widest text-[#b0b0b0]">{selected.prov}</p>
+                  <p className="text-[15px] font-black text-[#0f0f0f]">{MONTH_ABBR[Number(sm) - 1]} {sy}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div>
+                    <p className="text-[18px] font-black font-mono text-right tabular-nums" style={{ color: provColor(selected.prov) }}>{selSignups.toLocaleString()}</p>
+                    <p className="text-[7.5px] font-mono text-[#a1a1a1] text-right">signups</p>
+                  </div>
+                  <button
+                    onClick={() => setPinned(prev => (prev?.prov === selected.prov && prev.month === selected.month ? null : selected))}
+                    className="tap-scale p-2.5 rounded-lg border cursor-pointer transition-all"
+                    style={{ minHeight: 44, minWidth: 44,
+                      ...(pinned?.prov === selected.prov && pinned.month === selected.month
+                        ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
+                        : { backgroundColor: "white", color: "#a0a0a0", borderColor: "#e5e5e5" }) }}>
+                    <Pin className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setSelected(null)}
+                    className="tap-scale p-2.5 text-[#c0c0c0] cursor-pointer" style={{ minHeight: 44, minWidth: 44 }}>
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              {pinned && (pinned.prov !== selected.prov || pinned.month !== selected.month) === false && (
+                <div className="flex-none px-4 py-2 bg-[#eef4f1] border-b border-[#d0e8e2]">
+                  <p className="text-[9px] font-mono text-[#2b5346]">Pinned · tap another cell to compare</p>
+                </div>
+              )}
+              <div className="flex-1 overflow-y-auto divide-y divide-[#f0f0ee]">
+                {selectedEvents.map(event => {
+                  const enriched = reportByCode.get(event.code);
+                  const barPct = Math.max(3, (event.totalSignups / maxEv) * 100);
+                  const isPasted = isFilteredPaste && pastedSet.has(event.code);
+                  const color = enriched ? convGradeColor(enriched.calculatedConversion) : provColor(event.homeProvince);
+                  const famStem = detectFamily(event.code);
+                  const famName = famStem.replace(/^EV/, "");
+                  const isRecurringCode = eventFamilies.find(f => f.stem === famStem)?.isRecurring;
+                  return (
+                    <div key={event.code} className="flex items-center gap-3"
+                      style={{ opacity: isFilteredPaste && !isPasted ? 0.4 : 1, minHeight: 56 }}>
+                      <div className="self-stretch w-1 shrink-0 rounded-r" style={{ backgroundColor: provColor(event.homeProvince) }} />
+                      <div className="flex-1 min-w-0 py-3">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {isPasted && <span className="text-[7.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-1 py-0.5 rounded font-semibold shrink-0">yours</span>}
+                          <span className="font-mono font-bold text-[12px] text-[#0f0f0f] truncate">{event.code}</span>
+                        </div>
+                        <p className="text-[10px] text-[#a1a1a1] mt-0.5 truncate">
+                          <span style={{ color: provColor(event.homeProvince), fontWeight: 700 }}>{event.homeProvince}</span>
+                          {" · "}{event.eventDateLabel}
+                          {isRecurringCode && <span className="ml-1 text-[#c8c8c8]">↻ {famName}</span>}
+                        </p>
+                      </div>
+                      {enriched && (
+                        <span className="text-[10px] font-semibold font-mono shrink-0"
+                          style={{ color: convGradeColor(enriched.calculatedConversion) }}>
+                          {enriched.calculatedConversion.toFixed(1)}%
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2 shrink-0 pr-4">
+                        <div className="h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden w-14">
+                          <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: color, opacity: 0.75 }} />
+                        </div>
+                        <span className="font-mono font-bold text-[14px] text-[#1a1a1a] tabular-nums">{event.totalSignups}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {!foundReports.length && (
+                <div className="flex-none px-4 py-2.5 border-t border-[#f3f3f1]">
+                  <p className="text-[8.5px] font-mono text-[#c0c0c0]">Upload Looker data on the Overview tab for conversion rates.</p>
+                </div>
+              )}
+            </div>
+          );
+        })(),
+        document.body
       )}
 
       {/* ══ FAMILIES VIEW ═══════════════════════════════════════════ */}
       {calView === "families" && (
-        <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden order-[4] md:order-[0]">
+        <div className="bg-white border-b border-[#e8e8e8]">
           {/* Families filter bar */}
-          <div className="px-4 py-3 border-b border-[#f5f5f3] flex items-center gap-3 bg-[#fafafa] flex-wrap">
+          <div className="px-4 py-3 border-b border-[#f0f0ee] flex items-center gap-3 bg-[#fafaf8] flex-wrap">
             <div className="flex items-center bg-[#f0f0ee] p-0.5 rounded-lg border border-[#e5e5e5]">
               <button
                 onClick={() => setFamilyFilter("recurring")}
@@ -1279,247 +1468,176 @@ export function CalendarTab({
         </div>
       )}
 
-      {/* ══ HEATMAP CELL DETAIL / COMPARISON ════════════════════════ */}
-      <div className="order-[5] md:order-[0] flex flex-col gap-4">
-      {calView === "heatmap" && selected && selectedEvents.length > 0 && (() => {
-        const [sy, sm] = selected.month.split("-");
-        const selLabel = `${MONTH_ABBR[Number(sm) - 1]} ${sy} · ${selected.prov}`;
-        const selSignups = selectedEvents.reduce((s, e) => s + e.totalSignups, 0);
-        const maxEv = Math.max(1, ...selectedEvents.map(e => e.totalSignups));
-        const maxProv = Math.max(1, ...cellProvTotals.map(([, n]) => n));
+      {/* ══ FOOTER: data coverage + upload ═════════════════════════ */}
+      <div className="bg-[#fafaf8] border-t border-[#e8e8e8]">
+        {/* Coverage row */}
+        <div className="px-4 py-3 flex items-center gap-4 flex-wrap border-b border-[#f0f0ee]">
+          <div className="flex items-center gap-2 shrink-0">
+            <BarChart2 className="w-3 h-3 text-[#c0c0c0]" />
+            <span className="text-[8px] font-mono uppercase tracking-widest text-[#b8b8b8]">Data coverage</span>
+          </div>
+          {coverageStats.years.map(y => {
+            const yd = coverageStats.byYear[y];
+            const isLatest = y === coverageStats.latestYear;
+            const isYTD = isLatest && coverageStats.isYTD;
+            return (
+              <div key={y} className="flex items-baseline gap-1.5">
+                <span className="text-[8.5px] font-mono text-[#b0b0b0]">{y}{isYTD ? " YTD" : ""}:</span>
+                <span className="text-[12px] font-black font-mono text-[#1a1a1a]">{yd.signups.toLocaleString()}</span>
+                <span className="text-[8px] font-mono text-[#c8c8c8]">sig · {yd.events} ev</span>
+              </div>
+            );
+          })}
+          {coverageStats.years.length >= 2 && !coverageStats.isYTD && (() => {
+            const yrs = coverageStats.years;
+            const prev = coverageStats.byYear[yrs[yrs.length - 2]];
+            const curr = coverageStats.byYear[yrs[yrs.length - 1]];
+            if (!prev || !curr || curr.signups < 50) return null;
+            const delta = curr.signups - prev.signups;
+            const pct = prev.signups > 0 ? Math.round((delta / prev.signups) * 100) : 0;
+            const up = delta >= 0;
+            return (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[8.5px] font-mono font-semibold"
+                style={{ backgroundColor: up ? "#eef4f1" : "#fff0f0", color: up ? "#2b5346" : "#850b0b" }}>
+                {up ? "↑" : "↓"} {Math.abs(pct)}% YoY
+              </span>
+            );
+          })()}
+          <div className="ml-auto flex items-center gap-1.5 shrink-0">
+            <CalendarDays className="w-3 h-3 text-[#d0d0d0]" />
+            <span className="text-[8.5px] font-mono text-[#c0c0c0]">{dateRangeLabel}</span>
+          </div>
+        </div>
 
-        // ── Comparison mode: show two cells side-by-side ──
-        if (pinned && pinnedEvents.length > 0 && (pinned.prov !== selected.prov || pinned.month !== selected.month)) {
-          const [py, pm] = pinned.month.split("-");
-          const pinLabel = `${MONTH_ABBR[Number(pm) - 1]} ${py} · ${pinned.prov}`;
-          const pinSignups = pinnedEvents.reduce((s, e) => s + e.totalSignups, 0);
-          const allCodes = Array.from(new Set([...selectedEvents.map(e => e.code), ...pinnedEvents.map(e => e.code)])).sort();
-          const selMap = new Map(selectedEvents.map(e => [e.code, e]));
-          const pinMap = new Map(pinnedEvents.map(e => [e.code, e]));
-
-          return (
-            <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-              {/* Comparison header */}
-              <div className="grid grid-cols-2 divide-x divide-[#f5f5f3] border-b border-[#f5f5f3]">
-                {[
-                  { label: pinLabel, signups: pinSignups, prov: pinned.prov, isPinned: true },
-                  { label: selLabel, signups: selSignups, prov: selected.prov, isPinned: false },
-                ].map(col => (
-                  <div key={col.label} className="px-4 py-3 flex items-center justify-between gap-3"
-                    style={{ borderLeft: `3px solid ${provColor(col.prov)}` }}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-black text-[#0f0f0f] truncate">{col.label}</span>
-                      {col.isPinned && <span className="text-[8px] font-mono text-[#a1a1a1] bg-[#f5f5f3] px-1 py-0.5 rounded shrink-0">pinned</span>}
-                    </div>
-                    <div className="flex items-baseline gap-1 shrink-0">
-                      <span className="text-base font-black font-mono" style={{ color: provColor(col.prov) }}>{col.signups.toLocaleString()}</span>
-                      <span className="text-[8px] font-mono text-[#a1a1a1]">signups</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {/* Comparison rows */}
-              <div className="divide-y divide-[#f8f8f8]">
-                {allCodes.map(code => {
-                  const a = pinMap.get(code);
-                  const b = selMap.get(code);
-                  const maxSig = Math.max(1, a?.totalSignups ?? 0, b?.totalSignups ?? 0);
-                  const delta = (b?.totalSignups ?? 0) - (a?.totalSignups ?? 0);
-                  const Cell = ({ ev, prov }: { ev: EventStats | undefined; prov: string }) => (
-                    <div className="px-4 py-2.5 flex items-center gap-3">
-                      {ev ? (
-                        <>
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="font-mono font-black text-[10px] text-[#0f0f0f] truncate">{ev.code}</span>
-                            <span className="text-[8.5px] font-mono text-[#c0c0c0] shrink-0">{ev.eventDateLabel}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0 w-24">
-                            <div className="h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden flex-1">
-                              <div className="h-full rounded-full" style={{ width: `${Math.max(3, (ev.totalSignups / maxSig) * 100)}%`, backgroundColor: provColor(prov), opacity: 0.7 }} />
-                            </div>
-                            <span className="text-[10px] font-mono font-semibold text-[#3d3d3d] w-6 text-right">{ev.totalSignups}</span>
-                          </div>
-                        </>
-                      ) : (
-                        <span className="text-[9px] font-mono text-[#d0d0d0] italic">not present</span>
-                      )}
-                    </div>
-                  );
-                  return (
-                    <div key={code} className="grid grid-cols-2 divide-x divide-[#f8f8f8] items-center">
-                      <Cell ev={a} prov={pinned.prov} />
-                      <div className="relative">
-                        <Cell ev={b} prov={selected.prov} />
-                        {a && b && (
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-mono font-bold px-1 py-0.5 rounded-full"
-                            style={{ backgroundColor: delta >= 0 ? "#eef4f1" : "#fff0f0", color: delta >= 0 ? "#2b5346" : "#850b0b" }}>
-                            {delta >= 0 ? "+" : ""}{delta}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="px-4 py-3 border-t border-[#f8f8f8] flex items-center justify-between">
-                <span className="text-[9px] font-mono text-[#a1a1a1]">Δ = selected vs pinned</span>
-                <button onClick={() => setPinned(null)} className="text-[9px] font-mono text-[#a1a1a1] hover:text-[#850b0b] cursor-pointer flex items-center gap-1">
-                  <PinOff className="w-3 h-3" /> Clear comparison
-                </button>
-              </div>
-            </div>
-          );
-        }
-
-        // ── Normal cell detail ──
-        return (
-          <div className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
-            <div className="px-4 md:px-5 py-3 md:py-4 border-b border-[#f5f5f3] flex items-center justify-between gap-3 md:gap-4"
-              style={{ borderLeft: `3px solid ${provColor(selected.prov)}` }}>
-              <div className="flex items-center gap-2 md:gap-3 min-w-0">
-                <span className="text-xs font-black text-[#0f0f0f]">{selLabel}</span>
-                <span className="text-[10px] font-mono text-[#a1a1a1]">{selectedEvents.length} event{selectedEvents.length !== 1 ? "s" : ""}</span>
-              </div>
-              <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                {/* Province breakdown mini-bars — desktop only */}
-                <div className="hidden sm:flex items-end gap-1.5 h-7">
-                  {cellProvTotals.map(([p, n]) => (
-                    <div key={p} className="flex flex-col items-center gap-0.5">
-                      <div className="w-3 rounded-sm" style={{ height: Math.max(3, (n / maxProv) * 20), backgroundColor: provColor(p) }} />
-                      <span className="text-[7px] font-mono" style={{ color: provColor(p) }}>{p}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-black font-mono text-[#2b5346]">{selSignups.toLocaleString()}</span>
-                  <span className="text-[9px] font-mono text-[#a1a1a1]">signups</span>
-                </div>
-                {/* Pin for comparison */}
-                <button
-                  onClick={() => setPinned(prev => (prev?.prov === selected.prov && prev.month === selected.month ? null : selected))}
-                  title={pinned?.prov === selected.prov && pinned.month === selected.month ? "Unpin" : "Pin this cell to compare with another"}
-                  className="tap-scale flex items-center gap-1 text-[9.5px] font-mono cursor-pointer px-2 py-1 rounded border transition-all"
-                  style={{
-                    minHeight: 44,
-                    ...(pinned?.prov === selected.prov && pinned.month === selected.month
-                      ? { backgroundColor: "#2b5346", color: "white", borderColor: "#2b5346" }
-                      : { backgroundColor: "white", color: "#888", borderColor: "#e5e5e5" })
-                  }}
-                >
-                  <Pin className="w-3 h-3" />
-                  <span className="hidden md:inline">{pinned?.prov === selected.prov && pinned.month === selected.month ? "Pinned" : "Compare"}</span>
-                </button>
-                <button onClick={() => setSelected(null)} className="tap-scale text-[#c0c0c0] hover:text-[#888] cursor-pointer p-2" style={{ minHeight: 44, minWidth: 44 }}>
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-            {pinned && (pinned.prov !== selected.prov || pinned.month !== selected.month) === false && (
-              <div className="px-4 md:px-5 py-2 bg-[#eef4f1] border-b border-[#d0e8e2]">
-                <p className="text-[9.5px] font-mono text-[#2b5346]">
-                  This cell is pinned. Click another cell to compare side-by-side.
-                </p>
-              </div>
-            )}
-            {/* Mobile: section label above event list */}
-            <p className="md:hidden px-4 pt-3 pb-1 text-[9px] font-mono uppercase tracking-[0.18em] text-[#a1a1a1]">Events</p>
-            <div className="divide-y divide-[#f0f0ee]">
-              {selectedEvents.map(event => {
-                const enriched = reportByCode.get(event.code);
-                const barPct = Math.max(3, (event.totalSignups / maxEv) * 100);
-                const isPasted = isFilteredPaste && pastedSet.has(event.code);
-                const color = enriched ? convGradeColor(enriched.calculatedConversion) : provColor(event.homeProvince);
-                const famStem = detectFamily(event.code);
-                const famName = famStem.replace(/^EV/, "");
-                const isRecurringCode = eventFamilies.find(f => f.stem === famStem)?.isRecurring;
+        {/* Province × year breakdown */}
+        {provinceYearStats.rows.length > 0 && (
+          <div className="px-4 py-3 border-b border-[#f0f0ee]">
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: `80px repeat(${provinceYearStats.years.length}, 1fr) 72px` }}>
+              <div />
+              {provinceYearStats.years.map(y => {
+                const isLatest = y === coverageStats.latestYear;
+                const isYTD = isLatest && coverageStats.isYTD;
                 return (
-                  <div
-                    key={event.code}
-                    className="flex items-center gap-3 md:gap-4"
-                    style={{
-                      opacity: isFilteredPaste && !isPasted ? 0.45 : 1,
-                      minHeight: 56,
-                      paddingLeft: 0,
-                    }}
-                  >
-                    {/* Mobile: left province color bar */}
-                    <div
-                      className="md:hidden self-stretch w-1 shrink-0 rounded-r"
-                      style={{ backgroundColor: provColor(event.homeProvince) }}
-                    />
-                    {/* Desktop padding replacement */}
-                    <div className="hidden md:block w-5 shrink-0" />
-                    <div className="flex items-center gap-2 min-w-0 flex-1 py-3 md:py-0">
-                      {/* Mobile layout: stacked code + meta */}
-                      <div className="flex flex-col min-w-0 flex-1 md:hidden">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          {isPasted && <span className="text-[7.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-1 py-0.5 rounded font-semibold shrink-0">yours</span>}
-                          <span className="font-mono font-bold text-[12px] text-[#0f0f0f] truncate" style={{ fontFamily: "DM Mono, monospace" }}>{event.code}</span>
-                        </div>
-                        <p className="text-[10px] text-[#a1a1a1] mt-0.5 truncate">
-                          <span style={{ color: provColor(event.homeProvince), fontWeight: 700 }}>{event.homeProvince}</span>
-                          {" · "}{event.eventDateLabel}
-                          {isRecurringCode && <span className="ml-1 text-[#c0c0c0]">↻ {famName}</span>}
-                        </p>
-                      </div>
-                      {/* Desktop layout: inline */}
-                      <div className="hidden md:flex items-center gap-2 min-w-0 flex-1">
-                        {isPasted && <span className="text-[7.5px] font-mono text-[#2b5346] bg-[#eef4f1] px-1.5 py-0.5 rounded font-semibold shrink-0">yours</span>}
-                        <span className="font-mono font-black text-[11px] text-[#0f0f0f] truncate">{event.code}</span>
-                        <span className="text-[9px] font-mono text-[#c0c0c0] shrink-0">{event.eventDateLabel}</span>
-                        {isRecurringCode && (
-                          <span className="text-[7.5px] font-mono text-[#a1a1a1] bg-[#f5f5f3] border border-[#e5e5e5] px-1.5 py-0.5 rounded shrink-0" title="Part of recurring event family">
-                            ↻ {famName}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {enriched && (
-                      <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                        <span className="text-[10px] font-semibold font-mono" style={{ color: convGradeColor(enriched.calculatedConversion) }}>
-                          {enriched.calculatedConversion.toFixed(1)}%
-                        </span>
-                        {enriched["Avg LTV 12"] > 0 && (
-                          <span className="hidden md:inline text-[10px] font-mono text-[#888]">${enriched["Avg LTV 12"].toFixed(0)} LTV</span>
-                        )}
-                      </div>
-                    )}
-                    {/* Signup count — prominent on mobile */}
-                    <div className="flex items-center gap-2 shrink-0 pr-4 md:pr-0 md:w-28">
-                      <div className="hidden md:flex h-1.5 bg-[#f0f0ee] rounded-full overflow-hidden flex-1">
-                        <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: color, opacity: 0.75 }} />
-                      </div>
-                      <span
-                        className="font-mono font-bold text-[14px] md:text-[10px] md:font-semibold text-right"
-                        style={{ color: "#1a1a1a", fontFamily: "DM Mono, monospace", minWidth: 32 }}
-                      >
-                        {event.totalSignups}
-                      </span>
-                    </div>
+                  <div key={y} className="text-right text-[8px] font-mono text-[#b0b0b0] uppercase tracking-wide pb-1 border-b border-[#f0f0ee]">
+                    {y}{isYTD ? " YTD" : ""}
                   </div>
                 );
               })}
+              <div className="text-right text-[8px] font-mono text-[#b0b0b0] uppercase tracking-wide pb-1 border-b border-[#f0f0ee]">Total</div>
+              {provinceYearStats.rows.map(row => {
+                const barPct = (row.total / provinceYearStats.maxTotal) * 100;
+                return (
+                  <React.Fragment key={row.prov}>
+                    <div className="flex items-center gap-2 pr-2">
+                      <span className="text-[10px] font-mono font-bold shrink-0" style={{ color: provColor(row.prov) }}>{row.prov}</span>
+                      <div className="flex-1 h-1 bg-[#f0f0ee] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: provColor(row.prov), opacity: 0.5 }} />
+                      </div>
+                    </div>
+                    {provinceYearStats.years.map(y => {
+                      const n = row.byYear[y] ?? 0;
+                      const ev = row.eventsByYear[y] ?? 0;
+                      const isLatest = y === coverageStats.latestYear;
+                      const yIdx = provinceYearStats.years.indexOf(y);
+                      const prevY = yIdx > 0 ? provinceYearStats.years[yIdx - 1] : null;
+                      const prevN = prevY ? (row.byYear[prevY] ?? 0) : null;
+                      const delta = prevN !== null && prevN > 0 && !(isLatest && coverageStats.isYTD)
+                        ? Math.round(((n - prevN) / prevN) * 100) : null;
+                      return (
+                        <div key={y} className="text-right">
+                          {n > 0 ? (
+                            <>
+                              <div className="flex items-baseline justify-end gap-1">
+                                <span className="text-[10.5px] font-black font-mono" style={{ color: isLatest ? "#1a1a1a" : "#999" }}>{n.toLocaleString()}</span>
+                                {delta !== null && (
+                                  <span className="text-[7.5px] font-mono" style={{ color: delta >= 0 ? "#2b5346" : "#850b0b" }}>
+                                    {delta >= 0 ? "↑" : "↓"}{Math.abs(delta)}%
+                                  </span>
+                                )}
+                              </div>
+                              {ev > 0 && <div className="text-[7.5px] font-mono text-[#c0c0c0]">{ev} ev</div>}
+                            </>
+                          ) : (
+                            <span className="text-[#e0e0e0] text-[11px] font-mono">—</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <div className="text-right">
+                      <div className="text-[10.5px] font-black font-mono text-[#1a1a1a]">{row.total.toLocaleString()}</div>
+                      {row.totalEvents > 0 && <div className="text-[7.5px] font-mono text-[#c0c0c0]">{row.totalEvents} ev</div>}
+                    </div>
+                  </React.Fragment>
+                );
+              })}
             </div>
-            {!foundReports.length && (
-              <div className="px-4 md:px-5 py-3 border-t border-[#f8f8f8]">
-                <p className="text-[9px] font-mono text-[#c0c0c0]">
-                  Upload your Looker performance dataset on the Overview tab to see conversion rates and LTV here.
-                </p>
-              </div>
-            )}
           </div>
-        );
-      })()}
+        )}
 
-      </div>{/* end order-[5] cell detail wrapper */}
-
-      {/* Hint */}
-      {calView === "heatmap" && !selected && (
-        <div className="flex items-center gap-2 text-[10px] font-mono text-[#c0c0c0] order-[6] md:order-[0]">
-          <ChevronRight className="w-3 h-3" />
-          Click any cell to see the events inside it. Use "Compare" to pin a cell and compare with another.
-        </div>
-      )}
+        {/* Upload panel */}
+        {showUpload && (
+          <div className="bg-white border-t border-[#e8e8e8]">
+            <div className="px-5 pt-5 pb-4 border-b border-[#f5f5f3]">
+              <p className="text-[11px] font-black text-[#0f0f0f]">Upload the Exportable Client List from Looker Studio</p>
+              <p className="text-[10px] text-[#a1a1a1] font-mono mt-0.5">
+                Built-in data covers {dateRangeLabel}. Export a fresh Exportable Client List to extend the calendar to today.
+              </p>
+            </div>
+            <div className="px-5 py-4 grid grid-cols-1 gap-3 sm:grid-cols-2 border-b border-[#f5f5f3]">
+              {LOOKER_STEPS.map(s => (
+                <div key={s.step} className="flex gap-3">
+                  <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black font-mono text-white mt-0.5"
+                    style={{ backgroundColor: "#2b5346" }}>{s.step}</span>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#1a1a1a]">{s.title}</p>
+                    <p className="text-[10px] text-[#888] leading-relaxed mt-0.5">{s.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-4 border-b border-[#f5f5f3]">
+              <div
+                onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={e => { e.preventDefault(); setIsDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }}
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2.5 cursor-pointer transition-colors"
+                style={isDragOver ? { borderColor: "#2b5346", backgroundColor: "#eef4f1" } : { borderColor: "#e5e5e5", backgroundColor: "#fafafa" }}>
+                {isLoadingCustomer ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 text-[#2b5346] animate-spin" />
+                    <span className="text-xs font-mono text-[#a1a1a1]">Parsing file…</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-lg bg-[#eef4f1] flex items-center justify-center">
+                      <Upload className="w-4 h-4 text-[#2b5346]" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-semibold text-[#1a1a1a]">Drop CSV or XLSX here</p>
+                      <p className="text-[9.5px] text-[#a1a1a1] font-mono mt-0.5">or click to browse</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-2.5">Expected columns</p>
+              <div className="grid grid-cols-1 gap-0 divide-y divide-[#f5f5f3] border border-[#f0f0ee] rounded-xl overflow-hidden sm:grid-cols-2 sm:divide-y-0">
+                {EXPECTED_COLS.map(col => (
+                  <div key={col.name} className="flex items-baseline gap-2.5 px-3 py-2 bg-white border-b border-[#f5f5f3]">
+                    <span className="font-mono text-[10px] text-[#2b5346] font-semibold shrink-0 w-36">{col.name}</span>
+                    <span className="text-[10px] text-[#a1a1a1] leading-snug">{col.note}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] font-mono text-[#c8c8c8] mt-2.5">Parsed client-side · no data leaves your browser</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
