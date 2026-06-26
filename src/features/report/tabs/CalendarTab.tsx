@@ -763,38 +763,130 @@ export function CalendarTab({
 
       {/* ══ HEATMAP VIEW ════════════════════════════════════════════ */}
       {calView === "heatmap" && (
-        <div className="flex flex-row bg-white border-b border-[#e8e8e8]">
-          {/* Heatmap table */}
-          <div className="flex-1 overflow-x-auto min-w-0" style={{ WebkitOverflowScrolling: "touch" }}>
-            <table className="border-collapse" style={{ minWidth: Math.max(600, MONTH_SLOTS.length * 52 + 160) }}>
+        <div className="flex flex-row bg-[#f5f4f1] border-b border-[#e8e8e8]">
+
+          {/* ── Mobile: Province heat cards ─────────────────────────── */}
+          <div className="md:hidden flex-1 flex flex-col gap-2.5 px-3 py-4">
+            {visProvs.map(prov => {
+              const mobCells = MONTH_SLOTS.map((mo, i) => {
+                const c = matrix.get(`${prov}||${mo}`);
+                return { mo, signups: c?.signups ?? 0, isYearBound: yearBounds.has(i) };
+              });
+              const rowTotal = mobCells.reduce((s, c) => s + c.signups, 0);
+              return (
+                <div key={prov} className="bg-white rounded-2xl shadow-sm overflow-hidden"
+                  style={{ borderLeft: `4px solid ${provColor(prov)}` }}>
+                  <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[16px] font-black font-mono" style={{ color: provColor(prov) }}>{prov}</span>
+                      <span className="text-[10px] font-mono text-[#888] ml-2.5">
+                        {rowTotal > 0 ? rowTotal.toLocaleString() : "—"} signups
+                      </span>
+                    </div>
+                    <span className="text-[8.5px] font-mono text-[#c0c0c0]">
+                      {mobCells.filter(c => c.signups > 0).length} months active
+                    </span>
+                  </div>
+                  {/* Month heat timeline */}
+                  <div className="flex px-4 pb-1.5" style={{ gap: 2 }}>
+                    {mobCells.map(({ mo, signups, isYearBound }) => {
+                      const isSel = selected?.prov === prov && selected.month === mo;
+                      const isPinned = pinned?.prov === prov && pinned.month === mo;
+                      const s2 = heatStyle(signups, maxCellSignups);
+                      return (
+                        <div key={mo}
+                          onClick={() => signups > 0 && selectCell(prov, mo)}
+                          className={`flex-1 rounded-sm transition-all ${signups > 0 ? "cursor-pointer active:opacity-80" : ""} ${isYearBound ? "ml-[3px]" : ""}`}
+                          style={{
+                            height: 28,
+                            backgroundColor: isSel ? provColor(prov) : signups > 0 ? s2.bg : "#f0efed",
+                            outline: isSel ? `2px solid ${provColor(prov)}` : isPinned ? `2px dashed ${provColor(prov)}` : "none",
+                            outlineOffset: -2,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  {/* Year labels */}
+                  <div className="flex px-4 pb-3">
+                    {yearSpans.map(span => (
+                      <div key={span.year} className="text-[7.5px] font-mono text-[#c0c0c0]" style={{ flex: span.count }}>
+                        {span.year}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {/* Monthly totals summary */}
+            <div className="bg-white rounded-2xl shadow-sm px-4 py-3">
+              <p className="text-[8px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-3">Monthly Totals</p>
+              <div className="flex items-end gap-[2px]" style={{ height: 44 }}>
+                {monthTotals.map((tot, i) => {
+                  const h = tot > 0 ? Math.max(4, (tot / maxMonthTotal) * 36) : 2;
+                  return (
+                    <div key={MONTH_SLOTS[i]}
+                      className={`flex-1 rounded-sm ${yearBounds.has(i) ? "ml-[3px]" : ""}`}
+                      style={{
+                        height: h,
+                        backgroundColor: tot > 0 ? "#2b5346" : "#f0efed",
+                        opacity: tot > 0 ? 0.45 + (tot / maxMonthTotal) * 0.55 : 1,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex pt-1">
+                {yearSpans.map(span => (
+                  <div key={span.year} className="text-[7.5px] font-mono text-[#c0c0c0]" style={{ flex: span.count }}>{span.year}</div>
+                ))}
+              </div>
+              <p className="text-[11px] font-black font-mono text-[#1a1a1a] mt-2">
+                {monthTotals.reduce((s, n) => s + n, 0).toLocaleString()} total signups
+              </p>
+            </div>
+          </div>
+
+          {/* ── Desktop: Mosaic heat grid ────────────────────────────── */}
+          <div className="hidden md:block flex-1 overflow-x-auto min-w-0" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table
+              style={{
+                minWidth: Math.max(600, MONTH_SLOTS.length * 54 + 168),
+                borderCollapse: "separate",
+                borderSpacing: "3px 3px",
+                padding: "10px 10px 6px",
+              }}>
               <thead>
-                {/* Year header row */}
+                {/* Year pill row */}
                 <tr>
-                  <th className="sticky left-0 z-20 bg-white border-b border-r border-[#ebebeb]" style={{ width: 120, minWidth: 120 }} />
+                  <th style={{ width: 128, minWidth: 128, verticalAlign: "bottom", paddingBottom: 6 }} />
                   {yearSpans.map((span, si) => (
                     <th key={span.year} colSpan={span.count}
-                      className={`border-b border-[#ebebeb] py-2 text-center ${si > 0 ? "border-l-2 border-l-[#2b5346]/25" : ""}`}
-                      style={{ backgroundColor: si % 2 === 0 ? "#fafaf8" : "#f4f3f0" }}>
-                      <span className="text-[9px] font-mono font-bold tracking-[0.22em] uppercase" style={{ color: "#2b5346" }}>{span.year}</span>
+                      style={{ paddingBottom: 6, paddingLeft: si > 0 ? 8 : 0 }}>
+                      <div className="rounded-full py-1 text-center"
+                        style={{ backgroundColor: si % 2 === 0 ? "#2b5346" : "#1a3d2f" }}>
+                        <span className="text-[8.5px] font-mono font-bold tracking-[0.22em] uppercase text-white/90">{span.year}</span>
+                      </div>
                     </th>
                   ))}
-                  <th className="border-b border-[#ebebeb] w-16" style={{ backgroundColor: "#fafaf8" }} />
+                  <th style={{ width: 72 }} />
                 </tr>
-                {/* Month header row */}
+                {/* Month label row */}
                 <tr>
-                  <th className="sticky left-0 z-20 bg-white border-b-2 border-r border-[#ebebeb] text-left px-3 py-2"
-                    style={{ width: 120, minWidth: 120 }}>
-                    <span className="text-[7.5px] font-mono uppercase tracking-[0.22em] text-[#c8c8c8]">Province</span>
+                  <th className="sticky left-0 z-20 text-left"
+                    style={{ width: 128, minWidth: 128, backgroundColor: "#f5f4f1", paddingBottom: 4 }}>
+                    <span className="text-[7.5px] font-mono uppercase tracking-[0.22em] text-[#c8c8c8] pl-1">Province</span>
                   </th>
                   {MONTH_SLOTS.map((mk, i) => (
                     <th key={mk}
-                      style={{ minWidth: 52, backgroundColor: yearBandColors[i] }}
-                      className={`border-b-2 border-[#e0e0de] text-center py-2 ${yearBounds.has(i) ? "border-l-2 border-l-[#2b5346]/20" : ""}`}>
-                      <span className="text-[8.5px] font-mono text-[#999]">{monthLabel(mk)}</span>
+                      style={{
+                        minWidth: 54, backgroundColor: "#f5f4f1",
+                        paddingBottom: 4, paddingLeft: yearBounds.has(i) ? 8 : 0, textAlign: "center",
+                      }}>
+                      <span className="text-[8.5px] font-mono text-[#aaa]">{monthLabel(mk)}</span>
                     </th>
                   ))}
-                  <th className="border-b-2 border-[#e0e0de] text-right pr-3 py-2"
-                    style={{ backgroundColor: "#fafaf8" }}>
+                  <th style={{ backgroundColor: "#f5f4f1", textAlign: "right", paddingRight: 10, paddingBottom: 4 }}>
                     <span className="text-[7.5px] font-mono uppercase tracking-wide text-[#b0b0b0]">Total</span>
                   </th>
                 </tr>
@@ -805,71 +897,85 @@ export function CalendarTab({
                   const rowTotal = MONTH_SLOTS.reduce((s, mo) => s + (matrix.get(`${prov}||${mo}`)?.signups ?? 0), 0);
                   return (
                     <tr key={prov} className="group">
-                      {/* Province sticky column with sparkline */}
-                      <td className="sticky left-0 z-10 border-b border-r border-[#ebebeb] px-3 py-2 bg-white group-hover:bg-[#fafaf8] transition-colors"
-                        style={{ minWidth: 120 }}>
-                        <div className="flex items-center justify-between gap-2">
+                      {/* Province sticky label cell */}
+                      <td className="sticky left-0 z-10" style={{ paddingRight: 4 }}>
+                        <div className="flex items-center justify-between gap-1.5 h-full px-2.5 py-2 rounded-xl"
+                          style={{
+                            borderLeft: `3px solid ${provColor(prov)}`,
+                            backgroundColor: `${provColor(prov)}0d`,
+                          }}>
                           <div>
                             <p className="text-[13px] font-black font-mono leading-none" style={{ color: provColor(prov) }}>{prov}</p>
                             <p className="text-[8px] font-mono text-[#c0c0c0] mt-0.5 tabular-nums">{rowTotal > 0 ? rowTotal.toLocaleString() : ""}</p>
                           </div>
                           {spark.length >= 2 && (() => {
                             const max = Math.max(1, ...spark);
-                            const W = 36, H = 18, n = spark.length;
-                            const bw = Math.max(3, (W - (n - 1) * 2) / n);
+                            const W = 32, H = 16, n = spark.length;
+                            const bw = Math.max(2, (W - (n - 1) * 2) / n);
                             return (
-                              <svg width={W} height={H} className="shrink-0 hidden md:block opacity-60">
-                                {spark.map((v, i) => {
+                              <svg width={W} height={H} className="opacity-55 shrink-0">
+                                {spark.map((v, i2) => {
                                   const h = Math.max(2, (v / max) * H);
-                                  return <rect key={i} x={i * (bw + 2)} y={H - h} width={bw} height={h} rx={1} fill={provColor(prov)} />;
+                                  return <rect key={i2} x={i2 * (bw + 2)} y={H - h} width={bw} height={h} rx={1} fill={provColor(prov)} />;
                                 })}
                               </svg>
                             );
                           })()}
                         </div>
                       </td>
-                      {/* Data cells */}
+                      {/* Month data cells */}
                       {MONTH_SLOTS.map((mo, i) => {
                         const k = `${prov}||${mo}`;
                         const cell = matrix.get(k);
                         const sig = cell?.signups ?? 0;
                         const evCount = cell?.events.length ?? 0;
-                        const style = heatStyle(sig, maxCellSignups);
+                        const style2 = heatStyle(sig, maxCellSignups);
+                        const t = sig > 0 ? Math.pow(sig / maxCellSignups, 0.55) : 0;
                         const isSel = selected?.prov === prov && selected.month === mo;
                         const isPinned = pinned?.prov === prov && pinned.month === mo;
+                        const isYearBound = yearBounds.has(i);
                         return (
                           <td key={mo}
                             onClick={() => sig > 0 && selectCell(prov, mo)}
+                            className="select-none"
                             style={{
-                              minWidth: 52,
-                              backgroundColor: isSel ? provColor(prov) : isPinned ? provColor(prov) + "22" : sig > 0 ? style.bg : yearBandColors[i],
-                              outline: isSel ? `2px solid ${provColor(prov)}` : isPinned ? `2px dashed ${provColor(prov)}` : "none",
+                              minWidth: 54,
+                              height: 48,
+                              borderRadius: 8,
+                              backgroundColor: isSel ? provColor(prov)
+                                : isPinned ? provColor(prov) + "22"
+                                : sig > 0 ? style2.bg
+                                : "#eae8e2",
+                              boxShadow: isSel
+                                ? `0 0 0 2px ${provColor(prov)}, 0 4px 14px rgba(43,83,70,0.28)`
+                                : sig > 0 ? `0 2px ${Math.round(2 + t * 10)}px rgba(43,83,70,${(t * 0.22).toFixed(2)})` : "none",
+                              cursor: sig > 0 ? "pointer" : "default",
+                              textAlign: "center", verticalAlign: "middle",
+                              outline: isPinned ? `2px dashed ${provColor(prov)}` : "none",
                               outlineOffset: -2,
-                            }}
-                            className={`border-b border-[#ebebeb] text-center select-none transition-colors ${sig > 0 ? "cursor-pointer hover:opacity-90" : ""} ${yearBounds.has(i) ? "border-l-2 border-l-[#2b5346]/15" : ""}`}>
-                            <div style={{ paddingTop: 9, paddingBottom: 9, minHeight: 40 }}>
-                              {sig > 0 ? (
-                                <>
-                                  <p className="text-[12px] font-black font-mono leading-none"
-                                    style={{ color: isSel ? "#fff" : style.text }}>
-                                    {sig >= 1000 ? `${(sig / 1000).toFixed(1)}k` : sig}
+                              paddingLeft: isYearBound ? 6 : 0,
+                              transform: isSel ? "scale(1.08)" : "scale(1)",
+                              transition: "box-shadow 0.15s ease, transform 0.1s ease",
+                            }}>
+                            {sig > 0 ? (
+                              <div>
+                                <p className="text-[11.5px] font-black font-mono leading-none"
+                                  style={{ color: isSel ? "#fff" : style2.text }}>
+                                  {sig >= 1000 ? `${(sig / 1000).toFixed(1)}k` : sig}
+                                </p>
+                                {evCount > 1 && (
+                                  <p className="text-[7px] font-mono leading-none mt-0.5"
+                                    style={{ color: isSel ? "rgba(255,255,255,0.65)" : style2.subtext }}>
+                                    {evCount}ev
                                   </p>
-                                  {evCount > 1 && (
-                                    <p className="text-[7px] font-mono leading-none mt-0.5"
-                                      style={{ color: isSel ? "rgba(255,255,255,0.65)" : style.subtext }}>
-                                      {evCount} ev
-                                    </p>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-[12px] font-mono" style={{ color: "#e8e8e8" }}>·</span>
-                              )}
-                            </div>
+                                )}
+                              </div>
+                            ) : null}
                           </td>
                         );
                       })}
                       {/* Row total */}
-                      <td className="border-b border-[#ebebeb] text-right pr-3 py-2" style={{ backgroundColor: "#fafaf8" }}>
+                      <td style={{ textAlign: "right", paddingRight: 10, paddingLeft: 4 }}>
                         {rowTotal > 0 && (
                           <span className="text-[11px] font-black font-mono" style={{ color: provColor(prov) }}>
                             {rowTotal.toLocaleString()}
@@ -881,17 +987,24 @@ export function CalendarTab({
                 })}
                 {/* Monthly totals row */}
                 <tr>
-                  <td className="sticky left-0 z-10 bg-[#f5f4f2] border-t-2 border-r border-[#e0e0de] px-3 py-2.5">
-                    <span className="text-[7.5px] font-mono uppercase tracking-[0.22em] text-[#a0a0a0]">Total</span>
+                  <td className="sticky left-0 z-10" style={{ paddingRight: 4 }}>
+                    <div className="flex items-center px-2.5 py-2.5 rounded-xl" style={{ backgroundColor: "#dedad1" }}>
+                      <span className="text-[7.5px] font-mono uppercase tracking-[0.22em] text-[#a0a0a0]">Total</span>
+                    </div>
                   </td>
                   {monthTotals.map((tot, i) => (
                     <td key={MONTH_SLOTS[i]}
-                      style={{ backgroundColor: yearBandColors[i] === "#ffffff" ? "#f9f8f6" : "#f4f3f0" }}
-                      className={`border-t-2 border-[#e0e0de] text-center py-1.5 ${yearBounds.has(i) ? "border-l-2 border-l-[#2b5346]/15" : ""}`}>
+                      style={{
+                        backgroundColor: "#dedad1",
+                        borderRadius: 8,
+                        textAlign: "center", verticalAlign: "bottom",
+                        paddingTop: 6, paddingBottom: 6, height: 48,
+                        paddingLeft: yearBounds.has(i) ? 6 : 0,
+                      }}>
                       {tot > 0 && (
                         <div className="flex flex-col items-center gap-0.5">
                           <div className="w-3 rounded-sm mx-auto"
-                            style={{ height: Math.max(3, (tot / maxMonthTotal) * 20), backgroundColor: "#2b5346", opacity: 0.45 }} />
+                            style={{ height: Math.max(3, (tot / maxMonthTotal) * 22), backgroundColor: "#2b5346", opacity: 0.55 }} />
                           <p className="text-[8px] font-mono text-[#777] tabular-nums">
                             {tot >= 1000 ? `${(tot / 1000).toFixed(1)}k` : tot}
                           </p>
@@ -899,7 +1012,7 @@ export function CalendarTab({
                       )}
                     </td>
                   ))}
-                  <td className="border-t-2 border-[#e0e0de] text-right pr-3 py-2.5" style={{ backgroundColor: "#f5f4f2" }}>
+                  <td style={{ textAlign: "right", paddingRight: 10, paddingLeft: 4 }}>
                     <span className="text-[12px] font-black font-mono text-[#1a1a1a]">
                       {monthTotals.reduce((s, n) => s + n, 0).toLocaleString()}
                     </span>
@@ -908,16 +1021,16 @@ export function CalendarTab({
               </tbody>
             </table>
             {/* Legend */}
-            <div className="px-4 py-2.5 flex items-center gap-2.5 border-t border-[#ebebeb] bg-white">
-              <span className="text-[7.5px] font-mono text-[#c0c0c0] uppercase tracking-wider">Signups</span>
-              <div className="flex items-center gap-0.5">
+            <div className="px-5 py-3 flex items-center gap-3 border-t border-[#dedbd4]">
+              <span className="text-[7.5px] font-mono text-[#b0b0b0] uppercase tracking-wider">Signups</span>
+              <div className="flex items-center gap-1">
                 {[0, 0.15, 0.3, 0.5, 0.7, 1.0].map((t, i) => (
-                  <div key={i} className="w-5 h-3 rounded-sm border border-[#f0f0ee]"
-                    style={{ backgroundColor: t === 0 ? "#f5f5f3" : `rgb(${Math.round(255 - t * 212)},${Math.round(255 - t * 172)},${Math.round(255 - t * 185)})` }} />
+                  <div key={i} className="w-5 h-3 rounded"
+                    style={{ backgroundColor: t === 0 ? "#eae8e2" : `rgb(${Math.round(255 - t * 212)},${Math.round(255 - t * 172)},${Math.round(255 - t * 185)})` }} />
                 ))}
               </div>
               <span className="text-[8px] font-mono text-[#a0a0a0]">Low → High</span>
-              {!selected && <span className="text-[8px] font-mono text-[#c8c8c8] ml-3 hidden md:inline">Click any cell to drill in · Pin + click another to compare</span>}
+              {!selected && <span className="text-[8px] font-mono text-[#c0c0c0] ml-3">Click any cell to drill in · Pin + click another to compare</span>}
               {pinned && <span className="text-[8.5px] font-mono text-[#a0a0a0] ml-3">Dashed = pinned for comparison</span>}
             </div>
           </div>
