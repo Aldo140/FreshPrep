@@ -239,9 +239,12 @@ export function CalendarTab({
   const { eventStats } = customerData;
   const isCustomData = !!customerFileName;
   const hasClientLtvUpload = foundReports.length > 0;
-  const eventScopeLabel = eventStats.some(e => !e.code.trim().toUpperCase().startsWith("EV"))
-    ? "EV-prefix + verified BusinessDevelopment codes"
-    : "EV-prefix codes only";
+  const eventScopeLabel = useMemo(
+    () => eventStats.some(e => !e.code.trim().toUpperCase().startsWith("EV"))
+      ? "EV-prefix + verified BusinessDevelopment codes"
+      : "EV-prefix codes only",
+    [eventStats],
+  );
 
   // Apply AB team province override: codes run by AB team even when hosted in BC cities
   const normalizedStats = useMemo(() =>
@@ -373,8 +376,14 @@ export function CalendarTab({
     return Array.from(vol.entries()).sort((a, b) => b[1] - a[1]).map(([p]) => p);
   }, [visibleStats]);
 
-  const selProvs = activeProvs ?? new Set(allProvs);
-  const visProvs = allProvs.filter(p => selProvs.has(p));
+  const selProvs = useMemo(
+    () => activeProvs ?? new Set(allProvs),
+    [activeProvs, allProvs],
+  );
+  const visProvs = useMemo(
+    () => allProvs.filter(p => selProvs.has(p)),
+    [allProvs, selProvs],
+  );
 
   const toggleProv = (p: string) => {
     const next = new Set(selProvs);
@@ -415,7 +424,7 @@ export function CalendarTab({
     return m;
   }, [matrix]);
 
-  const maxMonthTotal = Math.max(1, ...monthTotals);
+  const maxMonthTotal = useMemo(() => Math.max(1, ...monthTotals), [monthTotals]);
 
   const totalSignups = useMemo(
     () => visibleStats.filter(e => selProvs.has(e.homeProvince)).reduce((s, e) => s + e.totalSignups, 0),
@@ -462,11 +471,17 @@ export function CalendarTab({
 
   // ── Families view ─────────────────────────────────────────────
 
+  const familyCache = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of visibleStats) m.set(e.code, detectFamily(e.code));
+    return m;
+  }, [visibleStats]);
+
   const eventFamilies = useMemo((): EventFamily[] => {
     const map = new Map<string, EventStats[]>();
     for (const e of visibleStats) {
       if (!selProvs.has(e.homeProvince)) continue;
-      const stem = detectFamily(e.code);
+      const stem = familyCache.get(e.code) ?? detectFamily(e.code);
       const arr = map.get(stem) ?? [];
       arr.push(e);
       map.set(stem, arr);
@@ -487,7 +502,7 @@ export function CalendarTab({
         isRecurring: distinctMonths.size >= 2,
       };
     }).sort((a, b) => b.totalSignups - a.totalSignups);
-  }, [visibleStats, selProvs]);
+  }, [visibleStats, selProvs, familyCache]);
 
   const filteredFamilies = useMemo(() => {
     let list = familyFilter === "recurring"
