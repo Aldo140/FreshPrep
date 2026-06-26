@@ -152,7 +152,7 @@ function GuideView({
                 {([
                   ["708", "event codes"],
                   ["FY25–FY26", "fiscal years"],
-                  ["6", "provinces"],
+                  ["4", "provinces"],
                 ] as [string, string][]).map(([val, label]) => (
                   <div
                     key={val}
