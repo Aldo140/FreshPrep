@@ -131,8 +131,8 @@ When `teamFilter` is set:
 
 ## 8. Static DB — Built-in Codes
 
-- The built-in DB covers codes from **Jul 1, 2024 – Jun 24, 2026** (2 fiscal years).
-- There are approximately **708 unique BD/EV codes** in the built-in DB.
+- The built-in DB covers codes from **Jul 1, 2024 – Jul 6, 2026** (2 fiscal years).
+- There are approximately **681 unique BD/EV codes** in the built-in DB.
 - The built-in DB is loaded by `useStaticSignups.ts` from a bundled JSON/CSV at `/assets/`.
 - When a user uploads their own Client LTV (Looker export), the app MERGES the user file + built-in DB rows:
   - User file rows take precedence (no deduplication conflict since they come from different systems).
@@ -180,4 +180,4 @@ These same values must appear in every tab, map, and chart. Do not introduce new
 
 ---
 
-*Last updated: Jun 24, 2026. Maintained alongside the codebase — update when any of the above truths change.*
+*Last updated: Jul 6, 2026. Maintained alongside the codebase — update when any of the above truths change.*
