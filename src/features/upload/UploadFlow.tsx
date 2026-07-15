@@ -38,9 +38,9 @@ const COMPARISON_ROWS: [string, boolean, boolean][] = [
   ["Calendar heatmap (province × month)", true, true],
   ["Fiscal year comparison (FY2025 / FY2026)", true, true],
   ["Regional province breakdown", true, true],
-  ["Code lookup & browse all 681 codes", true, true],
+  ["Code lookup & browse all 688 codes", true, true],
   ["Compare two event editions", true, true],
-  ["Data after Jul 6, 2026", false, true],
+  ["Data after Jul 15, 2026", false, true],
   ["Conversion rate (signups → paying)", false, true],
   ["LTV at 3 / 6 / 12 months", false, true],
   ["Discount spend & efficiency ratio", false, true],
@@ -150,7 +150,7 @@ function GuideView({
               </h1>
               <div className="flex items-center gap-2 flex-wrap">
                 {([
-                  ["681", "event codes"],
+                  ["688", "event codes"],
                   ["FY25–FY26", "fiscal years"],
                   ["4", "provinces"],
                 ] as [string, string][]).map(([val, label]) => (
@@ -195,7 +195,7 @@ function GuideView({
                     </span>
                   </div>
                   <p style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
-                    Jul 2024 – Jul 2026 · 681 codes
+                    Jul 2024 – Jul 2026 · 688 codes
                   </p>
                 </div>
               </div>
@@ -294,7 +294,7 @@ function GuideView({
                       </span>
                     </div>
                     <p className="text-[9px] font-mono text-[#2b5346]/70 mt-0.5">
-                      Jul 1, 2024 – Jul 6, 2026 · 681 codes · 2 fiscal years
+                      Jul 1, 2024 – Jul 15, 2026 · 688 codes · 2 fiscal years
                     </p>
                   </div>
                 </div>
@@ -305,7 +305,7 @@ function GuideView({
                   <ul className="space-y-1.5">
                     <Yes>Province × month <strong>calendar heatmap</strong></Yes>
                     <Yes><strong>Fiscal year comparison</strong> — FY2025 vs FY2026</Yes>
-                    <Yes>Browse &amp; search <strong>all 681 event codes</strong></Yes>
+                    <Yes>Browse &amp; search <strong>all 688 event codes</strong></Yes>
                     <Yes><strong>Compare two event editions</strong> side-by-side</Yes>
                     <Yes>Regional signups by province</Yes>
                   </ul>
@@ -317,13 +317,13 @@ function GuideView({
                   <ul className="space-y-1">
                     <No>Conversion rate or LTV</No>
                     <No>Performance grades (A+ → F)</No>
-                    <No>Events after Jul 6, 2026</No>
+                    <No>Events after Jul 15, 2026</No>
                   </ul>
                 </div>
                 <div className="mt-auto pt-1 space-y-2.5">
                   <div className="flex items-start gap-1.5 text-[8.5px] font-mono text-[#b08000] leading-relaxed">
                     <AlertCircle className="w-3 h-3 shrink-0 mt-px" />
-                    <span>Data ends Jul 6 — upload a Looker export anytime to get current data</span>
+                    <span>Data ends Jul 15 — upload a Looker export anytime to get current data</span>
                   </div>
                   <button
                     onClick={onBdOnly}
@@ -373,7 +373,7 @@ function GuideView({
                   </p>
                   <ul className="space-y-1">
                     <No>Events not yet in the built-in database</No>
-                    <No>Data or conversions after Jul 6, 2026</No>
+                    <No>Data or conversions after Jul 15, 2026</No>
                     <No>Revenue &amp; grade analysis</No>
                   </ul>
                 </div>

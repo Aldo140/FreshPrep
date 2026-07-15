@@ -59,7 +59,7 @@ export function CustomerUploadModal({ isOpen, isLoading, onClose, onFile }: Cust
           <div>
             <h3 className="text-[15px] font-black text-[#0f0f0f]">Upload custom signup data</h3>
             <p className="text-xs text-[#a1a1a1] font-mono mt-0.5 leading-relaxed">
-              The calendar uses the built-in Jul 1, 2024 – Jul 6, 2026 dataset by default.
+              The calendar uses the built-in Jul 1, 2024 – Jul 15, 2026 dataset by default.
               Upload a newer export to override it.
             </p>
           </div>
