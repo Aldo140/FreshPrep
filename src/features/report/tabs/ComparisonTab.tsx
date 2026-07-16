@@ -79,15 +79,16 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
   const bdGroups = useMemo(() => {
     if (foundReports.length > 0 || rawPastedCodes.length < 2) return null;
     const statsByCode = new Map<string, EventStats>(eventStats.map(e => [e.code, e]));
-    type Grp = { codes: string[]; totalSignups: number; provinces: string[]; dateMonths: string[] };
+    type Grp = { codes: string[]; totalSignups: number; totalPaying: number; provinces: string[]; dateMonths: string[] };
     const groups: Record<string, Grp> = {};
     for (const code of rawPastedCodes) {
       const lbl = editionLabels[code] ?? "Edition A";
-      if (!groups[lbl]) groups[lbl] = { codes: [], totalSignups: 0, provinces: [], dateMonths: [] };
+      if (!groups[lbl]) groups[lbl] = { codes: [], totalSignups: 0, totalPaying: 0, provinces: [], dateMonths: [] };
       const stat = statsByCode.get(code);
       if (stat) {
         groups[lbl].codes.push(code);
         groups[lbl].totalSignups += stat.totalSignups;
+        groups[lbl].totalPaying += stat.payingSignups;
         if (stat.homeProvince && !groups[lbl].provinces.includes(stat.homeProvince)) {
           groups[lbl].provinces.push(stat.homeProvince);
         }
@@ -117,7 +118,7 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
           <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Comparison Analysis · BD Events</p>
           <h2 className="text-[20px] font-black text-[#0f0f0f]">Volume Comparison</h2>
           <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">
-            Upload a Looker file to unlock conversion, LTV, and trend analysis.
+            Signups, paying customers &amp; conversion from the built-in DB. Upload a Looker file for LTV and trend analysis.
           </p>
         </div>
 
@@ -145,9 +146,17 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
                     </div>
                     <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">{grp.codes.join(", ")}</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-2xl font-black font-mono" style={{ color: isWinner ? "#2b5346" : "#1a1a1a" }}>{grp.totalSignups.toLocaleString()}</p>
-                    <p className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">signups</p>
+                  <div className="text-right shrink-0 flex items-start gap-4">
+                    <div>
+                      <p className="text-2xl font-black font-mono" style={{ color: isWinner ? "#2b5346" : "#1a1a1a" }}>{grp.totalSignups.toLocaleString()}</p>
+                      <p className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">signups</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black font-mono text-[#4d8970]">{grp.totalPaying.toLocaleString()}</p>
+                      <p className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">
+                        paying · {grp.totalSignups > 0 ? ((grp.totalPaying / grp.totalSignups) * 100).toFixed(0) : 0}%
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <div className="h-2 bg-[#f0f0f0] rounded-full overflow-hidden">
@@ -167,7 +176,7 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
         <div className="bg-[#f8f7f5] rounded-xl border border-[#e8e8e8] px-5 py-4 flex items-center gap-3">
           <BarChart2 className="w-4 h-4 text-[#a1a1a1] shrink-0" />
           <p className="text-xs text-[#3d3d3d]">
-            <strong>Volume only</strong> — Upload a Looker export to see conversion rates, LTV trajectory, and trend direction.
+            <strong>Volume &amp; conversion</strong> — Upload a Looker export to add LTV trajectory and trend direction.
           </p>
         </div>
       </div>

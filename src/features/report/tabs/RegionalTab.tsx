@@ -13,6 +13,14 @@ const PROV_COLOR: Record<string, string> = {
 };
 const provColor = (p: string) => PROV_COLOR[p] ?? "#2b5346";
 
+const PROV_FULL: Record<string, string> = {
+  BC: "British Columbia", AB: "Alberta", ON: "Ontario",
+  QC: "Quebec", SK: "Saskatchewan", MB: "Manitoba",
+  NS: "Nova Scotia", NB: "New Brunswick",
+};
+// Label ink on strip segments: gold needs dark text, the greens/rusts need white
+const segText = (p: string) => (p === "AB" ? "#3a2e00" : "#fff");
+
 function fiscalYear(monthKey: string): string {
   const y = Number(monthKey.slice(0, 4));
   const m = Number(monthKey.slice(5, 7));
@@ -84,6 +92,7 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
   const [codeLookupQuery, setCodeLookupQuery] = useState("");
   const [selectedLookupCode, setSelectedLookupCode] = useState<string | null>(null);
   const [expandedProvince, setExpandedProvince] = useState<string | null>(null);
+  const [hoverProv, setHoverProv] = useState<string | null>(null);
   const eventSchedule = useEventSchedule();
 
   // Top 10 events per home province, ranked by signups (BD-only drill-down)
@@ -277,56 +286,36 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
     const filteredProvs = bdProvinceStats.filter(p => activeProvinces.has(p.province));
     const grandTotal = bdProvinceStats.reduce((s, p) => s + p.signups, 0);
     const totalEvents = bdProvinceStats.reduce((s, p) => s + p.events, 0);
+    const grandPaying = bdProvinceStats.reduce((s, p) => s + p.paying, 0);
+    const hovered = hoverProv ? bdProvinceStats.find(p => p.province === hoverProv) : null;
 
     return (
       <div className="p-4 md:p-5 pb-24 md:pb-5 flex flex-col gap-4 md:gap-5 max-w-6xl mx-auto w-full">
 
-        {/* ── MOBILE: summary hero strip ── DESKTOP: original header ── */}
-        {/* Mobile hero */}
-        <div
-          className="md:hidden rounded-2xl px-5 py-5 flex flex-col gap-1 animate-slide-up-in"
-          style={{ background: "#2b5346" }}
-        >
-          <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-white/60">Regional · BD Events Database</p>
-          <div className="flex items-end justify-between gap-3 mt-1">
+        {/* ── Hero: national performance ── */}
+        <div className="rounded-2xl px-5 py-5 md:px-7 md:py-6 animate-slide-up-in" style={{ background: "#2b5346" }}>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p
-                className="text-[38px] font-black font-mono text-white leading-none animate-num-rise"
-                style={{ fontFamily: "DM Mono, monospace" }}
-              >
-                {grandTotal.toLocaleString()}
-              </p>
-              <p className="text-[11px] text-white/70 mt-1" style={{ fontFamily: "DM Sans, sans-serif" }}>
-                signups across Canada
-              </p>
+              <p className="text-[8px] font-mono uppercase tracking-[0.28em] text-white/40 mb-1.5">Regional · BD Events Database</p>
+              <h2 className="text-[22px] md:text-[28px] font-black text-white leading-none tracking-tight">Province Performance</h2>
+              <p className="text-[10px] font-mono text-white/40 mt-1">{dbDateRange} · {filteredProvs.length} province{filteredProvs.length !== 1 ? "s" : ""}</p>
             </div>
-            <div className="text-right shrink-0">
-              <p
-                className="text-[26px] font-black text-white/90 leading-none"
-                style={{ fontFamily: "DM Mono, monospace" }}
-              >
-                {filteredProvs.length}
-              </p>
-              <p className="text-[9px] text-white/55 uppercase tracking-wide mt-0.5" style={{ fontFamily: "DM Mono, monospace" }}>
-                provinces
-              </p>
+            <div className="flex items-start gap-5 md:gap-7">
+              <div>
+                <p className="text-[26px] md:text-[34px] font-black font-mono text-[#e7bd27] leading-none tabular-nums">{totalEvents.toLocaleString()}</p>
+                <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">events</p>
+              </div>
+              <div>
+                <p className="text-[26px] md:text-[34px] font-black font-mono text-white leading-none tabular-nums animate-num-rise">{grandTotal.toLocaleString()}</p>
+                <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">signups</p>
+              </div>
+              <div>
+                <p className="text-[26px] md:text-[34px] font-black font-mono leading-none tabular-nums" style={{ color: "#8fc7ae" }}>{grandPaying.toLocaleString()}</p>
+                <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">
+                  paying · {grandTotal > 0 ? ((grandPaying / grandTotal) * 100).toFixed(0) : 0}%
+                </p>
+              </div>
             </div>
-          </div>
-          <p className="text-[9px] font-mono text-white/45 mt-2">{dbDateRange}</p>
-        </div>
-
-        {/* Desktop header (unchanged) */}
-        <div className="hidden md:flex items-end justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1] mb-1">Regional · BD Events Database</p>
-            <h2 className="text-[20px] font-black text-[#0f0f0f]">Province Summary</h2>
-            <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">
-              Signups by province · {dbDateRange}
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-2xl font-black font-mono text-[#2b5346]">{grandTotal.toLocaleString()}</p>
-            <p className="text-[9px] font-mono text-[#a1a1a1] uppercase tracking-wide">total signups</p>
           </div>
         </div>
 
@@ -348,6 +337,55 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
             </button>
           )}
         </div>
+
+        {/* ── Signature: national share strip ── */}
+        {grandTotal > 0 && (
+          <section className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm px-5 py-4 animate-slide-up-in">
+            <div className="flex items-baseline justify-between gap-3 mb-3 flex-wrap">
+              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">Share of national signups</p>
+              <p className="text-[9px] font-mono" style={{ color: hovered ? provColor(hovered.province) : "#c0c0c0" }}>
+                {hovered
+                  ? `${PROV_FULL[hovered.province] ?? hovered.province} — ${hovered.signups.toLocaleString()} signups · ${hovered.signups > 0 ? ((hovered.paying / hovered.signups) * 100).toFixed(0) : 0}% paying · ${hovered.events} events`
+                  : "click a province to open its ranked events below"}
+              </p>
+            </div>
+            <div className="flex w-full h-11 rounded-lg overflow-hidden" style={{ gap: 2 }} role="img" aria-label="Province share of national signups">
+              {bdProvinceStats.map(row => {
+                const pct = (row.signups / grandTotal) * 100;
+                const dimmed = !activeProvinces.has(row.province);
+                return (
+                  <button
+                    key={row.province}
+                    type="button"
+                    onClick={() => {
+                      setExpandedProvince(prev => prev === row.province ? null : row.province);
+                      requestAnimationFrame(() =>
+                        document.getElementById(`prov-row-${row.province}`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+                      );
+                    }}
+                    onMouseEnter={() => setHoverProv(row.province)}
+                    onMouseLeave={() => setHoverProv(null)}
+                    className="flex items-center justify-center cursor-pointer transition-opacity min-w-0"
+                    style={{
+                      flexGrow: row.signups,
+                      flexBasis: 0,
+                      backgroundColor: provColor(row.province),
+                      opacity: dimmed ? 0.3 : hoverProv && hoverProv !== row.province ? 0.65 : 1,
+                    }}
+                    aria-label={`${PROV_FULL[row.province] ?? row.province}: ${row.signups.toLocaleString()} signups, ${pct.toFixed(0)}% of national`}
+                    title={`${row.province} · ${row.signups.toLocaleString()} signups · ${pct.toFixed(0)}%`}
+                  >
+                    {pct >= 7 && (
+                      <span className="text-[10px] font-black font-mono whitespace-nowrap px-1" style={{ color: segText(row.province) }}>
+                        {row.province} {pct.toFixed(0)}%
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Code lookup */}
         <section className="bg-white rounded-2xl border border-[#e8e8e8] shadow-sm overflow-hidden">
@@ -593,125 +631,89 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
           </div>
         </section>
 
-        {/* ── MOBILE: province filter pills (horizontal scroll) ── */}
-        {allProvinces.length > 1 && (
-          <div className="md:hidden snap-x-scroll no-scrollbar flex gap-2 pb-1">
-            {allProvinces.map(p => {
-              const isActive = activeProvinces.has(p);
-              return (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => toggleProvince(p)}
-                  className="snap-start shrink-0 flex items-center gap-1.5 px-3 rounded-full text-[11px] font-black font-mono cursor-pointer tap-scale border transition-all"
-                  style={{
-                    minHeight: "44px",
-                    color: isActive ? "#fff" : provColor(p),
-                    backgroundColor: isActive ? provColor(p) : provColor(p) + "14",
-                    borderColor: provColor(p) + (isActive ? "ff" : "40"),
-                  }}
-                  aria-pressed={isActive}
-                >
-                  {p}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* ── MOBILE: province tiles ── DESKTOP: original 2-col grid ── */}
-
-        {/* Mobile tiles */}
-        <div className="md:hidden flex flex-col gap-3">
+        {/* ── Province leaderboard (ranked, expandable) ── */}
+        <div className="flex flex-col gap-2.5">
           {filteredProvs.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white rounded-2xl border border-[#e8e8e8] shadow-sm animate-slide-up-in">
               <MapPin className="w-8 h-8 text-[#d0d0d0]" />
               <p className="text-sm font-semibold text-[#3d3d3d]">No provinces selected</p>
-              <p className="text-[10px] font-mono text-[#a1a1a1]">Tap a province pill above to show data</p>
+              <p className="text-[10px] font-mono text-[#a1a1a1]">Clear the province filter to show data</p>
             </div>
           ) : (
-            filteredProvs.map(row => {
-              const shareW = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
-              const PROV_FULL: Record<string, string> = {
-                BC: "British Columbia", AB: "Alberta", ON: "Ontario",
-                QC: "Quebec", SK: "Saskatchewan", MB: "Manitoba",
-                NS: "Nova Scotia", NB: "New Brunswick",
-              };
-              const fullName = PROV_FULL[row.province] ?? row.province;
+            filteredProvs.map((row, idx) => {
+              const isOpen = expandedProvince === row.province;
+              const isLeader = idx === 0 && filteredProvs.length > 1;
+              const shareOfMax = filteredProvs[0].signups > 0 ? (row.signups / filteredProvs[0].signups) * 100 : 0;
+              const sharePct = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
+              const convPct = row.signups > 0 ? (row.paying / row.signups) * 100 : 0;
+              const bdShare = provinceTotals[row.province]?.all
+                ? (provinceTotals[row.province].bd / provinceTotals[row.province].all) * 100
+                : null;
               return (
                 <div
                   key={row.province}
-                  className="bg-white border border-[#e8e8e8] overflow-hidden animate-slide-up-in"
-                  style={{ borderRadius: "14px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", minHeight: "72px" }}
+                  id={`prov-row-${row.province}`}
+                  className="bg-white rounded-2xl border overflow-hidden shadow-sm animate-slide-up-in"
+                  style={{
+                    borderColor: isOpen ? provColor(row.province) + "55" : "#e8e8e8",
+                    animationDelay: `${idx * 45}ms`,
+                  }}
                 >
-                  {/* Tile body */}
                   <button
                     type="button"
                     onClick={() => setExpandedProvince(prev => prev === row.province ? null : row.province)}
-                    aria-expanded={expandedProvince === row.province}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer tap-scale"
+                    aria-expanded={isOpen}
+                    className="w-full flex items-center gap-3 md:gap-5 px-4 md:px-5 py-3.5 text-left cursor-pointer hover:bg-[#fbfbfa] transition-colors tap-scale"
                   >
-                    {/* Left: colored square + province abbr */}
-                    <div className="flex flex-col items-center gap-1.5 shrink-0">
-                      <div
-                        className="rounded-[3px]"
-                        style={{ width: "12px", height: "12px", backgroundColor: provColor(row.province) }}
-                      />
-                      <span
-                        className="font-black"
-                        style={{ fontFamily: "DM Mono, monospace", fontSize: "13px", color: provColor(row.province) }}
-                      >
-                        {row.province}
-                      </span>
-                    </div>
+                    <span
+                      className="shrink-0 w-7 text-right font-black font-mono leading-none"
+                      style={{ fontSize: 22, color: isLeader ? "#e7bd27" : "#e0ded9" }}
+                    >
+                      {idx + 1}
+                    </span>
 
-                    {/* Center: full name + event count */}
                     <div className="flex-1 min-w-0">
-                      <p
-                        className="text-[#3d3d3d] truncate"
-                        style={{ fontFamily: "DM Sans, sans-serif", fontSize: "12px" }}
-                      >
-                        {fullName}
-                      </p>
-                      <p
-                        className="text-[#a1a1a1] mt-0.5"
-                        style={{ fontFamily: "DM Mono, monospace", fontSize: "10px" }}
-                      >
-                        {row.events} event{row.events !== 1 ? "s" : ""} · {row.signups > 0 ? ((row.paying / row.signups) * 100).toFixed(0) : 0}% paying
-                      </p>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span
+                          className="font-black text-[13px] font-mono px-1.5 py-0.5 rounded border leading-none"
+                          style={{ color: provColor(row.province), borderColor: provColor(row.province) + "40", backgroundColor: provColor(row.province) + "12" }}
+                        >
+                          {row.province}
+                        </span>
+                        <span className="text-[12px] font-semibold text-[#3d3d3d] truncate">{PROV_FULL[row.province] ?? row.province}</span>
+                        <span className="text-[9px] font-mono text-[#a1a1a1]">
+                          {row.events} event{row.events !== 1 ? "s" : ""} · {sharePct.toFixed(0)}% of national
+                        </span>
+                        {isLeader && (
+                          <span className="text-[8px] font-black font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ color: "#8a6f00", background: "#fdf6dd" }}>
+                            top province
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2 h-2 bg-[#f0f0ee] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bar-grow" style={{ width: `${shareOfMax}%`, backgroundColor: provColor(row.province) }} />
+                      </div>
                     </div>
 
-                    {/* Right: signup count */}
                     <div className="shrink-0 text-right">
-                      <p
-                        className="font-black text-[#1a1a1a] leading-none"
-                        style={{ fontFamily: "DM Mono, monospace", fontSize: "18px" }}
-                      >
-                        {row.signups.toLocaleString()}
+                      <p className="font-black font-mono text-[#0f0f0f] leading-none" style={{ fontSize: 20 }}>{row.signups.toLocaleString()}</p>
+                      <p className="text-[9px] font-mono text-[#4d8970] mt-1">
+                        {row.paying.toLocaleString()} paying · {convPct.toFixed(0)}%
                       </p>
-                      <p
-                        className="text-[#a1a1a1] mt-0.5"
-                        style={{ fontFamily: "DM Mono, monospace", fontSize: "9px" }}
-                      >
-                        signups
-                      </p>
+                      {bdShare !== null && (
+                        <p className="hidden md:block text-[8.5px] font-mono text-[#b0b0b0] mt-0.5">
+                          BD = {bdShare.toFixed(1)}% of all {row.province} signups
+                        </p>
+                      )}
                     </div>
 
                     <ChevronDown
                       className="w-4 h-4 shrink-0 text-[#a1a1a1] transition-transform"
-                      style={{ transform: expandedProvince === row.province ? "rotate(180deg)" : "none" }}
+                      style={{ transform: isOpen ? "rotate(180deg)" : "none" }}
                     />
                   </button>
 
-                  {/* Full-width progress bar */}
-                  <div className="h-[3px] bg-[#f0f0f0] w-full">
-                    <div
-                      className="h-full bar-grow"
-                      style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }}
-                    />
-                  </div>
-
-                  {expandedProvince === row.province && (
+                  {isOpen && (
                     <TopEventsList
                       events={topEventsByProvince.get(row.province) ?? []}
                       color={provColor(row.province)}
@@ -721,56 +723,6 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
               );
             })
           )}
-        </div>
-
-        {/* Desktop: original 2-col grid (unchanged) */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredProvs.map(row => {
-            const shareW = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
-            return (
-              <div key={row.province} className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden self-start">
-                <button
-                  type="button"
-                  onClick={() => setExpandedProvince(prev => prev === row.province ? null : row.province)}
-                  aria-expanded={expandedProvince === row.province}
-                  className="w-full px-5 py-4 text-left cursor-pointer hover:bg-[#fafaf9] transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className="font-black text-[13px] font-mono px-2 py-0.5 rounded border"
-                      style={{ color: provColor(row.province), borderColor: provColor(row.province) + "40", backgroundColor: provColor(row.province) + "12" }}
-                    >
-                      {row.province}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-[9px] font-mono text-[#a1a1a1]">
-                      {row.events} event{row.events !== 1 ? "s" : ""}
-                      <ChevronDown
-                        className="w-3.5 h-3.5 transition-transform"
-                        style={{ transform: expandedProvince === row.province ? "rotate(180deg)" : "none" }}
-                      />
-                    </span>
-                  </div>
-                  <p className="text-2xl font-black font-mono text-[#1a1a1a] leading-none">{row.signups.toLocaleString()}</p>
-                  <p className="text-[9px] font-mono text-[#a1a1a1] mt-1">signups · {shareW.toFixed(0)}% of total</p>
-                  <p className="text-[9px] font-mono text-[#4d8970] mt-0.5">
-                    {row.signups > 0 ? ((row.paying / row.signups) * 100).toFixed(0) : 0}% became paying
-                    {provinceTotals[row.province]?.all
-                      ? ` · BD = ${((provinceTotals[row.province].bd / provinceTotals[row.province].all) * 100).toFixed(1)}% of all ${row.province} signups`
-                      : ""}
-                  </p>
-                  <div className="mt-2 h-1 bg-[#eee] rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }} />
-                  </div>
-                </button>
-                {expandedProvince === row.province && (
-                  <TopEventsList
-                    events={topEventsByProvince.get(row.province) ?? []}
-                    color={provColor(row.province)}
-                  />
-                )}
-              </div>
-            );
-          })}
         </div>
 
         {/* Link to BD Fiscal for full breakdown */}

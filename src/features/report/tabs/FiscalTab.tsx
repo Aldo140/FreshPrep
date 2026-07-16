@@ -295,7 +295,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
   // ── Event volume from static/uploaded CSV — grouped by fiscal year ──
 
   const volume = useMemo(() => {
-    const byYear: Record<string, { events: number; signups: number }> = {};
+    const byYear: Record<string, { events: number; signups: number; paying: number }> = {};
     const eventListByFY: Record<string, EventStats[]> = {};
     const eventsByProv: Record<string, number> = {};
     const signupsByProv: Record<string, number> = {};
@@ -319,9 +319,10 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       if (!e.eventMonth) continue;
       eventMonths.add(e.eventMonth);
       const yr = fiscalYear(e.eventMonth);
-      if (!byYear[yr]) byYear[yr] = { events: 0, signups: 0 };
+      if (!byYear[yr]) byYear[yr] = { events: 0, signups: 0, paying: 0 };
       byYear[yr].events++;
       byYear[yr].signups += e.totalSignups;
+      byYear[yr].paying += e.payingSignups;
       if (!eventListByFY[yr]) eventListByFY[yr] = [];
       eventListByFY[yr].push(e);
       byMonth[e.eventMonth] = (byMonth[e.eventMonth] ?? 0) + e.totalSignups;
@@ -362,6 +363,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
     const prevYear = years.length >= 2 ? years[years.length - 2] : null;
     const totalEvents = visibleEventStats.length;
     const totalSignups = visibleEventStats.reduce((s, e) => s + e.totalSignups, 0);
+    const totalPaying = visibleEventStats.reduce((s, e) => s + e.payingSignups, 0);
 
     // Coverage per FY: how many of the 12 months have event data
     const coverage: Record<string, { covered: number; total: 12; status: "full" | "partial" | "none" }> = {};
@@ -379,7 +381,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       byYear, eventsByProv, signupsByProv,
       eventsByProvByFY, eventListByProvByFY, signupsByProvByFY,
       eventsByProvYTD, signupsByProvYTD,
-      years, latestYear, prevYear, totalEvents, totalSignups, coverage, nextFY, nextFYStart,
+      years, latestYear, prevYear, totalEvents, totalSignups, totalPaying, coverage, nextFY, nextFYStart,
       eventListByFY,
       ytdSignupsByFY,
       byMonth, byMonthByFY,
@@ -690,7 +692,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
         <div className="flex items-center gap-1.5 w-full md:w-auto">
           <span className="text-[8.5px] font-mono text-[#a1a1a1] uppercase tracking-widest shrink-0">FY</span>
           <div className="flex items-center gap-1 flex-1 md:flex-initial flex-wrap">
-            {([null, ...volume.years] as (string | null)[]).map(fy => (
+            {([null, ...[...volume.years].reverse()] as (string | null)[]).map(fy => (
               <button key={fy ?? "all"}
                 onClick={() => setSelectedFY(fy)}
                 className="tap-scale flex-1 md:flex-initial px-3 rounded-full text-[9px] font-mono font-semibold border transition-colors cursor-pointer"
@@ -722,7 +724,16 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
             icon={<CalendarDays className="w-4 h-4" />}
             large
           />
-          {volume.years.map(yr => {
+          <KpiCard
+            label="Paying Customers"
+            value={fmtBig(volume.totalPaying)}
+            sub={`${volume.totalSignups > 0 ? ((volume.totalPaying / volume.totalSignups) * 100).toFixed(1) : 0}% blended conversion`}
+            note="from built-in signup data"
+            accent="#4d8970"
+            icon={<TrendingUp className="w-4 h-4" />}
+            large
+          />
+          {[...volume.years].reverse().map(yr => {
             const yd = volume.byYear[yr];
             const isLatest = yr === volume.latestYear;
             const isCurrent = yr === currentFY;
@@ -734,7 +745,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                 key={yr}
                 label={`${yr}${isCurrent && !complete ? " · In Progress" : complete ? " · Complete" : ""}`}
                 value={fmtBig(yd.signups)}
-                sub={`${yd.events} event codes · ${fyRange(yr)}`}
+                sub={`${yd.events} codes · ${fmtBig(yd.paying)} paying (${yd.signups > 0 ? ((yd.paying / yd.signups) * 100).toFixed(0) : 0}%)`}
                 note={(() => {
                   if (isPartial) return `Partial data — ${cov.covered}/12 months in dataset`;
                   if (!volume.prevYear || yr !== volume.latestYear) return undefined;
@@ -888,17 +899,38 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                     label: "Event Codes",
                     values: volume.years.map(yr => volume.byYear[yr]?.events ?? 0),
                     fmt: (n: number) => n.toLocaleString(),
+                    isRate: false,
                   },
                   {
                     label: "Signups",
                     values: volume.years.map(yr => volume.byYear[yr]?.signups ?? 0),
                     fmt: (n: number) => fmtBig(n),
+                    isRate: false,
+                  },
+                  {
+                    label: "Paying Customers",
+                    values: volume.years.map(yr => volume.byYear[yr]?.paying ?? 0),
+                    fmt: (n: number) => fmtBig(n),
+                    isRate: false,
+                  },
+                  {
+                    label: "Conversion",
+                    values: volume.years.map(yr => {
+                      const yd = volume.byYear[yr];
+                      return yd && yd.signups > 0 ? (yd.paying / yd.signups) * 100 : 0;
+                    }),
+                    fmt: (n: number) => `${n.toFixed(1)}%`,
+                    isRate: true,
                   },
                 ].map((row, ri) => {
                   const vals = row.values;
                   const prev = vals[vals.length - 2] ?? null;
                   const curr = vals[vals.length - 1] ?? null;
-                  const d = prev !== null && curr !== null && prev > 0 ? delta(curr, prev) : null;
+                  const d = prev !== null && curr !== null && prev > 0
+                    ? (row.isRate
+                        ? { up: curr >= prev, pct: Math.round(Math.abs(curr - prev) * 10) / 10, pp: true }
+                        : { ...delta(curr, prev)!, pp: false })
+                    : null;
                   return (
                     <tr key={row.label} className={`border-b border-[#f8f8f8] ${ri % 2 === 0 ? "" : "bg-[#fafafa]"}`}>
                       <td className="px-5 py-3 text-[11px] font-semibold text-[#3d3d3d]">{row.label}</td>
@@ -923,7 +955,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                             className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full"
                             style={{ backgroundColor: d.up ? "#eef4f1" : "#fff0f0", color: d.up ? "#2b5346" : "#850b0b" }}
                           >
-                            {d.up ? "↑" : "↓"}{Math.abs(d.pct)}%
+                            {d.up ? "↑" : "↓"}{Math.abs(d.pct)}{d.pp ? "pp" : "%"}
                           </span>
                         ) : (
                           <span className="text-[10px] font-mono text-[#d0d0d0]">—</span>

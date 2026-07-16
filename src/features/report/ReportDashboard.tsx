@@ -15,12 +15,13 @@ import {
   RefreshCw, ArrowLeft, Database, Upload, X,
   LayoutDashboard, TrendingUp, DollarSign, CalendarDays,
   BarChart3, MapPin, BarChart2, SlidersHorizontal,
-  ChevronDown, ChevronUp as ChevronUpIcon,
+  ChevronDown, ChevronUp as ChevronUpIcon, FileText,
 } from "lucide-react";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PerformanceTab } from "./tabs/PerformanceTab";
 import { RevenueTab } from "./tabs/RevenueTab";
 import { RegionalTab } from "./tabs/RegionalTab";
+import { ReportBuilderTab } from "./tabs/ReportBuilderTab";
 import { DataTab } from "./tabs/DataTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
 import { CalendarTab } from "./tabs/CalendarTab";
@@ -339,6 +340,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     { id: "calendar",   label: "Calendar",   shortLabel: "Calendar", icon: CalendarDays },
     { id: "fiscal",     label: "BD Fiscal",  shortLabel: "Fiscal",   icon: BarChart3 },
     { id: "regional",   label: "Regional",   shortLabel: "Regional", icon: MapPin },
+    { id: "report",     label: "BD Report",  shortLabel: "Report",   icon: FileText },
     { id: "data",       label: "All Codes",  shortLabel: "Codes",    icon: Database },
   ];
 
@@ -779,6 +781,13 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             activeProvince={activeProvince}
             onNavigate={setReportPage}
             channelScope={channelScope}
+          />
+        )}
+
+        {reportPage === "report" && (
+          <ReportBuilderTab
+            eventStats={scopedCustomerData.eventStats}
+            provinceTotals={scopedCustomerData.provinceTotals}
           />
         )}
 

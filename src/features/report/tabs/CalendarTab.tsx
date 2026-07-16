@@ -278,12 +278,13 @@ export function CalendarTab({
 
   // ── Month range ───────────────────────────────────────────────
 
+  // Newest month first — users care about recent activity, not 2024
   const MONTH_SLOTS = useMemo(() => {
     const months = visibleStats.map(e => e.eventMonth).filter(Boolean);
-    if (months.length === 0) return generateMonthRange("2024-07", "2026-06");
+    if (months.length === 0) return generateMonthRange("2024-07", "2026-06").reverse();
     const min = months.reduce((a, b) => a < b ? a : b);
     const max = months.reduce((a, b) => a > b ? a : b);
-    return generateMonthRange(min, max);
+    return generateMonthRange(min, max).reverse();
   }, [visibleStats]);
 
   const yearBounds = useMemo(() => {
@@ -436,6 +437,11 @@ export function CalendarTab({
     [visibleStats, selProvs],
   );
 
+  const totalPaying = useMemo(
+    () => visibleStats.filter(e => selProvs.has(e.homeProvince)).reduce((s, e) => s + e.payingSignups, 0),
+    [visibleStats, selProvs],
+  );
+
   // ── Cell detail ───────────────────────────────────────────────
 
   const cellProvTotals = useMemo((): [string, number][] => {
@@ -545,8 +551,9 @@ export function CalendarTab({
 
   const dateRangeLabel = useMemo(() => {
     if (!MONTH_SLOTS.length) return "";
-    const [fy, fm] = MONTH_SLOTS[0].split("-");
-    const [ly, lm] = MONTH_SLOTS[MONTH_SLOTS.length - 1].split("-");
+    const asc = [...MONTH_SLOTS].sort();
+    const [fy, fm] = asc[0].split("-");
+    const [ly, lm] = asc[asc.length - 1].split("-");
     const f = `${MONTH_ABBR[Number(fm) - 1]} ${fy}`;
     const l = `${MONTH_ABBR[Number(lm) - 1]} ${ly}`;
     return f === l ? f : `${f} – ${l}`;
@@ -673,6 +680,12 @@ export function CalendarTab({
             <div>
               <p className="text-[26px] md:text-[34px] font-black font-mono text-white leading-none tabular-nums">{totalSignups.toLocaleString()}</p>
               <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">signups</p>
+            </div>
+            <div>
+              <p className="text-[26px] md:text-[34px] font-black font-mono leading-none tabular-nums" style={{ color: "#8fc7ae" }}>{totalPaying.toLocaleString()}</p>
+              <p className="text-[8px] font-mono text-white/35 mt-0.5 uppercase tracking-[0.2em]">
+                paying · {totalSignups > 0 ? ((totalPaying / totalSignups) * 100).toFixed(0) : 0}%
+              </p>
             </div>
             {headerYoyPct !== null && (
               <div>
@@ -1619,7 +1632,7 @@ export function CalendarTab({
             <BarChart2 className="w-3 h-3 text-[#c0c0c0]" />
             <span className="text-[8px] font-mono uppercase tracking-widest text-[#b8b8b8]">Data coverage</span>
           </div>
-          {coverageStats.years.map(y => {
+          {[...coverageStats.years].reverse().map(y => {
             const yd = coverageStats.byYear[y];
             const isLatest = y === coverageStats.latestYear;
             const isYTD = isLatest && coverageStats.isYTD;
@@ -1657,7 +1670,7 @@ export function CalendarTab({
           <div className="px-4 py-3 border-b border-[#f0f0ee]">
             <div className="grid gap-1.5" style={{ gridTemplateColumns: `80px repeat(${provinceYearStats.years.length}, 1fr) 72px` }}>
               <div />
-              {provinceYearStats.years.map(y => {
+              {[...provinceYearStats.years].reverse().map(y => {
                 const isLatest = y === coverageStats.latestYear;
                 const isYTD = isLatest && coverageStats.isYTD;
                 return (
@@ -1677,7 +1690,7 @@ export function CalendarTab({
                         <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: provColor(row.prov), opacity: 0.5 }} />
                       </div>
                     </div>
-                    {provinceYearStats.years.map(y => {
+                    {[...provinceYearStats.years].reverse().map(y => {
                       const n = row.byYear[y] ?? 0;
                       const ev = row.eventsByYear[y] ?? 0;
                       const isLatest = y === coverageStats.latestYear;
