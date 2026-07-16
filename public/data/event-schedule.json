@@ -1,0 +1,4090 @@
+{
+ "BDABBIKESHOW5": {
+  "name": "Calgary Bike Show",
+  "province": "AB",
+  "date": "Mar 18-19",
+  "team": "Carrie, Gill",
+  "totalSpend": 2500,
+  "cpa": 78.125
+ },
+ "BDWOMENSHOW": {
+  "name": "National Women's Show",
+  "province": "AB",
+  "date": "April 22 & 23",
+  "team": null,
+  "totalSpend": 2935,
+  "cpa": 55.37735849
+ },
+ "BDBABYANDTOT5": {
+  "name": "Calgary Baby & Tot",
+  "province": "AB",
+  "date": "May 6-7",
+  "team": "Carrie & Callum",
+  "totalSpend": 1661.5,
+  "cpa": 75.52
+ },
+ "BDNIGHTMARKET5": {
+  "name": "Calgary Night Market",
+  "province": "AB",
+  "date": "45065",
+  "team": "Callum/Gill",
+  "totalSpend": 585,
+  "cpa": 23.4
+ },
+ "EVSERVUS": {
+  "name": "Calgary Marathon Expo",
+  "province": "AB",
+  "date": "May 26 & 27",
+  "team": "Carrie & Pavel",
+  "totalSpend": 2870,
+  "cpa": 95.67
+ },
+ "BDSOAPRUN": {
+  "name": "Soap Run",
+  "province": "AB",
+  "date": "May 27 & 28",
+  "team": "Kevin",
+  "totalSpend": 962.5,
+  "cpa": 53.47222222
+ },
+ "EVLILAC": {
+  "name": "Lilac Fest",
+  "province": "AB",
+  "date": "44716",
+  "team": "Carrie & Callum",
+  "totalSpend": 3170,
+  "cpa": 38.65
+ },
+ "EVNIGHTMARKETMWD": {
+  "name": "Calgary Night Market",
+  "province": "AB",
+  "date": "45093",
+  "team": "Carrie",
+  "totalSpend": 665,
+  "cpa": 44.32
+ },
+ "EVCROSSROADSMW": {
+  "name": "Crossroads Market",
+  "province": "AB",
+  "date": "June 23-25",
+  "team": "Carrie & Callum",
+  "totalSpend": 2300,
+  "cpa": null
+ },
+ "EVCURRIE5": {
+  "name": "Currie Barracks Market",
+  "province": "AB",
+  "date": "45115",
+  "team": "TBD",
+  "totalSpend": 150,
+  "cpa": null
+ },
+ "EVJULYNIGHTMARKET5": {
+  "name": "Calgary Night Market",
+  "province": "AB",
+  "date": "45135",
+  "team": "Carrie & Callum",
+  "totalSpend": 515,
+  "cpa": 39.65
+ },
+ "EVSUNFEST5": {
+  "name": "Inglelwood Sunfest",
+  "province": "AB",
+  "date": "45137",
+  "team": "Carrie & Callum",
+  "totalSpend": 1190,
+  "cpa": 37.12
+ },
+ "EVTASTEOFCALGARY11": {
+  "name": "Taste of Calgary",
+  "province": "AB",
+  "date": "Aug 3-7",
+  "team": "Carrie & Callum",
+  "totalSpend": 3694.27,
+  "cpa": 42.46
+ },
+ "EVMARDA11": {
+  "name": "Marda Gras",
+  "province": "AB",
+  "date": "45151",
+  "team": "Callum/Gill",
+  "totalSpend": 350,
+  "cpa": 10.6
+ },
+ "EVNIGHTMARKET11": {
+  "name": "Calgary Night Market",
+  "province": "AB",
+  "date": "45156",
+  "team": "Carrie & Callum",
+  "totalSpend": 275,
+  "cpa": null
+ },
+ "EVGLOBALFEST85": {
+  "name": "Globalfest",
+  "province": "AB",
+  "date": "Aug 17, 19, 22, 24, 26",
+  "team": "BA Team",
+  "totalSpend": 3827,
+  "cpa": 72.20754717
+ },
+ "EVROCKYMTN11": {
+  "name": "Rocky Mountain Food festival Calgary",
+  "province": "AB",
+  "date": "Oct 13 &14",
+  "team": "BA Team",
+  "totalSpend": 2756,
+  "cpa": 551
+ },
+ "EVEDMFALLSHOW11": {
+  "name": "Edmonton Fall Home Show",
+  "province": "AB",
+  "date": "Oct 13-15",
+  "team": "Carrie and BA Team",
+  "totalSpend": 5390.4,
+  "cpa": 99
+ },
+ "EVCALRENO6": {
+  "name": "Calgary Home and Reno Show",
+  "province": "AB",
+  "date": "Jan 12th-14th",
+  "team": "Jackie, Andre and Angad",
+  "totalSpend": 4523,
+  "cpa": 56
+ },
+ "EVWF6": {
+  "name": "The Wedding Fair",
+  "province": "AB",
+  "date": "Jan 21st",
+  "team": "Jackie and Andre",
+  "totalSpend": 1935,
+  "cpa": 48
+ },
+ "EVEDMREN06": {
+  "name": "Edmonton Home and Reno Show",
+  "province": "AB",
+  "date": "Jan 26th-28th",
+  "team": "Andre, Katherine, Aurpon and Peter",
+  "totalSpend": 5185.93,
+  "cpa": 52.38313131
+ },
+ "EVCROSSRD6": {
+  "name": "Crossroads farmers market",
+  "province": "AB",
+  "date": "Feb 17-19th",
+  "team": "Andre and Trevor",
+  "totalSpend": 1350,
+  "cpa": 45
+ },
+ "EVYYCHOME6": {
+  "name": "Calgary Home and Garden Show",
+  "province": "AB",
+  "date": "Feb 22-25th",
+  "team": "Andre, Jackie and Alex",
+  "totalSpend": 5792.9,
+  "cpa": 44
+ },
+ "EVRDHOMESHOW6": {
+  "name": "Red Deer Home show",
+  "province": "AB",
+  "date": "March 8-10th",
+  "team": "Andre",
+  "totalSpend": 2430,
+  "cpa": 64
+ },
+ "EVLETHSHOW11": {
+  "name": "Lethbridge Home Show",
+  "province": "AB",
+  "date": "March 14, 15 and 16",
+  "team": "Andre",
+  "totalSpend": 2840,
+  "cpa": 66.04651163
+ },
+ "EVABBIKESHOW6": {
+  "name": "Calgary Bike Show",
+  "province": "AB",
+  "date": "March 16th and 17th",
+  "team": "Carrie, Jackie and Andre",
+  "totalSpend": 2994,
+  "cpa": 66.53333333
+ },
+ "EVEDMHG6": {
+  "name": "Edmonton Home and Garden Show",
+  "province": "AB",
+  "date": "March 21st-24th",
+  "team": "Peter, Katherine and Andre",
+  "totalSpend": 5160.4,
+  "cpa": 67.01818182
+ },
+ "EVYYCWS6": {
+  "name": "National Women Expo",
+  "province": "AB",
+  "date": "April 13th - April 14th",
+  "team": "Carrie and Andre",
+  "totalSpend": 3165,
+  "cpa": 53.6440678
+ },
+ "EVCHHOME6": {
+  "name": "Cochrane Trade Show",
+  "province": "AB",
+  "date": "May 4th and 5th",
+  "team": "Jackie, Andre, Carrie and Kate",
+  "totalSpend": 1877,
+  "cpa": 110.4117647
+ },
+ "EVSPCKIMB6": {
+  "name": "Sportchek Mother Day Walk",
+  "province": "AB",
+  "date": "May 12th",
+  "team": "Kate and Andre",
+  "totalSpend": 595,
+  "cpa": 14.16666667
+ },
+ "EVIBYYCMARATHON6": {
+  "name": "Calgary Marathon",
+  "province": "AB",
+  "date": "May24th - 25th",
+  "team": "Jackie, Andre, Kate",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVIBYYCTOTS6": {
+  "name": "Baby Show",
+  "province": "AB",
+  "date": "May25th - 26th",
+  "team": "Jackie, Adi, Kate and Syed",
+  "totalSpend": 1214,
+  "cpa": 303.5
+ },
+ "EVIBBLOSSOM6": {
+  "name": "Blossom Fest",
+  "province": "AB",
+  "date": "May25th - 26th",
+  "team": "Carrie and Jackie",
+  "totalSpend": 1401.75,
+  "cpa": 77.875
+ },
+ "EVIBLILAC6": {
+  "name": "Lilac Festival",
+  "province": "AB",
+  "date": "June 2nd",
+  "team": "Carrie, Jackie and Andre",
+  "totalSpend": 2640,
+  "cpa": 42.58064516
+ },
+ "EVIBBRIDGE6": {
+  "name": "Bridgeland Night market",
+  "province": "AB",
+  "date": "June 28th",
+  "team": "Carrie, Andre(Jun, Jul-5-1030)",
+  "totalSpend": 853.75,
+  "cpa": 32.83653846
+ },
+ "EVIBBRIDGE10": {
+  "name": "Bridgeland Night market",
+  "province": "AB",
+  "date": "July 26, Aug 30",
+  "team": "Carrie, Andre (Jul 5-1030pm), Renee (Jul), Kate (Aug)",
+  "totalSpend": 1746.25,
+  "cpa": 34.925
+ },
+ "EVIBAIRDRIE6": {
+  "name": "Airdrie Farmers Market",
+  "province": "AB",
+  "date": "June 19, Jun 26 (missed)",
+  "team": "Carrie",
+  "totalSpend": 305,
+  "cpa": 61
+ },
+ "EVIBAIRDRIE10": {
+  "name": "Airdrie Farmers Market",
+  "province": "AB",
+  "date": "Jul 3, Aug 7",
+  "team": "Carrie",
+  "totalSpend": 455,
+  "cpa": 50.55555556
+ },
+ "EVIBKIEHLS6": {
+  "name": "Kiehls mall event",
+  "province": "AB",
+  "date": "Jun 22nd, Jun 23rd",
+  "team": "Carrie+Renee (Chinook), Andre (Market Mall)",
+  "totalSpend": 670,
+  "cpa": 67
+ },
+ "EVIBOKOTOKS6": {
+  "name": "Okotoks Farmers Market",
+  "province": "AB",
+  "date": "Jun 14th, 21st",
+  "team": "Syed, Carrie",
+  "totalSpend": 435,
+  "cpa": 145
+ },
+ "EVIBCHESTERMERE6": {
+  "name": "Chestermere Farmers Market",
+  "province": "AB",
+  "date": "Jun 26th",
+  "team": "Carrie",
+  "totalSpend": 235,
+  "cpa": 58.75
+ },
+ "EVIBCARSTAIRS6": {
+  "name": "Carstairs Farmers Market",
+  "province": "AB",
+  "date": "Jun 18th",
+  "team": "Carrie",
+  "totalSpend": 255,
+  "cpa": 255
+ },
+ "EVIBCD10": {
+  "name": "East Village Canada Day",
+  "province": "AB",
+  "date": "July 1st",
+  "team": "Andre, Carrie, Renee (2-5PM)",
+  "totalSpend": 1511.25,
+  "cpa": 37.78125
+ },
+ "EVIBTASTEEDM10": {
+  "name": "Taste of Edmonton",
+  "province": "AB",
+  "date": "July 18th to 28th - July 18-19",
+  "team": "Syed, Andre, Carrie, Renee, Kiana, Joe",
+  "totalSpend": 6611.96,
+  "cpa": 150.2718182
+ },
+ "EVIBEDM10": {
+  "name": "HealYEG Slow Pitch Event",
+  "province": "AB",
+  "date": "45493",
+  "team": "Renee, Carrie",
+  "totalSpend": 215,
+  "cpa": 43
+ },
+ "EVIBEDMDNTNFM10": {
+  "name": "Edmonton Downtown Market",
+  "province": "AB",
+  "date": "Sept 21, 28",
+  "team": "Josie",
+  "totalSpend": 566,
+  "cpa": 47.16666667
+ },
+ "EVIBMOMMKT10": {
+  "name": "The Mom Market",
+  "province": "AB",
+  "date": "July 7th, Aug 18th",
+  "team": "Carrie",
+  "totalSpend": 763,
+  "cpa": 47.6875
+ },
+ "EVIBSUNFEST10": {
+  "name": "Inglewood Sunfest",
+  "province": "AB",
+  "date": "July 27th",
+  "team": "Carrie, Renee(11-730), Andre(11-5)",
+  "totalSpend": 1342.5,
+  "cpa": 32.74390244
+ },
+ "EVIBTASTECGY10": {
+  "name": "Taste of Calgary",
+  "province": "AB",
+  "date": "August 1st to August 5th",
+  "team": "Syed, Carrie, Mayank, Renee, Rohail",
+  "totalSpend": 12626.59,
+  "cpa": 21.84
+ },
+ "EVIBMARDAGRAS10": {
+  "name": "Marda Gras",
+  "province": "AB",
+  "date": "August 13th",
+  "team": "Syed, Mayank, Renee, Kate",
+  "totalSpend": 1058.3,
+  "cpa": 26.4575
+ },
+ "EVIBWHOOPUP10": {
+  "name": "Whoop Up Days Lethbridge",
+  "province": "AB",
+  "date": "Aug 20-24th",
+  "team": "Syed, Carrie, Renee",
+  "totalSpend": 6194.8,
+  "cpa": 65.20842105
+ },
+ "EVIBABKIEHLS6": {
+  "name": "Kiehls mall event (Chinook and Market Mall)",
+  "province": "AB",
+  "date": "Sept 11-13",
+  "team": "Carrie, Renee (Sept 12), Josie-Edm (12:30-6PM)",
+  "totalSpend": 2043.9,
+  "cpa": 58.39714286
+ },
+ "EVIBLMM10": {
+  "name": "Little Modern Market",
+  "province": "AB",
+  "date": "Sept 14th",
+  "team": "Carrie, Renee (Sept 14)",
+  "totalSpend": 963.8,
+  "cpa": 50.72631579
+ },
+ "EVIBLMBKER10": {
+  "name": "Little Modern Beaker Market",
+  "province": "AB",
+  "date": "Sept 20-21",
+  "team": "Carrie, Renee (Sept 21)",
+  "totalSpend": 2170.03,
+  "cpa": 60.27861111
+ },
+ "EVIBFOXYBOX10": {
+  "name": "Foxy Box Pop up",
+  "province": "AB",
+  "date": "Sept 21",
+  "team": "Renee, Syed",
+  "totalSpend": 584.82,
+  "cpa": 41.77285714
+ },
+ "EVIBCGYFHS10": {
+  "name": "Calgary Fall Home Show",
+  "province": "AB",
+  "date": "Sep 27th 28th 29th",
+  "team": "Carrie, Renee, Syed",
+  "totalSpend": 4138.67,
+  "cpa": 42.66670103
+ },
+ "EVIBABWOMENEXPO10": {
+  "name": "Women's Expo",
+  "province": "AB",
+  "date": "Oct 4-6th",
+  "team": "Carrie, Renee (Oct 5-6), Kate (Oct 4&6)",
+  "totalSpend": 3841,
+  "cpa": 56.48529412
+ },
+ "EVIBEDMFHS10": {
+  "name": "Edmonton Home Show",
+  "province": "AB",
+  "date": "Oct 18-20",
+  "team": "Carrie, Josie, Renee",
+  "totalSpend": 6016.42,
+  "cpa": 89.79731343
+ },
+ "EVIBTRAFIGURA10": {
+  "name": "Trafigura Employee Wellness Fair",
+  "province": "AB",
+  "date": "45953",
+  "team": "Carrie",
+  "totalSpend": 135,
+  "cpa": 19.28571429
+ },
+ "EVIBCGYRMWFF10": {
+  "name": "Rocky Mountain Wine and Food Fest - Cgy",
+  "province": "AB",
+  "date": "Oct 18-19",
+  "team": "Syed, Kate",
+  "totalSpend": 2073.25,
+  "cpa": 44.11170213
+ },
+ "EVIBEDMRMWFF10": {
+  "name": "Rocky Mountain Wine and Food Fest - Edm",
+  "province": "AB",
+  "date": "Nov 8-9",
+  "team": "Syed, Carrie, Josie",
+  "totalSpend": 2806.32,
+  "cpa": 103.9377778
+ },
+ "EVIB101STFITNESS10": {
+  "name": "Edmonton 101 St Fitness pop up",
+  "province": "AB",
+  "date": "45603",
+  "team": "Carrie",
+  "totalSpend": 295,
+  "cpa": 42.14285714
+ },
+ "EVIBRISEREP10": {
+  "name": "Edmonton Rise Republic pop up",
+  "province": "AB",
+  "date": "45603",
+  "team": "Josie",
+  "totalSpend": 162.5,
+  "cpa": 32.5
+ },
+ "EVIBLIGHTUPFEST10": {
+  "name": "Edmonton Light up the Night WinterFest",
+  "province": "AB",
+  "date": "45611",
+  "team": "Josie",
+  "totalSpend": 262,
+  "cpa": 65.5
+ },
+ "EVIBGRANDSOUTH10": {
+  "name": "Grand South Christmas Market - Mahogany",
+  "province": "AB",
+  "date": "45612",
+  "team": "Carrie",
+  "totalSpend": 452.49,
+  "cpa": 28.280625
+ },
+ "EVIBEDMTABOO10": {
+  "name": "Edm Taboo Show",
+  "province": "AB",
+  "date": "Nov 15-17",
+  "team": "Josie, Joe",
+  "totalSpend": 2664.62,
+  "cpa": 140.2431579
+ },
+ "EVIBMOMMKTHOLIDAY10": {
+  "name": "The Mom Market (xmas)",
+  "province": "AB",
+  "date": "Nov 30 -  Dec 1",
+  "team": "Carrie, Renee",
+  "totalSpend": 1075,
+  "cpa": 56.57894737
+ },
+ "EVIBLMMHOLIDAY10": {
+  "name": "Little Modern Market",
+  "province": "AB",
+  "date": "45633",
+  "team": "Carrie, Renee",
+  "totalSpend": 552.25,
+  "cpa": 29.06578947
+ },
+ "EVIBPEAKTP10": {
+  "name": "Peak to Praire Market",
+  "province": "AB",
+  "date": "45634",
+  "team": "Carrie, Renee",
+  "totalSpend": 555,
+  "cpa": 27.75
+ },
+ "EVIBGRANARYRDS10": {
+  "name": "Granary Roads Xmas Market",
+  "province": "AB",
+  "date": "Dec 14-15",
+  "team": "Carrie",
+  "totalSpend": 685,
+  "cpa": 38.05555556
+ },
+ "EVIBSTUDIOBHOLI10": {
+  "name": "Studio Bell After Hrs (Holiday Edition)",
+  "province": "AB",
+  "date": "45640",
+  "team": "Syed, Carrie",
+  "totalSpend": 210,
+  "cpa": null
+ },
+ "EVIBVEGANMKT10": {
+  "name": "Vegan Lokal Market",
+  "province": "AB",
+  "date": "45641",
+  "team": "Renee",
+  "totalSpend": 350,
+  "cpa": 350
+ },
+ "EVIBHERITAGEOUAC10": {
+  "name": "Once Upon Christmas Market (Heritage Park)",
+  "province": "AB",
+  "date": "Dec 21-22",
+  "team": "Carrie, Renee",
+  "totalSpend": 750,
+  "cpa": 39.47368421
+ },
+ "EVIBMYODETOXCGY10": {
+  "name": "MyoDetox Lunch and Learn",
+  "province": "AB",
+  "date": "45675",
+  "team": "Carrie",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVIBCRUSHCAMP10": {
+  "name": "CrushCamp Pop-Up Event",
+  "province": "AB",
+  "date": "45309",
+  "team": "Renee",
+  "totalSpend": 0,
+  "cpa": 0
+ },
+ "EVIBWEDDINGFEDM10": {
+  "name": "The Wedding Fair - EDM",
+  "province": "AB",
+  "date": "45676",
+  "team": "Carrie, Renee",
+  "totalSpend": 2419.93,
+  "cpa": 105.2143478
+ },
+ "EVIBEDMRENO2510": {
+  "name": "Edmonton Reno Show",
+  "province": "AB",
+  "date": "Jan 24-26",
+  "team": "Carrie, Renee, Josie",
+  "totalSpend": 5418.17,
+  "cpa": 80.86820896
+ },
+ "EVIBCGYRV10": {
+  "name": "Calgary RV Adventure Show",
+  "province": "AB",
+  "date": "Jan 23-26",
+  "team": "Syed, Karla, Isabel - Carrie (Setup)",
+  "totalSpend": 2505,
+  "cpa": 83.5
+ },
+ "BDIBF45STALB": {
+  "name": "F45 St. Albert Pop-up",
+  "province": "AB",
+  "date": "45685",
+  "team": "Renee, Josie",
+  "totalSpend": 0,
+  "cpa": 0
+ },
+ "EVIBWEDDINGFCGY10": {
+  "name": "The Wedding Fair - CGY",
+  "province": "AB",
+  "date": "45690",
+  "team": "Carrie, Renee",
+  "totalSpend": 2235.74,
+  "cpa": 101.6245455
+ },
+ "EVIBEDMRV10": {
+  "name": "Edmonton RV Adventure Show",
+  "province": "AB",
+  "date": "Feb 6-9",
+  "team": "Carrie, Renee, Josie (Sat)",
+  "totalSpend": 4395,
+  "cpa": 129.2647059
+ },
+ "EVIBCCTC2510": {
+  "name": "Calgary Teachers Convention",
+  "province": "AB",
+  "date": "Feb 13-14, 2025",
+  "team": "Carrie, Renee",
+  "totalSpend": 1879.5,
+  "cpa": 19.578125
+ },
+ "BDIBGYMVMTK10": {
+  "name": "After Dark - GYMVMT Kensington Popup - YEG",
+  "province": "AB",
+  "date": "45709",
+  "team": "Renee",
+  "totalSpend": 0,
+  "cpa": 25
+ },
+ "EVIBCGYHGDN2510": {
+  "name": "Calgary Home and Gdn Show",
+  "province": "AB",
+  "date": "Feb 27 - Mar 2",
+  "team": "Carrie, Renee, Jackie, Sonia, Venus, Cavell",
+  "totalSpend": 5086.5,
+  "cpa": 56.51666667
+ },
+ "EVIBLMMMAR2510": {
+  "name": "Little Modern Market",
+  "province": "AB",
+  "date": "45717",
+  "team": "Renee",
+  "totalSpend": 408.75,
+  "cpa": 68.125
+ },
+ "EVIBRDHOME10": {
+  "name": "Red Deer Home Show",
+  "province": "AB",
+  "date": "Mar 7-9",
+  "team": "Syed, Renee",
+  "totalSpend": 1996.09,
+  "cpa": 40.73653061
+ },
+ "BDIBHERGYMVMT10": {
+  "name": "HER Gymvmt - Beacon Hill pop up",
+  "province": "AB",
+  "date": "45724",
+  "team": "Carrie",
+  "totalSpend": 225,
+  "cpa": 13.23529412
+ },
+ "EVIBLETHHOME10": {
+  "name": "Lethbridge Home and Gdn Show",
+  "province": "AB",
+  "date": "Mar 13-15",
+  "team": "Carrie",
+  "totalSpend": 2427.63,
+  "cpa": 59.2104878
+ },
+ "EVIBCGYAUTO10": {
+  "name": "Calgary Auto Show",
+  "province": "AB",
+  "date": "Mar 13-16",
+  "team": "Syed, Karla, Cavell, Asia, Aldo",
+  "totalSpend": 3650,
+  "cpa": 192.1052632
+ },
+ "BDIBCHURCHFIT10": {
+  "name": "Church Fitness Pop-up",
+  "province": "AB",
+  "date": "45738",
+  "team": "Renee",
+  "totalSpend": 0,
+  "cpa": 0
+ },
+ "EVIBEDMHGDN2510": {
+  "name": "Edm Spring Home & Gdn Show",
+  "province": "AB",
+  "date": "Mar 27-30",
+  "team": "Renee, Cavell, Josie",
+  "totalSpend": 4517,
+  "cpa": 57.91025641
+ },
+ "EVIBBIKEAB2510": {
+  "name": "AB Bike Show (Cgy)",
+  "province": "AB",
+  "date": "Mar 29-30",
+  "team": "Syed, Karla",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVNATWOMEN2510": {
+  "name": "National Women's Show",
+  "province": "AB",
+  "date": "Apr 5-6, 2025",
+  "team": "Renee, Asia, Cavell",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVOKTRADE2510": {
+  "name": "Okotoks Trade and Lifestyle Show",
+  "province": "AB",
+  "date": "Apr 5-6, 2025",
+  "team": "Syed, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVAIRDHLIFE2510": {
+  "name": "Airdrie Regional Home and Lifestyle Show",
+  "province": "AB",
+  "date": "Apr 12-13, 2025",
+  "team": "Renee, Karla",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVLACOMBEDCC10": {
+  "name": "Lacombe Chamber of Commerce Tradeshow",
+  "province": "AB",
+  "date": "Apr 18-19, 2025",
+  "team": "Renee",
+  "totalSpend": 199.5,
+  "cpa": null
+ },
+ "EVSTALBLIFE10": {
+  "name": "St. Albert Home and Lifestyle Expo",
+  "province": "AB",
+  "date": "April 25 - 27, 2025",
+  "team": "Renee, Josie (Fri)",
+  "totalSpend": 1023,
+  "cpa": null
+ },
+ "EVCHTRADE2510": {
+  "name": "Cochrane & District Trade Show",
+  "province": "AB",
+  "date": "May 3-4, 2025",
+  "team": "Renee, Karla",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVSCURUN10": {
+  "name": "Calgary Marathon",
+  "province": "AB",
+  "date": "45788",
+  "team": "Renee, Aldo, Syed",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHSCAFARM10": {
+  "name": "Hillhurst Sunnyside Farmers Market Opener",
+  "province": "AB",
+  "date": "45805",
+  "team": "Renee, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHERWESWB10": {
+  "name": "HER GYMVMT Westbrook - World Beatz Party Pop-up",
+  "province": "AB",
+  "date": "45808",
+  "team": "Renee",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVSMEPICV29": {
+  "name": "Epic Weekends: Spruce Meadows",
+  "province": "AB",
+  "date": "June 5 - 8",
+  "team": "Renee, Josie, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVMHOA2510": {
+  "name": "Mahogany Farmers Market",
+  "province": "AB",
+  "date": "45819",
+  "team": "Renee, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVBRIDGE2025": {
+  "name": "Bridgeland Night Market",
+  "province": "AB",
+  "date": "45836",
+  "team": "Syed, Kate, Aldo, Prin",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCD2025": {
+  "name": "East Village Canada Day",
+  "province": "AB",
+  "date": "45844",
+  "team": "Kate, Syed , Prin , Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVSTAMPEDE10": {
+  "name": "Stampede Marketplace",
+  "province": "AB",
+  "date": "July 4 - 13",
+  "team": "Aldo, Josie, Kate, Prin, Joe, Asia",
+  "totalSpend": 7000,
+  "cpa": 29.41176471
+ },
+ "EVBRIDGE2": {
+  "name": "Bridgeland Night Mkt",
+  "province": "AB",
+  "date": "45857",
+  "team": "Aldo, Kate",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHSFARM2": {
+  "name": "Hillhurst Sunnyside Farmers Market Salsafest",
+  "province": "AB",
+  "date": "45861",
+  "team": "Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVISUNFEST": {
+  "name": "Inglewood Sunfest",
+  "province": "AB",
+  "date": "45864",
+  "team": "Aldo, Prince, Andre",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVTASTE2025": {
+  "name": "Taste of Calgary",
+  "province": "AB",
+  "date": "July 31- August 4",
+  "team": "Kate, Prince, Syed, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVBOW2025": {
+  "name": "Bowness Festival",
+  "province": "AB",
+  "date": "45874",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVMARDAGRAS": {
+  "name": "Marda Gras",
+  "province": "AB",
+  "date": "45879",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVBRIDGELAND2025": {
+  "name": "Bridgeland Night Market",
+  "province": "AB",
+  "date": "45878",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVMAHOGANY2025": {
+  "name": "Mahogany Farmers Market",
+  "province": "AB",
+  "date": "45882",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVLMM2025": {
+  "name": "LMM Festival",
+  "province": "AB",
+  "date": "45885",
+  "team": "Prince, Aldo, Kate",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVWHOOP2025": {
+  "name": "Whoop Up Days",
+  "province": "AB",
+  "date": "August 19-23",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHERITAGE2025": {
+  "name": "Heritage Park Night Market",
+  "province": "AB",
+  "date": "45892",
+  "team": "Aldo, Kate",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHSFARM3": {
+  "name": "Hillhurst Farmers Market",
+  "province": "AB",
+  "date": "45896",
+  "team": "Prince, Syed, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVEDMFMARKET2025": {
+  "name": "Edmonton Farmers Market",
+  "province": "AB",
+  "date": "45900",
+  "team": "Prince, Syed",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHERITAGE2": {
+  "name": "Heritage Park Night Market",
+  "province": "AB",
+  "date": "45900",
+  "team": "Aldo, Kate",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVMAHOGANY3": {
+  "name": "Mahogany Farmers Market",
+  "province": "AB",
+  "date": "45903",
+  "team": "Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVRUMBLE2025": {
+  "name": "Rumble Boxing",
+  "province": "AB",
+  "date": "45905",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVAIRDRIEFEST2025": {
+  "name": "Airdrie Fest",
+  "province": "AB",
+  "date": "45906",
+  "team": "Prince, Aldo, Josie, Kate",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVBRIDGE9": {
+  "name": "Bridgeleand Night Market",
+  "province": "AB",
+  "date": "45906",
+  "team": "Prince, Aldo, Kate",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVAIRDRIEFARMERS1": {
+  "name": "Airdrie Farmers Market",
+  "province": "AB",
+  "date": "45910",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHERITAGE10": {
+  "name": "Heritage Park Night Market",
+  "province": "AB",
+  "date": "45913",
+  "team": "Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVEDMFMARKET202513": {
+  "name": "Edmonton Farmers Market",
+  "province": "AB",
+  "date": "45913",
+  "team": "Prince",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVAIRDRIEFARMERS2": {
+  "name": "Airdrie Farmers Market",
+  "province": "AB",
+  "date": "45917",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVOKOTOKS2025": {
+  "name": "Okotoks Night Market",
+  "province": "AB",
+  "date": "45919",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVBCKELOWNASHOW2025": {
+  "name": "Kewlona Home Show",
+  "province": "AB",
+  "date": "September 20 - September 21",
+  "team": "Prince, Aldo, Syed",
+  "totalSpend": 800,
+  "cpa": null
+ },
+ "EVCRESCENT2025": {
+  "name": "Crescent Heights",
+  "province": "AB",
+  "date": "45924",
+  "team": "Kate, Prince",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVAIRDRIEFARMERS3": {
+  "name": "Airdrie Farmers Market",
+  "province": "AB",
+  "date": "45924",
+  "team": "Aldo, Prince",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCALGARYHOMESHOW2025": {
+  "name": "Calgary Home and Gdn Show",
+  "province": "AB",
+  "date": "September 26 - September 28",
+  "team": "Chanceline, Prince, Kate, josie",
+  "totalSpend": 6446.03,
+  "cpa": 71.62255556
+ },
+ "EVPENTICTON": {
+  "name": "Pentincton Home Show",
+  "province": "AB",
+  "date": "September 27 - September 28",
+  "team": "Aldo, Karla, Syed",
+  "totalSpend": 800,
+  "cpa": null
+ },
+ "EVTRIWOOD2025": {
+  "name": "Triwood Fall Market",
+  "province": "AB",
+  "date": "45928",
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVMAHOGANYFMARKET2025": {
+  "name": "Mahogany Farmers Market",
+  "province": "AB",
+  "date": "45931",
+  "team": "Aldo, Josie",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVAIRDRIEFARMERS4": {
+  "name": "Airdrie Farmers Market",
+  "province": "AB",
+  "date": "45931",
+  "team": "Prince",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVEDMFMARKET202504": {
+  "name": "Edmonton Farmers Market",
+  "province": "AB",
+  "date": "45934",
+  "team": "Prince, Chanceline",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHSFARM4": {
+  "name": "Hillhirts sunnyside",
+  "province": "AB",
+  "date": "45938",
+  "team": "Prince, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVEDMFMARKET202511": {
+  "name": "Edmonton farmers Market",
+  "province": "AB",
+  "date": "45941",
+  "team": "Prince, Chanceline",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHILLHURSTWINTER": {
+  "name": "Hillhirts sunnyside",
+  "province": "AB",
+  "date": "45945",
+  "team": "Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVEDMHOMESHOW2025": {
+  "name": "Edmonton Fall Home Show",
+  "province": "AB",
+  "date": "October 17 - October 19",
+  "team": "Prince",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVFOODWINE2025": {
+  "name": "Rocky Mountain Food and Wine",
+  "province": "AB",
+  "date": "October 17 - October 18",
+  "team": "Kate, Syed",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVKAMLOOPSHS": {
+  "name": "Kamloops Home Show",
+  "province": "AB",
+  "date": "October 18 - October 19",
+  "team": "Josie, Aldo, Joe",
+  "totalSpend": 3400,
+  "cpa": 82.92682927
+ },
+ "EVHSWINTER": {
+  "name": "Hillhurst Sunnyside Farmers Market",
+  "province": "AB",
+  "date": "45952",
+  "team": "Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVHALLOWEENMARKET1": {
+  "name": "EcoFrindly Market",
+  "province": "AB",
+  "date": "45955",
+  "team": "Aldo, Josie",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVLETHBRIDGEHOLIDAYEXPO": {
+  "name": "Holdiay Gift Expo",
+  "province": "AB",
+  "date": "45962",
+  "team": "Prince",
+  "totalSpend": 335,
+  "cpa": null
+ },
+ "EVEDMFOODWINE": {
+  "name": "Rocky Mountain Food and Wine",
+  "province": "AB",
+  "date": "November 7 - November 8",
+  "team": "Prince, Chanceline",
+  "totalSpend": 3620,
+  "cpa": 50.27777778
+ },
+ "EVBEARMARKET": {
+  "name": "BearSpaw Market",
+  "province": "AB",
+  "date": "45968",
+  "team": "Aldo, Josie",
+  "totalSpend": 800,
+  "cpa": 100
+ },
+ "EVHANDCRAFTEDLETHBRIDGE": {
+  "name": "Handcrafted with Love Holiday Market",
+  "province": "AB",
+  "date": "45969",
+  "team": "Josie",
+  "totalSpend": 310,
+  "cpa": 44.28571429
+ },
+ "EVSPRUCE2025": {
+  "name": "International Christmas Market Week 1",
+  "province": "AB",
+  "date": "November 14 - November 16",
+  "team": "Prince, Aldo, Kate, Syed",
+  "totalSpend": 1800,
+  "cpa": 36
+ },
+ "EVCHESTERMEREXMASMARKET": {
+  "name": "Chstermere Christmas Market Fall",
+  "province": "AB",
+  "date": "November 14 - November 16",
+  "team": "Josie",
+  "totalSpend": 710,
+  "cpa": 118.3333333
+ },
+ "EVAIRDRIEFARM": {
+  "name": "Airdrie Indoor Christmas Crawl",
+  "province": "AB",
+  "date": "45976",
+  "team": "Aldo, Karla",
+  "totalSpend": 295,
+  "cpa": 73.75
+ },
+ "EVCALGARYMOMMARKET": {
+  "name": "Calgary Mom Market",
+  "province": "AB",
+  "date": "45976",
+  "team": "Kate",
+  "totalSpend": 550,
+  "cpa": 36.66666667
+ },
+ "EVSPRUCE2": {
+  "name": "International Christmas Market Week 2 & 3",
+  "province": "AB",
+  "date": "November 21 - November 30",
+  "team": "Joe, Josie, Kate, Aldo, Karla, Prince",
+  "totalSpend": 4500,
+  "cpa": 55.55555556
+ },
+ "EVMOMSHOWEDM": {
+  "name": "Edmonton Mom Market",
+  "province": "AB",
+  "date": "45983",
+  "team": "Chanceline",
+  "totalSpend": 405,
+  "cpa": 15
+ },
+ "EVGRANARY1": {
+  "name": "Granary Road Christmas Market  Week 1",
+  "province": "AB",
+  "date": "November 22- November 23",
+  "team": "Josie",
+  "totalSpend": 602,
+  "cpa": 66.88888889
+ },
+ "EVLMMNOV2025": {
+  "name": "Little Modern Market -",
+  "province": "AB",
+  "date": "45983",
+  "team": "Kate",
+  "totalSpend": 550,
+  "cpa": 39.28571429
+ },
+ "EVEXTRAVAGANZA": {
+  "name": "Christmas Extravaganza -",
+  "province": "AB",
+  "date": "November 22- November 23",
+  "team": "Aldo, Joe, Kate",
+  "totalSpend": 435,
+  "cpa": 18.91304348
+ },
+ "EVUNIDISTRICT": {
+  "name": "University District",
+  "province": "AB",
+  "date": "Novembrer 27",
+  "team": "Aldo, Prince",
+  "totalSpend": 400,
+  "cpa": 66.66666667
+ },
+ "EVGRANARYNOV": {
+  "name": "Granary Road Christmas Market  Week 2",
+  "province": "AB",
+  "date": "November 29-30",
+  "team": "Aldo",
+  "totalSpend": 400,
+  "cpa": 100
+ },
+ "EVMOMSHOWEDMCONVENTION": {
+  "name": "Edmonton Convention Mom Market",
+  "province": "AB",
+  "date": "November 29 - November 30",
+  "team": "Chanceline, Jay, Elodie",
+  "totalSpend": 810,
+  "cpa": 810
+ },
+ "EVSILVERBELLSEDM": {
+  "name": "Silver Bells Christmas Market Spruce Grove",
+  "province": "AB",
+  "date": "45997",
+  "team": "Jc, Jr, Elodie",
+  "totalSpend": 826.5,
+  "cpa": 206.62
+ },
+ "EVMOMMARKETSHERWOODPARK": {
+  "name": "The Mom Market Sherwood Park Mall",
+  "province": "AB",
+  "date": "46005",
+  "team": "Chanceline, Jay",
+  "totalSpend": 230,
+  "cpa": 115
+ },
+ "EVCALRENO2026": {
+  "name": "Calgary Reno Show",
+  "province": "AB",
+  "date": "January 9 - 11",
+  "team": "Chanceline, Prin, Kate, Josie",
+  "totalSpend": 5678,
+  "cpa": 81.11428571
+ },
+ "EVEDMPETSHOW2026": {
+  "name": "Edmonton Pet Expo",
+  "province": "AB",
+  "date": "January 16-17",
+  "team": "Chanceline, Syed, Kate, Jr, Jay",
+  "totalSpend": 3097.56,
+  "cpa": 134.6765217
+ },
+ "EVEDMBLUSH": {
+  "name": "The Wedding Fair Edmonton",
+  "province": "AB",
+  "date": "46040",
+  "team": "Chanceline, Kate, Jr, Jay",
+  "totalSpend": 3535.89,
+  "cpa": 75.23170213
+ },
+ "EVEDMWEDDINGFAIR2026": {
+  "name": "St Albert Blush bridal expo - Edmonton",
+  "province": "AB",
+  "date": "46047",
+  "team": "Chanceline, Jr",
+  "totalSpend": 1548.95,
+  "cpa": 309.79
+ },
+ "EVKELOWNASPRINGSHOW": {
+  "name": "Kelowna spring home show",
+  "province": "AB",
+  "date": "February 7-8",
+  "team": "Prince, Syed, Aldo",
+  "totalSpend": 4230.31,
+  "cpa": 183.9265217
+ },
+ "EVCGYTEACHERS2026": {
+  "name": "Calgary Teachers Convention",
+  "province": "AB",
+  "date": "February 12-13",
+  "team": "Prince, Syed, Aldo, Josie, Agathon",
+  "totalSpend": 3497,
+  "cpa": 69.94
+ },
+ "EVREDDEERTEACHERS2026": {
+  "name": "Red Deer Teachers Convention",
+  "province": "AB",
+  "date": "Feb 19-20",
+  "team": "Chanceline, Syed, Aldo, Gurkaran",
+  "totalSpend": 1870,
+  "cpa": 64.48275862
+ },
+ "EVPALLISERTEACHER2026": {
+  "name": "Palliser Teachers Convention",
+  "province": "AB",
+  "date": "Feb 19-20",
+  "team": "Agathon, Prin, Josie, Princess, Aldo",
+  "totalSpend": 2095,
+  "cpa": 69.83333333
+ },
+ "EVBOATSHOW2026": {
+  "name": "Calgary Boat Show",
+  "province": "AB",
+  "date": "Feb 20-22",
+  "team": "Agathon, Josie, Prince, Aldo, Kate",
+  "totalSpend": 3314,
+  "cpa": 150.6363636
+ },
+ "EVHOMEANDGIFT": {
+  "name": "Edmonton home + gift market",
+  "province": "AB",
+  "date": "Feb 22-24",
+  "team": "Chanceline, Gurkaran, Aldo",
+  "totalSpend": 3785,
+  "cpa": 473.125
+ },
+ "EVEDMONTONTEACHERS": {
+  "name": "Edmonton Teachers Convention",
+  "province": "AB",
+  "date": "Feb 26-27",
+  "team": "Chanceline, Gurkaran, Aldo, Naod",
+  "totalSpend": 3730,
+  "cpa": 42.38636364
+ },
+ "EVCALGARYSPRINGSHOW2026": {
+  "name": "Calgary Home + Garden Show",
+  "province": "AB",
+  "date": "Feb 26- Mar 1",
+  "team": "Agathon, Aldo, Prince, Syed, Kate, Josie",
+  "totalSpend": 6088,
+  "cpa": 108.7142857
+ },
+ "EVREDDEERSHOW2026": {
+  "name": "Red Deer Home SHow",
+  "province": "AB",
+  "date": "Mar 6- 8",
+  "team": "Aldo, Gurkaran, Prince",
+  "totalSpend": 4040.47,
+  "cpa": 87.83630435
+ },
+ "EVEDMGYMVMTKENSINGTONAFTERDARK": {
+  "name": "EDM GYMVMT AfterDark Event",
+  "province": "AB",
+  "date": "46087",
+  "team": "Gurkaran",
+  "totalSpend": 300,
+  "cpa": 100
+ },
+ "EVLETH2026": {
+  "name": "Lethbridge Home Show",
+  "province": "AB",
+  "date": "Mar 12-14",
+  "team": "Prince and Aldo",
+  "totalSpend": 3611,
+  "cpa": 97.59459459
+ },
+ "EVEDMBOATSHOW": {
+  "name": "EDM Boat Show",
+  "province": "AB",
+  "date": "March 19-21",
+  "team": "Chanceline, Gurkaran, Naod",
+  "totalSpend": 2441.45,
+  "cpa": 406.9
+ },
+ "EVABBIKESHOW": {
+  "name": "Alberta Bike Show",
+  "province": "AB",
+  "date": "March 21-22",
+  "team": "Aldo, Josie, Agathon, Prin",
+  "totalSpend": 2487,
+  "cpa": 80.22580645
+ },
+ "EVVERNONSPRINGSHOW": {
+  "name": "Vernon Spring Home Show",
+  "province": "AB",
+  "date": "March 21-22",
+  "team": "Prince, Syed",
+  "totalSpend": 1850,
+  "cpa": 123.3333333
+ },
+ "EVEDMHOMEANDGARDEN": {
+  "name": "EDM Home + Garden Show",
+  "province": "AB",
+  "date": "March 26-29",
+  "team": "Chanceline, Gurkaran, Naod,",
+  "totalSpend": 4258,
+  "cpa": 90.59574468
+ },
+ "EVABFOODANDDRINK": {
+  "name": "Red Deer AB Food & Drink Show",
+  "province": "AB",
+  "date": "46109",
+  "team": "Prince, Aldo, Agathon",
+  "totalSpend": 1250,
+  "cpa": 96.15384615
+ },
+ "EVEDMAUTOSHOW": {
+  "name": "Edmonton Auto Show",
+  "province": "AB",
+  "date": "April 9-12",
+  "team": "Chanceline, Gurkaran, Naod, Sameer",
+  "totalSpend": 2725,
+  "cpa": 227
+ },
+ "EVKAMLOOPS26": {
+  "name": "Kamloop Home Show",
+  "province": "AB",
+  "date": "April 11-12",
+  "team": "Aldo, Syed",
+  "totalSpend": 2099.45,
+  "cpa": 99.97380952
+ },
+ "EVSTALBERT2026": {
+  "name": "St Albert Lifestyle Expo",
+  "province": "AB",
+  "date": "April 17-19",
+  "team": "Chanceline, Gurkaran, Naod, Sameer",
+  "totalSpend": 918.75,
+  "cpa": null
+ },
+ "EVAIRDRIEHS26": {
+  "name": "AIrdrie Home Show",
+  "province": "AB",
+  "date": "April 18-19",
+  "team": "Agathon, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVOKOTOKSHS26": {
+  "name": "Okotoks Home Show",
+  "province": "AB",
+  "date": "April 25-26",
+  "team": "Agathon, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCOCHRANE": {
+  "name": "Cochrane Trade Show",
+  "province": "AB",
+  "date": "May 2-3",
+  "team": "Agathon, Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVLAGREE": {
+  "name": "Lagree Partnership",
+  "province": "AB",
+  "date": "May 9-15",
+  "team": "Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCALGARYMARATHON26": {
+  "name": "Calgary Marathon",
+  "province": "AB",
+  "date": "May 22-23",
+  "team": "Agathon, Aldo, Chancellline",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCURRIEMARKET2026": {
+  "name": "Currie Market",
+  "province": "AB",
+  "date": "46172",
+  "team": "Rhett Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVMODERN26": {
+  "name": "Little Modern Market",
+  "province": "AB",
+  "date": "46171",
+  "team": "Hannah Aldo",
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVWELLNESS54": {
+  "name": "1291.5",
+  "province": "BC",
+  "date": "40950",
+  "team": null,
+  "totalSpend": 2236.5,
+  "cpa": 131.5588235
+ },
+ "EVBCBIKE5": {
+  "name": "1535",
+  "province": "BC",
+  "date": "March 4-6",
+  "team": null,
+  "totalSpend": 2415,
+  "cpa": 51.38297872
+ },
+ "EVBCHOMESHOW5": {
+  "name": "2969",
+  "province": "BC",
+  "date": "March 16-19",
+  "team": null,
+  "totalSpend": 4699,
+  "cpa": 117.475
+ },
+ "EVBMO5": {
+  "name": "1599",
+  "province": "BC",
+  "date": "May 5-6",
+  "team": null,
+  "totalSpend": 2469,
+  "cpa": 72.61764706
+ },
+ "EVRECONNECT5": {
+  "name": "250",
+  "province": "BC",
+  "date": "45064",
+  "team": null,
+  "totalSpend": 609,
+  "cpa": 43.5
+ },
+ "EVPLANTED5": {
+  "name": "2250",
+  "province": "BC",
+  "date": "46900",
+  "team": null,
+  "totalSpend": 4100,
+  "cpa": 39.04761905
+ },
+ "EVPARKSHOW5": {
+  "name": "695",
+  "province": "BC",
+  "date": "June 2-4",
+  "team": null,
+  "totalSpend": 1416.88,
+  "cpa": 74.57263158
+ },
+ "EVSEEKTHEPEAK5": {
+  "name": "0",
+  "province": "BC",
+  "date": "June 10th",
+  "team": null,
+  "totalSpend": 301,
+  "cpa": 60.2
+ },
+ "EVBAR": {
+  "name": "300",
+  "province": "BC",
+  "date": "45099",
+  "team": null,
+  "totalSpend": 475,
+  "cpa": null
+ },
+ "EVPARQFAIR85": {
+  "name": "0",
+  "province": "BC",
+  "date": "45105",
+  "team": null,
+  "totalSpend": 200,
+  "cpa": 20
+ },
+ "EVKHATS85": {
+  "name": "2000",
+  "province": "BC",
+  "date": "July 8th",
+  "team": null,
+  "totalSpend": 2575,
+  "cpa": 42.91666667
+ },
+ "EVFOF85": {
+  "name": "750",
+  "province": "BC",
+  "date": "July 14th",
+  "team": null,
+  "totalSpend": 870,
+  "cpa": 96.66666667
+ },
+ "EVCARFREE85": {
+  "name": "1575",
+  "province": "BC",
+  "date": "July 29th",
+  "team": null,
+  "totalSpend": 1800,
+  "cpa": 48.64864865
+ },
+ "EVKITSFEST85": {
+  "name": "2500",
+  "province": "BC",
+  "date": "August 11-13",
+  "team": null,
+  "totalSpend": 3490,
+  "cpa": 48.47222222
+ },
+ "EVPNE85": {
+  "name": "2493.75",
+  "province": "BC",
+  "date": "44062",
+  "team": null,
+  "totalSpend": 3505.75,
+  "cpa": 53.11742424
+ },
+ "EVPNE11": {
+  "name": "2310",
+  "province": "BC",
+  "date": "Sept 1/2",
+  "team": null,
+  "totalSpend": 3508,
+  "cpa": 73.08333333
+ },
+ "EVFC11": {
+  "name": "2205",
+  "province": "BC",
+  "date": "Sept 8-10",
+  "team": null,
+  "totalSpend": 3927,
+  "cpa": 55.30985915
+ },
+ "EVSHIPYARDS11": {
+  "name": "2100",
+  "province": "BC",
+  "date": "Sept 23rd",
+  "team": null,
+  "totalSpend": 2815,
+  "cpa": 281.5
+ },
+ "EVTECHPONG11": {
+  "name": "395",
+  "province": "BC",
+  "date": "Oct 19th",
+  "team": null,
+  "totalSpend": 545,
+  "cpa": 45.41666667
+ },
+ "EVBCFIT11": {
+  "name": "651",
+  "province": "BC",
+  "date": "45220",
+  "team": null,
+  "totalSpend": 651,
+  "cpa": 130.2
+ },
+ "EVBCBABY5": {
+  "name": "1622.88",
+  "province": "BC",
+  "date": "47419",
+  "team": null,
+  "totalSpend": 3062.88,
+  "cpa": 44.38956522
+ },
+ "EVBCWOMENSSHOW5": {
+  "name": "2024.4",
+  "province": "BC",
+  "date": "Nov 17/18/19",
+  "team": null,
+  "totalSpend": 3839.4,
+  "cpa": 87.25909091
+ },
+ "EVTK5": {
+  "name": "208.73",
+  "province": "BC",
+  "date": "January 23rd",
+  "team": "Alex",
+  "totalSpend": 308.73,
+  "cpa": 102.91
+ },
+ "EVVICWELL6": {
+  "name": "1487",
+  "province": "BC",
+  "date": "Jan 26-28",
+  "team": "Alex/Kelsey/Timsi",
+  "totalSpend": 2838.98,
+  "cpa": 149.42
+ },
+ "EVVANWELL6": {
+  "name": "1450",
+  "province": "BC",
+  "date": "Feb 3-4",
+  "team": "Alex/Andrew",
+  "totalSpend": 1945,
+  "cpa": 176.8181818
+ },
+ "BDGBISTRO6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45327",
+  "team": "Alex/Kristina",
+  "totalSpend": 264,
+  "cpa": 52.8
+ },
+ "BDVCC6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45328",
+  "team": "Alex/Kristina",
+  "totalSpend": 465,
+  "cpa": 93
+ },
+ "EVHOMESHOW6": {
+  "name": "2896",
+  "province": "BC",
+  "date": "Feb 8-11",
+  "team": "Cassidy/Katrina/Apeksha/Alex",
+  "totalSpend": 4981,
+  "cpa": 101.6530612
+ },
+ "EVRIVIAN6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45349",
+  "team": "Alex/Kristina/Jackie",
+  "totalSpend": 375,
+  "cpa": 375
+ },
+ "BDDISNEY6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45350",
+  "team": "Alex/Kristina",
+  "totalSpend": 500,
+  "cpa": 83.33333333
+ },
+ "BDNICOLA6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45351",
+  "team": "Alex",
+  "totalSpend": 450,
+  "cpa": 150
+ },
+ "EVBCBIKE6": {
+  "name": "1601.25",
+  "province": "BC",
+  "date": "March 2-3",
+  "team": "Alex/Kristina/Apeksha",
+  "totalSpend": 2851.25,
+  "cpa": 42.55597015
+ },
+ "BDLEDMAC6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45356",
+  "team": "Alex/Kristina",
+  "totalSpend": 450,
+  "cpa": 225
+ },
+ "BDCIBC6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45357",
+  "team": "Alex/Kristina",
+  "totalSpend": 400,
+  "cpa": null
+ },
+ "EVHERITAGE6": {
+  "name": "472.5",
+  "province": "BC",
+  "date": "March 9-10",
+  "team": "Alex/Kristina/Maryia",
+  "totalSpend": 1195.5,
+  "cpa": 35.16176471
+ },
+ "EVCAPU6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45364",
+  "team": "Alex",
+  "totalSpend": 186,
+  "cpa": null
+ },
+ "EVYYOGA6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45370",
+  "team": "Jackie",
+  "totalSpend": 188.72,
+  "cpa": 94.36
+ },
+ "EVNVANSHOW6": {
+  "name": "708.75",
+  "province": "BC",
+  "date": "March 22-24",
+  "team": "Alex/Kristina/Maryia",
+  "totalSpend": 1899.75,
+  "cpa": 70.36111111
+ },
+ "EVMOBI6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45377",
+  "team": "Alex/Kristina",
+  "totalSpend": 350,
+  "cpa": 58.33333333
+ },
+ "EVGCCASINO6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45384",
+  "team": "Alex, Carly",
+  "totalSpend": 0,
+  "cpa": 0
+ },
+ "EVHCASINO6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45385",
+  "team": "Alex, Carly",
+  "totalSpend": 0,
+  "cpa": 0
+ },
+ "EVRRCASINO6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45386",
+  "team": "Alex, Kristina",
+  "totalSpend": 125,
+  "cpa": 15.625
+ },
+ "EVTRISHOW6": {
+  "name": "700.75",
+  "province": "BC",
+  "date": "April 5-7",
+  "team": "Carly, Apeksha, Kristina, Alex",
+  "totalSpend": 1463.25,
+  "cpa": 86.07352941
+ },
+ "BDPWC6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45393",
+  "team": "Alex, Carly",
+  "totalSpend": 404.26,
+  "cpa": 404.26
+ },
+ "EVGLBC6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45398",
+  "team": "Alex",
+  "totalSpend": 318,
+  "cpa": null
+ },
+ "EVSUNRUN6": {
+  "name": "0",
+  "province": "BC",
+  "date": "April 19-21",
+  "team": "Carly, Kristina, Cassidy, Maryia, Alex, Syed, Jackie",
+  "totalSpend": 2800,
+  "cpa": 14.89361702
+ },
+ "EVCFC6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45405",
+  "team": "Alex",
+  "totalSpend": 318,
+  "cpa": null
+ },
+ "EVKABAM6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45406",
+  "team": "Alex",
+  "totalSpend": 222,
+  "cpa": 111
+ },
+ "EVBMO6": {
+  "name": "1599",
+  "province": "BC",
+  "date": "May 3-4",
+  "team": "Carly, Alex, Kristina, Cassidy, Apeksha, Maryia",
+  "totalSpend": 3348,
+  "cpa": 44.64
+ },
+ "EVYVRFAIRMONT6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45419",
+  "team": "Carly, Alex",
+  "totalSpend": 173.25,
+  "cpa": 28.875
+ },
+ "EVMINAMI6": {
+  "name": "50",
+  "province": "BC",
+  "date": "45425",
+  "team": "Carly/Kristina",
+  "totalSpend": 412,
+  "cpa": 206
+ },
+ "EVIBCONNECTRA6": {
+  "name": "300",
+  "province": "BC",
+  "date": "45434",
+  "team": "Carly, Kristina",
+  "totalSpend": 652,
+  "cpa": 65.2
+ },
+ "EVIBVHS6": {
+  "name": "370",
+  "province": "BC",
+  "date": "45437",
+  "team": "Carly, Jaenna",
+  "totalSpend": 681,
+  "cpa": 48.64285714
+ },
+ "EVIBPLANTED6": {
+  "name": "1379",
+  "province": "BC",
+  "date": "June 1-2",
+  "team": "Carly, Kristina, Anthony, Apeksha, Cassidy",
+  "totalSpend": 2509,
+  "cpa": 46.46296296
+ },
+ "EVIBCMHASTINGS6": {
+  "name": "68.25",
+  "province": "BC",
+  "date": "45450",
+  "team": "Carly, Apeksha, Jaenna",
+  "totalSpend": 380.25,
+  "cpa": 380.25
+ },
+ "EVIBUBCFARM6": {
+  "name": "30",
+  "province": "BC",
+  "date": "45458",
+  "team": "Carly, Apeksha, Jaenna",
+  "totalSpend": 384,
+  "cpa": 29.53846154
+ },
+ "EVIBDRAGONBOAT6": {
+  "name": "3675",
+  "province": "BC",
+  "date": "June 22-23",
+  "team": "Carly, Apeksha, Anthony, Kristina, Ashley, Cassidy, Kelly, Kyle, Kai",
+  "totalSpend": 5703,
+  "cpa": 57.03
+ },
+ "EVIBHHMKT6": {
+  "name": "252",
+  "province": "BC",
+  "date": "45466",
+  "team": "Apeksha, Jaenna",
+  "totalSpend": 691,
+  "cpa": 34.55
+ },
+ "EVIBPATHWAYS6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45469",
+  "team": "Kristina, Carly",
+  "totalSpend": 252.81,
+  "cpa": 63.2025
+ },
+ "EVIBPARQ6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45470",
+  "team": "Kristina, Carly",
+  "totalSpend": 254,
+  "cpa": 14.94117647
+ },
+ "EVIBFITNESSWORLDMG6": {
+  "name": "0",
+  "province": "BC",
+  "date": "45470",
+  "team": "Apeksha, Kyle",
+  "totalSpend": 425.43,
+  "cpa": 70.905
+ },
+ "EVIBVEGFEST6": {
+  "name": "150",
+  "province": "BC",
+  "date": "July 6th",
+  "team": "Carly, Anthony",
+  "totalSpend": 1641.23,
+  "cpa": 86.38052632
+ },
+ "EVIBKHATS6": {
+  "name": "2100",
+  "province": "BC",
+  "date": "July 6th",
+  "team": "Alex, Kyle, Kristina, Jaenna",
+  "totalSpend": 3248,
+  "cpa": 29
+ },
+ "EVIBWEWORKMG6": {
+  "name": "0",
+  "province": "BC",
+  "date": "July 10th",
+  "team": "Carly, Kristina",
+  "totalSpend": 324.85,
+  "cpa": 54.14166667
+ },
+ "EVIBWWMAINST6": {
+  "name": "0",
+  "province": "BC",
+  "date": "July 11th",
+  "team": "Carly, Jaenna",
+  "totalSpend": 295.7,
+  "cpa": 295.7
+ },
+ "EVIBFOF6": {
+  "name": "500",
+  "province": "BC",
+  "date": "July 12th",
+  "team": "Carly, Jaenna",
+  "totalSpend": 794.72,
+  "cpa": 56.76571429
+ },
+ "EVIBUBCFARMERSMKT6": {
+  "name": "0",
+  "province": "BC",
+  "date": "July 13th",
+  "team": "Carly, Ananya, Kyle",
+  "totalSpend": 416.3,
+  "cpa": 52.0375
+ },
+ "EVIBWWSEYMOUR6": {
+  "name": "0",
+  "province": "BC",
+  "date": "July 18th",
+  "team": "Carly, Jaenna",
+  "totalSpend": 260.82,
+  "cpa": 65.205
+ },
+ "EVIBHHALL6": {
+  "name": "472.5",
+  "province": "BC",
+  "date": null,
+  "team": "Jaenna, Kyle, Kelly",
+  "totalSpend": 1570.55,
+  "cpa": 74.78809524
+ },
+ "EVIBCOL6": {
+  "name": "3500",
+  "province": "BC",
+  "date": "July 27th",
+  "team": "Carly, Kyle, Ashley, Kelly",
+  "totalSpend": 4216.04,
+  "cpa": 210.802
+ },
+ "EVIBFILBERG6": {
+  "name": "2625",
+  "province": "BC",
+  "date": "August 2-4",
+  "team": "Carly, Kyle, Timsi",
+  "totalSpend": 6075.52,
+  "cpa": 506.2933333
+ },
+ "EVIBVMF6": {
+  "name": "1320",
+  "province": "BC",
+  "date": "45512",
+  "team": "Carly, Kyle, Apeksha",
+  "totalSpend": 1877.67,
+  "cpa": 234.70875
+ },
+ "EVIBVICDRAGON6": {
+  "name": "1500",
+  "province": "BC",
+  "date": "45514",
+  "team": "Carly, Anthony",
+  "totalSpend": 3286.37,
+  "cpa": 234.7407143
+ },
+ "EVIBKITSFEST10": {
+  "name": "2500",
+  "province": "BC",
+  "date": "August 9-11",
+  "team": "Alex, Kyle, Apeksha, Cassidy",
+  "totalSpend": 4385.75,
+  "cpa": 81.21759259
+ },
+ "EVIBPNE10": {
+  "name": "2287.5",
+  "province": "BC",
+  "date": "August 17-18",
+  "team": "Alex, Maryia, Apeksha, Cassidy, Jaenna, Kyle",
+  "totalSpend": 4406,
+  "cpa": 78.67857143
+ },
+ "EVIB1PNE10": {
+  "name": "2287.5",
+  "province": "BC",
+  "date": "August 24-25",
+  "team": "Alex, Maryia, Apeksha, Cassidy, Jaenna, Kyle",
+  "totalSpend": 4406,
+  "cpa": 55.075
+ },
+ "EVIBVELOSPOKE10": {
+  "name": "1000",
+  "province": "BC",
+  "date": "Sept 6th",
+  "team": "Alex, Apeksha",
+  "totalSpend": 1399.29,
+  "cpa": 233.215
+ },
+ "EVIBFULLYCHARGED10": {
+  "name": "2546",
+  "province": "BC",
+  "date": "Sept 6-8",
+  "team": "Alex, Kirtana, Maryia, Jaenna & Cassidy",
+  "totalSpend": 4410,
+  "cpa": 47.41935484
+ },
+ "EVIBMAINCARFREE10": {
+  "name": "360",
+  "province": "BC",
+  "date": "Sept 15",
+  "team": "Alex, Kirtana, Maryia, Jaenna",
+  "totalSpend": 1259,
+  "cpa": 17.98571429
+ },
+ "EVIBSHIPYARDS10": {
+  "name": "2000",
+  "province": "BC",
+  "date": "Sept 21",
+  "team": "Alex, Kirtana, Maryia",
+  "totalSpend": 2569,
+  "cpa": 61.16666667
+ },
+ "EVIBWEDDING10": {
+  "name": "995",
+  "province": "BC",
+  "date": "Sept 28",
+  "team": "Alex, Kirtana, Maryia",
+  "totalSpend": 1452,
+  "cpa": 58.08
+ },
+ "EVIBPIPESHOP10": {
+  "name": "147",
+  "province": "BC",
+  "date": "45577",
+  "team": "Kirtana, Maryia, Sunny",
+  "totalSpend": 568,
+  "cpa": 47.33333333
+ },
+ "EVIBFAIRMONT10": {
+  "name": "0",
+  "province": "BC",
+  "date": "45581",
+  "team": "Kirtana & Alex",
+  "totalSpend": 61,
+  "cpa": 5.083333333
+ },
+ "EVIBWOMENSHOW10": {
+  "name": "1951",
+  "province": "BC",
+  "date": "Oct 18 - 20",
+  "team": "Kirtana, Sunny, Jaenna",
+  "totalSpend": 3577,
+  "cpa": 33.12037037
+ },
+ "EVIBVICHOMESHOW10": {
+  "name": "995",
+  "province": "BC",
+  "date": "Oct 18 - 20",
+  "team": "Alex, Kelsey, Saige",
+  "totalSpend": 3237,
+  "cpa": 147.1363636
+ },
+ "EVIBVANHOMESHOW10": {
+  "name": "2970",
+  "province": "BC",
+  "date": "Oct 24 - 27",
+  "team": "Alex, Maryia, Kirtana, Apeksha",
+  "totalSpend": 4279,
+  "cpa": 75.07017544
+ },
+ "EVIBBABYSHOWBC10": {
+  "name": "1623",
+  "province": "BC",
+  "date": "Nov 2-3",
+  "team": "Kirtana, Maryia, Apeksha, Jaenna",
+  "totalSpend": 3158,
+  "cpa": 39.97468354
+ },
+ "EVIBCHEESEMEAT10": {
+  "name": "509",
+  "province": "BC",
+  "date": "45598",
+  "team": "Kirtana, Sunny",
+  "totalSpend": 2759,
+  "cpa": 229.9166667
+ },
+ "EVIBLANGLEYXMAS10": {
+  "name": "263",
+  "province": "BC",
+  "date": "45619",
+  "team": "Kirtana, Sunny, Chloe",
+  "totalSpend": 628,
+  "cpa": 48.30769231
+ },
+ "EVMWDPIPESHOP57": {
+  "name": "420",
+  "province": "BC",
+  "date": "Dec 6-8",
+  "team": "Kirtana, Maryia, Jaenna",
+  "totalSpend": 1385,
+  "cpa": 30.10869565
+ },
+ "EVMWDNOEL59": {
+  "name": "1545",
+  "province": "BC",
+  "date": "Dec 13-15, Dec 20",
+  "team": "Kirtana, Chloe, Sunny",
+  "totalSpend": 2488,
+  "cpa": 95.69230769
+ },
+ "EVMWDPNE59": {
+  "name": "825",
+  "province": "BC",
+  "date": "46012",
+  "team": "Alex, Kirtana, Chloe",
+  "totalSpend": 1077,
+  "cpa": 119.6666667
+ },
+ "EVMWDSURREY59": {
+  "name": "75",
+  "province": "BC",
+  "date": "46013",
+  "team": "Chloe, Kirtana, Sunny",
+  "totalSpend": 390,
+  "cpa": 30
+ },
+ "EVIBCWACKHOME10": {
+  "name": "875",
+  "province": "BC",
+  "date": "Jan 17-19",
+  "team": "Kirtana, Chloe, Sunny",
+  "totalSpend": 2055,
+  "cpa": 43.72340426
+ },
+ "EVIBSWANK10": {
+  "name": "818",
+  "province": "BC",
+  "date": "45682",
+  "team": "Kirtana, Chloe, Sunny",
+  "totalSpend": 1143,
+  "cpa": 76.2
+ },
+ "EVFV10": {
+  "name": "1155",
+  "province": "BC",
+  "date": "Jan 31-Feb 2",
+  "team": "Chloe, Sunny, Kirtana",
+  "totalSpend": 2290,
+  "cpa": 84.81481481
+ },
+ "EVTASTEVALLEY10": {
+  "name": "263",
+  "province": "BC",
+  "date": "Feb 7-8",
+  "team": "Sunny, Chloe, Kirtana",
+  "totalSpend": 1061,
+  "cpa": 24.11363636
+ },
+ "EVHILTON10": {
+  "name": "971",
+  "province": "BC",
+  "date": "45711",
+  "team": "Jaenna, Kirtana",
+  "totalSpend": 1296,
+  "cpa": 37.02857143
+ },
+ "EVHOMESHOWVIC10": {
+  "name": "1076",
+  "province": "BC",
+  "date": "Feb 21-23",
+  "team": "Alex, Kelsey, Saige, Prince, Georgia",
+  "totalSpend": 3284,
+  "cpa": 91.22222222
+ },
+ "EVWOMENSHOW10": {
+  "name": "699",
+  "province": "BC",
+  "date": "Feb 28 - Mar 2",
+  "team": "Kirtana, Chloe, Sunny",
+  "totalSpend": 2249,
+  "cpa": 24.44565217
+ },
+ "EVBCBIKE10": {
+  "name": "1758.25",
+  "province": "BC",
+  "date": "Mar 1 - 2",
+  "team": "Alex, Jaenna, Apeksha, Kelsey",
+  "totalSpend": 2881.25,
+  "cpa": 40.01736111
+ },
+ "EVHERITAGEHALL10": {
+  "name": "441",
+  "province": "BC",
+  "date": "March 8 - 9",
+  "team": "Jaenna, Kirtana",
+  "totalSpend": 821,
+  "cpa": 54.73333333
+ },
+ "EVBCHOME10": {
+  "name": "2896",
+  "province": "BC",
+  "date": "March 13 - 16",
+  "team": "Jaenna, Kirtana, Chloe, Sunny, Olivia",
+  "totalSpend": 5003,
+  "cpa": 69.48611111
+ },
+ "EVAUTOSHOW10": {
+  "name": "2573",
+  "province": "BC",
+  "date": "March 19 - 23",
+  "team": "Alex, Kirtana, Chloe",
+  "totalSpend": 3843,
+  "cpa": 52.64383562
+ },
+ "EVCOQHOME10": {
+  "name": "1200",
+  "province": "BC",
+  "date": "March 28-30",
+  "team": "Kirtana, Chloe, Sunny",
+  "totalSpend": 2100,
+  "cpa": 100
+ },
+ "EVPIPESHOP10": {
+  "name": "294",
+  "province": "BC",
+  "date": "April 5-6",
+  "team": "Kirtana, Jaenna",
+  "totalSpend": 737,
+  "cpa": 56.69230769
+ },
+ "EVSKIMWD": {
+  "name": "2000",
+  "province": "BC",
+  "date": "April 10-12",
+  "team": "Kirtana, Kelsey, Chloe",
+  "totalSpend": 5510,
+  "cpa": 108.0392157
+ },
+ "EVMOMVIC10": {
+  "name": "131.25",
+  "province": "BC",
+  "date": "April 19th",
+  "team": "Kelsey",
+  "totalSpend": 131.25,
+  "cpa": 11.93181818
+ },
+ "EVP4P": {
+  "name": "1000",
+  "province": "BC",
+  "date": "April 26th",
+  "team": "Kirtana, Chloe, Sunny",
+  "totalSpend": 1525,
+  "cpa": 61
+ },
+ "EVOUTDOORVIC10": {
+  "name": "762",
+  "province": "BC",
+  "date": "April 25-27",
+  "team": "Kelsey, Georgia",
+  "totalSpend": 1257,
+  "cpa": 59.85714286
+ },
+ "EVPETSVIC10": {
+  "name": "1128",
+  "province": "BC",
+  "date": "May 3-4",
+  "team": "Kelsey, Caleigh, Georgia",
+  "totalSpend": 1768,
+  "cpa": 93.05263158
+ },
+ "EVBMO10": {
+  "name": "1650",
+  "province": "BC",
+  "date": "May 2-3",
+  "team": "Alex, Kirtana, Olivia, Cassidy, Apeksha",
+  "totalSpend": 3055,
+  "cpa": 57.64150943
+ },
+ "EVFAIRMONT10": {
+  "name": "0",
+  "province": "BC",
+  "date": "45786",
+  "team": "Alex & Kirtana",
+  "totalSpend": 15,
+  "cpa": 3
+ },
+ "EVHOMEPARK10": {
+  "name": "761.25",
+  "province": "BC",
+  "date": "May 9-11",
+  "team": "Kelsey, Georgia",
+  "totalSpend": 1463.25,
+  "cpa": 104.5178571
+ },
+ "EVCWW10": {
+  "name": "525",
+  "province": "BC",
+  "date": "45787",
+  "team": "Chloe, Olivia",
+  "totalSpend": 815,
+  "cpa": 101.875
+ },
+ "EVHYACK10": {
+  "name": "1104",
+  "province": "BC",
+  "date": "45801",
+  "team": "Nicholas, Chloe, Sunny, Kirtana",
+  "totalSpend": 1731,
+  "cpa": 75.26086957
+ },
+ "EVARCTERYX10": {
+  "name": "0",
+  "province": "BC",
+  "date": "45804",
+  "team": "Alex, Kirtana",
+  "totalSpend": 143,
+  "cpa": 13
+ },
+ "EVLAWYERSHOW10": {
+  "name": "157",
+  "province": "BC",
+  "date": "45805",
+  "team": "Olivia, Chloe",
+  "totalSpend": 384,
+  "cpa": 384
+ },
+ "EVLANGLEYHOME10": {
+  "name": "893",
+  "province": "BC",
+  "date": "May 30-June 1",
+  "team": "Chloe, Nick",
+  "totalSpend": 1543,
+  "cpa": 171.4444444
+ },
+ "EVFVBABY10": {
+  "name": "540",
+  "province": "BC",
+  "date": "May 30-June 1",
+  "team": "Sunny, Kirtana",
+  "totalSpend": 965,
+  "cpa": 64.33333333
+ },
+ "EVVESSI500": {
+  "name": "2100",
+  "province": "BC",
+  "date": "45808",
+  "team": "Alex, Kyle, Apeksha",
+  "totalSpend": 2540,
+  "cpa": 362.8571429
+ },
+ "EVCARFREESURREY10": {
+  "name": "1500",
+  "province": "BC",
+  "date": "45815",
+  "team": "Kirtana, Nicholas, Chloe, Sarah",
+  "totalSpend": 2185,
+  "cpa": 136.5625
+ },
+ "EVABILITIES10": {
+  "name": "300",
+  "province": "BC",
+  "date": "45817",
+  "team": "Kirtana, Cassidy, Chloe",
+  "totalSpend": 720,
+  "cpa": 72
+ },
+ "EVCGSM10": {
+  "name": "263",
+  "province": "BC",
+  "date": "45822",
+  "team": "Sunny, Kirtana",
+  "totalSpend": 478,
+  "cpa": 47.8
+ },
+ "EVMOM141510": {
+  "name": "263",
+  "province": "BC",
+  "date": "June 14-15",
+  "team": "Kelsey",
+  "totalSpend": 263,
+  "cpa": 87.66666667
+ },
+ "EVMARKETSQUARE10": {
+  "name": "263",
+  "province": "BC",
+  "date": "June 19-20",
+  "team": "Kelsey",
+  "totalSpend": 263,
+  "cpa": 263
+ },
+ "EVGREEK10": {
+  "name": "800",
+  "province": "BC",
+  "date": "45830",
+  "team": "Kirtana, Sunny, Chloe",
+  "totalSpend": 1480,
+  "cpa": 42.28571429
+ },
+ "EVSAJE10": {
+  "name": "0",
+  "province": "BC",
+  "date": "45837",
+  "team": "Chloe, Kirtana",
+  "totalSpend": 614,
+  "cpa": 122.8
+ },
+ "EVCANADA10": {
+  "name": "2160",
+  "province": "BC",
+  "date": "45839",
+  "team": "Sarah, Nick, Sunny, Kirtana",
+  "totalSpend": 2870,
+  "cpa": 82
+ },
+ "EVKSP2510": {
+  "name": "2000",
+  "province": "BC",
+  "date": "45843",
+  "team": "Maryia, Jaenna, Chloe, Nick, Sunny, Kirtana",
+  "totalSpend": 3832.99,
+  "cpa": 32.76059829
+ },
+ "EVCDS10": {
+  "name": "1350",
+  "province": "BC",
+  "date": "July 12-13",
+  "team": "Cassidy, Jaenna, Maryia",
+  "totalSpend": 2958.5,
+  "cpa": 53.79090909
+ },
+ "EVSFF10": {
+  "name": "2500",
+  "province": "BC",
+  "date": "July 19-20",
+  "team": "Christine, Sunny, Kirtana",
+  "totalSpend": 3160,
+  "cpa": 47.87878788
+ },
+ "EVPLEASANT20": {
+  "name": "1500",
+  "province": "BC",
+  "date": "45878",
+  "team": "Olivia, Nick, Sunny",
+  "totalSpend": 2355,
+  "cpa": 67.28571429
+ },
+ "EVKITSFEST20": {
+  "name": "2500",
+  "province": "BC",
+  "date": "Aug 8-10",
+  "team": "Maryia, Jayzee, Jaenna, Cassidy, Olivia, Ali, Kirtana",
+  "totalSpend": 4825.5,
+  "cpa": 46.39903846
+ },
+ "EVDGNBT10": {
+  "name": "1575",
+  "province": "BC",
+  "date": "45878",
+  "team": "Kelsey, Caleigh",
+  "totalSpend": 1857.5,
+  "cpa": 97.76
+ },
+ "EVSMFF20": {
+  "name": "720",
+  "province": "BC",
+  "date": "45892",
+  "team": "Olivia, Chloe",
+  "totalSpend": 1030,
+  "cpa": 515
+ },
+ "EVPNE20": {
+  "name": "2887.5",
+  "province": "BC",
+  "date": "Aug 23 - 24",
+  "team": "Maryia, Jayzee, Jaenna, Chloe, Sarah, Kyle, Christine",
+  "totalSpend": 5425.45,
+  "cpa": 58.33817204
+ },
+ "EVVEGVIC10": {
+  "name": "150",
+  "province": "BC",
+  "date": "45885",
+  "team": "Kelsey, Kathryn",
+  "totalSpend": 275,
+  "cpa": 25
+ },
+ "EVDOTD10": {
+  "name": "1207.5",
+  "province": "BC",
+  "date": "45886",
+  "team": "Kelsey, Tanya",
+  "totalSpend": 1370,
+  "cpa": 171.25
+ },
+ "EVEMPRESS90": {
+  "name": "0",
+  "province": "BC",
+  "date": "45895",
+  "team": "Kelsey, Kendalyn",
+  "totalSpend": 144.5,
+  "cpa": 72.25
+ },
+ "EV1PNE20": {
+  "name": "2887.5",
+  "province": "BC",
+  "date": "August 30 - Sept 1",
+  "team": "Maryia, Olivia, Sarah, Blake",
+  "totalSpend": 5401,
+  "cpa": 45.77118644
+ },
+ "EVCOMMERCIAL50": {
+  "name": "450",
+  "province": "BC",
+  "date": "45907",
+  "team": "Nick, Jaenna",
+  "totalSpend": 1068,
+  "cpa": 50.85714286
+ },
+ "EVFLATS20": {
+  "name": "1000",
+  "province": "BC",
+  "date": "45907",
+  "team": "Sarah, Blake",
+  "totalSpend": 1580,
+  "cpa": 60.76923077
+ },
+ "EVELECTRIC20": {
+  "name": "3866.5",
+  "province": "BC",
+  "date": "Sept 6-8",
+  "team": "Maryia, Jaenna, Blake, Chloe, Kirtana",
+  "totalSpend": 5837,
+  "cpa": 57.2254902
+ },
+ "EVBHF20": {
+  "name": "0",
+  "province": "BC",
+  "date": "Sept 12-14",
+  "team": "Olivia, Sarah, Chloe, Kirtana",
+  "totalSpend": 1260,
+  "cpa": 63
+ },
+ "EVMAIN20": {
+  "name": "0",
+  "province": "BC",
+  "date": "Sept 14",
+  "team": "Jaenna, Maryia",
+  "totalSpend": 618,
+  "cpa": 19.3125
+ },
+ "EVSHIPYARDS20": {
+  "name": "2000",
+  "province": "BC",
+  "date": "Sept 20",
+  "team": "Maryia, Sunny, Kirtana",
+  "totalSpend": 2705,
+  "cpa": 77.28571429
+ },
+ "EVABBY20": {
+  "name": "850",
+  "province": "BC",
+  "date": "Sept 27-28",
+  "team": "Sarah, Nick, Olivia",
+  "totalSpend": 1890,
+  "cpa": 145.3846154
+ },
+ "EVSENIORSHEALTH20": {
+  "name": "75",
+  "province": "BC",
+  "date": "45934",
+  "team": "Malka, Sarah, Kirtana",
+  "totalSpend": 75,
+  "cpa": 12.5
+ },
+ "BDWEWORK20": {
+  "name": "557.8",
+  "province": "BC",
+  "date": "45946",
+  "team": "Malka, Kirtana",
+  "totalSpend": 557.8,
+  "cpa": 139.45
+ },
+ "EVMOM10": {
+  "name": "262.5",
+  "province": "BC",
+  "date": "45948",
+  "team": "Malka",
+  "totalSpend": 262.5,
+  "cpa": 65.625
+ },
+ "EVVICHOME2510": {
+  "name": "1076.25",
+  "province": "BC",
+  "date": "Oct 17-19",
+  "team": "Mariya, Malka, Sarah, Kirtana",
+  "totalSpend": 3858.25,
+  "cpa": 59.35769231
+ },
+ "EVMOMTK10": {
+  "name": "290.58",
+  "province": "BC",
+  "date": "45952",
+  "team": "Kirtana, Jacquelyn, Malka, Sarah",
+  "totalSpend": 290.58,
+  "cpa": 7.853513514
+ },
+ "EVVANHOME2520": {
+  "name": "2864.4",
+  "province": "BC",
+  "date": "October 23-26",
+  "team": "Kirtana, Jaenna, Malka, Maryia, Jeff",
+  "totalSpend": 4623.4,
+  "cpa": 37.58861789
+ },
+ "EVBABYSHOW20": {
+  "name": "1638.5",
+  "province": "BC",
+  "date": "October 25-26",
+  "team": "Malka, Maryia",
+  "totalSpend": 2985.18,
+  "cpa": 27.64055556
+ },
+ "EVOCT25WMNSXP20": {
+  "name": "656.25",
+  "province": "BC",
+  "date": "October 24-26",
+  "team": "Sarah, Olivia",
+  "totalSpend": 1473.75,
+  "cpa": 26.79545455
+ },
+ "EVCGFM20": {
+  "name": "275",
+  "province": "BC",
+  "date": "45962",
+  "team": "Sunny, Kirtana",
+  "totalSpend": 445,
+  "cpa": 111.25
+ },
+ "EVLAHM20": {
+  "name": "600",
+  "province": "BC",
+  "date": "November 1-2",
+  "team": "Malka, Jaenna, Blake",
+  "totalSpend": 1205,
+  "cpa": 86.07142857
+ },
+ "EVNOV25WCWEDDING20": {
+  "name": "1313",
+  "province": "BC",
+  "date": "45963",
+  "team": "Sarah, Nic, Olivia",
+  "totalSpend": 1648,
+  "cpa": 117.7142857
+ },
+ "EVVANWOMENSSHOW20": {
+  "name": "1900",
+  "province": "BC",
+  "date": "November 8-9",
+  "team": "Malka, Jaenna, Olivia, Kirtana, Blake (Day 2)",
+  "totalSpend": 3220,
+  "cpa": 32.85714286
+ },
+ "EVVANFOODIE20": {
+  "name": "140",
+  "province": "BC",
+  "date": "45982",
+  "team": "Malka, Jayzee",
+  "totalSpend": 267.5,
+  "cpa": 38.21428571
+ },
+ "EVWCWOMEN20": {
+  "name": "1836.45",
+  "province": "BC",
+  "date": "November 21-23",
+  "team": "Olivia, Ashton, Sarah, Kirtana",
+  "totalSpend": 3366.05,
+  "cpa": 76.50113636
+ },
+ "EVLANGLEYXMAS20": {
+  "name": "275",
+  "province": "BC",
+  "date": "45983",
+  "team": "Sunny",
+  "totalSpend": 430,
+  "cpa": 430
+ },
+ "EVJUBILEE20": {
+  "name": "365",
+  "province": "BC",
+  "date": "45983",
+  "team": "Blake, Sarah",
+  "totalSpend": 567.5,
+  "cpa": 81.07142857
+ },
+ "EVGIFTS20": {
+  "name": "400.09",
+  "province": "BC",
+  "date": "December 5-7",
+  "team": "Ashton, Sarah",
+  "totalSpend": 992.59,
+  "cpa": 58.38764706
+ },
+ "EVHIVE20": {
+  "name": "600",
+  "province": "BC",
+  "date": "December 6-7",
+  "team": "Olivia, Jaenna, Malka",
+  "totalSpend": 1120,
+  "cpa": 74.66666667
+ },
+ "EV1NIGHT20": {
+  "name": "330",
+  "province": "BC",
+  "date": "December 12-13",
+  "team": "Olivia, Sarah",
+  "totalSpend": 597.5,
+  "cpa": 49.79166667
+ },
+ "EVPINK20": {
+  "name": "2000",
+  "province": "BC",
+  "date": "December 13-14",
+  "team": "Malka, Blake (Day 1), Jaenna",
+  "totalSpend": 2995,
+  "cpa": 166.3888889
+ },
+ "EV2NIGHT20": {
+  "name": "150",
+  "province": "BC",
+  "date": "46011",
+  "team": "Olivia, Sarah",
+  "totalSpend": 295,
+  "cpa": 49.16666667
+ },
+ "EVSHIPXMAS20": {
+  "name": "2100",
+  "province": "BC",
+  "date": "46013",
+  "team": "Malka, Olivia, Nic, Sarah",
+  "totalSpend": 2560,
+  "cpa": 426.6666667
+ },
+ "EVADIW50": {
+  "name": "913.5",
+  "province": "BC",
+  "date": "46033",
+  "team": "Kirtana, Olivia, Ashton",
+  "totalSpend": 1178.5,
+  "cpa": 73.65625
+ },
+ "EVCHILLHOME50": {
+  "name": "918.75",
+  "province": "BC",
+  "date": "January 16-18",
+  "team": "Sarah, Olivia, Ashton",
+  "totalSpend": 2116.25,
+  "cpa": 176.3541667
+ },
+ "EVVANBOAT50": {
+  "name": "3370.95",
+  "province": "BC",
+  "date": "January 14-18",
+  "team": "Malka, Olivia, Jaenna, Nic, Kirtana",
+  "totalSpend": 5488.45,
+  "cpa": 137.21125
+ },
+ "EVANTHEM50": {
+  "name": "0",
+  "province": "BC",
+  "date": "46046",
+  "team": "Malka,Olivia",
+  "totalSpend": 140,
+  "cpa": 11.66666667
+ },
+ "EVENGAGED50": {
+  "name": "630",
+  "province": "BC",
+  "date": "46047",
+  "team": "Malka, Jaenna, Nic",
+  "totalSpend": 970,
+  "cpa": 107.7777778
+ },
+ "EVVICHEALTH50": {
+  "name": "1219.93",
+  "province": "BC",
+  "date": "January 24-25",
+  "team": "Sarah, Blake",
+  "totalSpend": 2061.26,
+  "cpa": 137.4173333
+ },
+ "EVABBYHOME50": {
+  "name": "1155",
+  "province": "BC",
+  "date": "January 30-February 1",
+  "team": "Sarah, Ashton, Olivia (Day 1), Nic (Day 3)",
+  "totalSpend": 2153.9,
+  "cpa": 307.7
+ },
+ "EVWELLNESS50": {
+  "name": "1865.41",
+  "province": "BC",
+  "date": "January 31-February 1",
+  "team": "Malka, Jaenna, Olivia",
+  "totalSpend": 2567.91,
+  "cpa": 71.33083333
+ },
+ "EVSWAN50": {
+  "name": "210",
+  "province": "BC",
+  "date": "46054",
+  "team": "Sarah",
+  "totalSpend": 210,
+  "cpa": 70
+ },
+ "EVTASTE50": {
+  "name": "500.22",
+  "province": "BC",
+  "date": "February 6-7",
+  "team": "Sarah, Ashton",
+  "totalSpend": 877.72,
+  "cpa": 67.51692308
+ },
+ "EVTABOO50": {
+  "name": "1446.14",
+  "province": "BC",
+  "date": "February 6-8",
+  "team": "Malka, Jaenna, Blake, Sarah",
+  "totalSpend": 2058.64,
+  "cpa": 158.3569231
+ },
+ "EVSALALTK50": {
+  "name": "234.35",
+  "province": "BC",
+  "date": "46065",
+  "team": "Sarah, Malka, Chloe",
+  "totalSpend": 234.35,
+  "cpa": 33.47857143
+ },
+ "EVCEC50": {
+  "name": "275",
+  "province": "BC",
+  "date": "46065",
+  "team": "Sarah, Malka, Kirtana",
+  "totalSpend": 275,
+  "cpa": 21.15384615
+ },
+ "EVEARLYRV50": {
+  "name": "1470",
+  "province": "BC",
+  "date": "February 19-22",
+  "team": "Sarah, Esther, Kirtana, Ashton",
+  "totalSpend": 2277.5,
+  "cpa": 50.61111111
+ },
+ "EVOPEN50": {
+  "name": "308.88",
+  "province": "BC",
+  "date": "February 21-22",
+  "team": "Sarah",
+  "totalSpend": 308.88,
+  "cpa": 30.888
+ },
+ "EVFVWOMEN50": {
+  "name": "754.92",
+  "province": "BC",
+  "date": "February 27-March 1",
+  "team": "Sarah, Olivia",
+  "totalSpend": 1644.92,
+  "cpa": 34.26916667
+ },
+ "EVBCBIKE50": {
+  "name": "1758.75",
+  "province": "BC",
+  "date": "February 28-March 1",
+  "team": "Malka, Jaenna, Kirtana",
+  "totalSpend": 2231.25,
+  "cpa": 54.42073171
+ },
+ "EVSRIDGETK50": {
+  "name": "0",
+  "province": "BC",
+  "date": "46086",
+  "team": "Sarah, Malka",
+  "totalSpend": 205.75,
+  "cpa": null
+ },
+ "EVSPORTS50": {
+  "name": "1731.45",
+  "province": "BC",
+  "date": "March 6-8",
+  "team": "Sarah, Olivia, Kirtana",
+  "totalSpend": 2628.55,
+  "cpa": 69.17236842
+ },
+ "EVVICWOMEN50": {
+  "name": "950",
+  "province": "BC",
+  "date": "March 7-8",
+  "team": "Malka, Jaenna",
+  "totalSpend": 2016.31,
+  "cpa": 67.21033333
+ },
+ "EVOUT50": {
+  "name": "1260",
+  "province": "BC",
+  "date": "March 13-15",
+  "team": "Sarah, Esther, Ashton, Kirtana",
+  "totalSpend": 1723.75,
+  "cpa": 101.3970588
+ },
+ "EVBCHOMEGARDEN50": {
+  "name": "2895.9",
+  "province": "BC",
+  "date": "March 12-15",
+  "team": "Malka, Olivia, Anna, Kirtana",
+  "totalSpend": 4346.4,
+  "cpa": 54.33
+ },
+ "EVADIWBRIDE50": {
+  "name": "693.26",
+  "province": "BC",
+  "date": "46103",
+  "team": "Jaenna, Kirtana",
+  "totalSpend": 878.26,
+  "cpa": 51.66235294
+ },
+ "EVVANAUTO50": {
+  "name": "2100",
+  "province": "BC",
+  "date": "March 25-29",
+  "team": "Malka, Olivia, Kirtana",
+  "totalSpend": 3810,
+  "cpa": 42.33333333
+ },
+ "EVRUMBLE50": {
+  "name": "0",
+  "province": "BC",
+  "date": "46107",
+  "team": "Sarah",
+  "totalSpend": 218.04,
+  "cpa": null
+ },
+ "EVTRIHOME50": {
+  "name": "761.25",
+  "province": "BC",
+  "date": "March 27-29",
+  "team": "Sarah, Ashton",
+  "totalSpend": 1075,
+  "cpa": 38.39285714
+ },
+ "EVWCW50": {
+  "name": "519.75",
+  "province": "BC",
+  "date": "46110",
+  "team": "Kirtana",
+  "totalSpend": 519.75,
+  "cpa": 39.98076923
+ },
+ "EVEASTERRUN50": {
+  "name": "525",
+  "province": "BC",
+  "date": "46116",
+  "team": "Jaenna, Malka",
+  "totalSpend": 603.75,
+  "cpa": 120.75
+ },
+ "EVEASTER50": {
+  "name": "168.88",
+  "province": "BC",
+  "date": "46116",
+  "team": "Sarah",
+  "totalSpend": 168.88,
+  "cpa": 28.14666667
+ },
+ "EVDELTAHOME50": {
+  "name": "787.5",
+  "province": "BC",
+  "date": "46123",
+  "team": "Sarah, Tanja",
+  "totalSpend": 980,
+  "cpa": 108.8888889
+ },
+ "EVSPRING50": {
+  "name": "735",
+  "province": "BC",
+  "date": "April 11-12",
+  "team": "Malka, Anna",
+  "totalSpend": 895,
+  "cpa": 127.8571429
+ },
+ "EVABBYSPRING50": {
+  "name": "1075",
+  "province": "BC",
+  "date": "April 18-19",
+  "team": "Olivia, Ashton, Kirtana",
+  "totalSpend": 1617.5,
+  "cpa": 124.4230769
+ },
+ "EVVANSUNRUN50": {
+  "name": "3150",
+  "province": "BC",
+  "date": "April 17-18",
+  "team": "Malka, Kirtana, Olivia, Jaenna, Lukas",
+  "totalSpend": 4450,
+  "cpa": 44.05940594
+ },
+ "EVPORTOBELLO50": {
+  "name": "380",
+  "province": "BC",
+  "date": "April 18-19",
+  "team": "Malka, Jaenna, Lukas",
+  "totalSpend": 755,
+  "cpa": 94.375
+ },
+ "EVBCLA50": {
+  "name": "925",
+  "province": "BC",
+  "date": "April 22-23",
+  "team": "Malka, Kirtana, Anna",
+  "totalSpend": 1110,
+  "cpa": 222
+ },
+ "EVPLANET50": {
+  "name": "1150",
+  "province": "BC",
+  "date": "46137",
+  "team": "Malka, Anna, Lukas",
+  "totalSpend": 1616.24,
+  "cpa": 76.96380952
+ },
+ "EVMOMSOCIALTK50": {
+  "name": "334.17",
+  "province": "BC",
+  "date": "46142",
+  "team": "Malka, Chloe",
+  "totalSpend": 334.17,
+  "cpa": null
+ },
+ "EVBMOEXPO50": {
+  "name": "1732.5",
+  "province": "BC",
+  "date": "May 1-2",
+  "team": "Malka, Olivia, Daija, Jaenna",
+  "totalSpend": 3475,
+  "cpa": 37.3655914
+ },
+ "EVRIDGEHOME50": {
+  "name": "803.25",
+  "province": "BC",
+  "date": "May 1-3",
+  "team": "Malka, Anna, Ashton, Olivia",
+  "totalSpend": 1583.25,
+  "cpa": 79.1625
+ },
+ "EVVICPET50": {
+  "name": "1500.6",
+  "province": "BC",
+  "date": "May 2-3",
+  "team": "Kirtana",
+  "totalSpend": 1582.52,
+  "cpa": 98.9075
+ },
+ "EVCPHR50": {
+  "name": "3722.25",
+  "province": "BC",
+  "date": "May 5-6",
+  "team": "Malka, Olivia, Anna, Kirtana",
+  "totalSpend": 4177.25,
+  "cpa": 109.9276316
+ },
+ "EVBEAUTY50": {
+  "name": "500",
+  "province": "BC",
+  "date": "46151",
+  "team": "Jaenna, Kirtana",
+  "totalSpend": 855,
+  "cpa": 27.58064516
+ },
+ "EVRUN4MOM50": {
+  "name": "300",
+  "province": "BC",
+  "date": "46152",
+  "team": "Kirtana",
+  "totalSpend": 300,
+  "cpa": 100
+ },
+ "EVARCTERYX50": {
+  "name": "0",
+  "province": "BC",
+  "date": "46156",
+  "team": "Malka, Kirtana",
+  "totalSpend": 0,
+  "cpa": 0
+ },
+ "EVFORTLANGLEY50": {
+  "name": "75",
+  "province": "BC",
+  "date": "46160",
+  "team": "Malka, Kirtana",
+  "totalSpend": 75,
+  "cpa": 5.769230769
+ },
+ "EVCLOVEROD50": {
+  "name": "1680",
+  "province": "BC",
+  "date": "May 14-18",
+  "team": "Malka, Olivia, Tanja, Anna",
+  "totalSpend": 3370,
+  "cpa": 146.5217391
+ },
+ "EVLANGSPRING50": {
+  "name": "886.25",
+  "province": "BC",
+  "date": "May 29-31",
+  "team": "Malka, Sunny, Izaz",
+  "totalSpend": 1306.25,
+  "cpa": 261.25
+ },
+ "EVVESSI50": {
+  "name": "2000",
+  "province": "BC",
+  "date": "46172",
+  "team": "Kirtana, Jaenna, Olga",
+  "totalSpend": 2405,
+  "cpa": 185
+ },
+ "EV1CLOVEMARKET50": {
+  "name": "93",
+  "province": "BC",
+  "date": "46172",
+  "team": "Malka",
+  "totalSpend": 93,
+  "cpa": 15.5
+ },
+ "EVBLUSHBRIDAL50": {
+  "name": "350",
+  "province": "BC",
+  "date": "46172",
+  "team": "Olivia, Ashton",
+  "totalSpend": 932.5,
+  "cpa": 71.73076923
+ },
+ "EVSFPOTTERS50": {
+  "name": "133.875",
+  "province": "BC",
+  "date": "46179",
+  "team": "Sunny, Izaz, Kirtana",
+  "totalSpend": 438.875,
+  "cpa": 62.69642857
+ },
+ "EVCFSURREY50": {
+  "name": "2150",
+  "province": "BC",
+  "date": "46179",
+  "team": "Malka, Olivia, Anna",
+  "totalSpend": 2590,
+  "cpa": 323.75
+ },
+ "EVABILITIES50": {
+  "name": "300",
+  "province": "BC",
+  "date": "46181",
+  "team": "Malka, Olivia",
+  "totalSpend": 490,
+  "cpa": 61.25
+ },
+ "EVITALIAN50": {
+  "name": "913",
+  "province": "BC",
+  "date": "46187",
+  "team": "Malka, Olivia, Jaenna",
+  "totalSpend": 1453,
+  "cpa": 46.87096774
+ },
+ "EVCARRIBEAN20": {
+  "name": "Caribbean Music Festival (2 days)",
+  "province": "QC",
+  "date": "July 12-13, 2025",
+  "team": null,
+  "totalSpend": 2562.5,
+  "cpa": 232.9545455
+ },
+ "EVPOCHA90": {
+  "name": "Pocha Korean Food Festival (2 days)",
+  "province": "QC",
+  "date": "July 26-27, 2025",
+  "team": null,
+  "totalSpend": 2469.1,
+  "cpa": 205.7583333
+ },
+ "EVMTLSTREET": {
+  "name": "Montreal Street Food Festival (2 days)",
+  "province": "QC",
+  "date": "August 16-17, 2025",
+  "team": null,
+  "totalSpend": 2127.5,
+  "cpa": 81.82692308
+ },
+ "EVFERMENT20": {
+  "name": "Ferment Fest (2 days)",
+  "province": "QC",
+  "date": "September 13-14, 2025",
+  "team": null,
+  "totalSpend": 1678,
+  "cpa": 45.35135135
+ },
+ "EVSITV20": {
+  "name": "International Tourism & Travel Show (3 days)",
+  "province": "QC",
+  "date": "November 7-9, 2025",
+  "team": null,
+  "totalSpend": 4519.2,
+  "cpa": 196.4869565
+ },
+ "EVSFQ20": {
+  "name": "Quebec City Women's Show (2 days & setup the day prior)",
+  "province": "QC",
+  "date": "November 15-16, 2025",
+  "team": null,
+  "totalSpend": 4825.76,
+  "cpa": 102.6757447
+ },
+ "CHUS": {
+  "name": "B2B Partnership & meeting with CHUS Hospital DT MTL",
+  "province": "QC",
+  "date": "December 13th, 2025",
+  "team": null,
+  "totalSpend": 0,
+  "cpa": 0
+ },
+ "LUTIN": {
+  "name": "B2B partnership with Lutinerie events staff & volunteers",
+  "province": "QC",
+  "date": "December 20th, 2025",
+  "team": null,
+  "totalSpend": 0,
+  "cpa": null
+ },
+ "EVMTLHOMESHOW50": {
+  "name": "Montreal Home Show",
+  "province": "QC",
+  "date": "March 12-15",
+  "team": null,
+  "totalSpend": 6547.38,
+  "cpa": 97.72208955
+ },
+ "EVMTLMANGERSANTE50": {
+  "name": "Montreal Expo Manger Sante",
+  "province": "QC",
+  "date": "March 20-22",
+  "team": null,
+  "totalSpend": 5540,
+  "cpa": 72.89473684
+ },
+ "EVMTLWOMEN50": {
+  "name": "Montreal Womens Show",
+  "province": "QC",
+  "date": "March 27-29",
+  "team": null,
+  "totalSpend": 5055.12,
+  "cpa": 105.315
+ },
+ "EVMTLOUTDOOR50": {
+  "name": "Montreal Outdoor Show",
+  "province": "QC",
+  "date": "March 28-29",
+  "team": null,
+  "totalSpend": 4086.16,
+  "cpa": 583.7371429
+ },
+ "EVCANFIT20": {
+  "name": "Canfit Pro",
+  "province": "ON",
+  "date": "Aug 15-16",
+  "team": null,
+  "totalSpend": 3991.5,
+  "cpa": 86.77173913
+ },
+ "EVCNE20": {
+  "name": "CNE",
+  "province": "ON",
+  "date": "Aug 15 - Sept 1",
+  "team": null,
+  "totalSpend": 66044.31,
+  "cpa": 194.8209735
+ },
+ "EVOTTPARKDALE": {
+  "name": "Ottawa Parkdale Market",
+  "province": "ON",
+  "date": "Aug 1-31",
+  "team": "Dave",
+  "totalSpend": 1584,
+  "cpa": 32.32653061
+ },
+ "EVOTTBUSKERFEST": {
+  "name": "Ottawa Buskerfest",
+  "province": "ON",
+  "date": "Aug 8-9-10",
+  "team": "Dave, Hanwei",
+  "totalSpend": 2071.5,
+  "cpa": 129.46875
+ },
+ "EVOTTCAPITALPRIDE": {
+  "name": "Ottawa Capital Pride Market",
+  "province": "ON",
+  "date": "Aug 23-24",
+  "team": "Dave, Hanwei",
+  "totalSpend": 1015,
+  "cpa": 17.5
+ },
+ "EVBRIDAL": {
+  "name": "Canadas Bridal Show",
+  "province": "ON",
+  "date": "Sept 12-14",
+  "team": "Micheal, Bree, Tracey",
+  "totalSpend": 3732,
+  "cpa": 86.79069767
+ },
+ "EVPAPEBLOCK20": {
+  "name": "Pape Village Block Party",
+  "province": "ON",
+  "date": "Sept 20-21",
+  "team": "Micheal, Sarah, Sofii",
+  "totalSpend": 1473,
+  "cpa": 81.83333333
+ },
+ "EVTOHOMESHOW20": {
+  "name": "Toronto Home Show",
+  "province": "ON",
+  "date": "Sept 26-28",
+  "team": null,
+  "totalSpend": 3137.5,
+  "cpa": 130.7291667
+ },
+ "EVTOBABYSHOW20": {
+  "name": "Toronto Baby Show",
+  "province": "ON",
+  "date": "Sept 27-28",
+  "team": "Tracey",
+  "totalSpend": 3212.5,
+  "cpa": 57.36607143
+ },
+ "EVTOBIKESHOW20": {
+  "name": "Toronto Bike Sale Show",
+  "province": "ON",
+  "date": "45933",
+  "team": null,
+  "totalSpend": 2458.64,
+  "cpa": 245.864
+ },
+ "EVTOQUEENST20": {
+  "name": "Queen St Marketplace - KEW Gardens",
+  "province": "ON",
+  "date": "45941",
+  "team": "Tracey, Micheal",
+  "totalSpend": 286,
+  "cpa": 143
+ },
+ "BDTODELOITTE10": {
+  "name": "Deloitte Pop Up",
+  "province": "ON",
+  "date": "October 16th",
+  "team": "Alex, Micheal",
+  "totalSpend": 1255.9,
+  "cpa": 89.70714286
+ },
+ "EVTOWATERFRONT20": {
+  "name": "Toronto Waterfront Expo",
+  "province": "ON",
+  "date": "October 17-18",
+  "team": "Alex, Micheal, Tracey, Pujan, John",
+  "totalSpend": 3834.5,
+  "cpa": 54.00704225
+ },
+ "EVTOMENOPAUSE20": {
+  "name": "National Menopause Show",
+  "province": "ON",
+  "date": "October 18-19",
+  "team": "Tracey, Kathrine, Micheal, Bree",
+  "totalSpend": 3222,
+  "cpa": 44.75
+ },
+ "EVTOSNOWBOARD20": {
+  "name": "Toronto Ski and Snowboard Show",
+  "province": "ON",
+  "date": "October 24-26",
+  "team": "11 from Menopause SHow",
+  "totalSpend": 4075,
+  "cpa": 92.61363636
+ },
+ "EVOTTFALLSHOW2025": {
+  "name": "Ottawa Fall Home Show",
+  "province": "ON",
+  "date": "Oct 2,3,4,5",
+  "team": "Dave, Syed, Hanwei, Tamara",
+  "totalSpend": 3675.46,
+  "cpa": 64.48175439
+ },
+ "EVOTTWOMENSSHOW2025": {
+  "name": "Ottawa Womens Show",
+  "province": "ON",
+  "date": "43756",
+  "team": "Dave, Hanwei, Tamara, Nerusha",
+  "totalSpend": 3538.6,
+  "cpa": 57.07419355
+ },
+ "EVOTTSKISHOW2025": {
+  "name": "Ottawa Ski and Snowboard Show",
+  "province": "ON",
+  "date": "43756",
+  "team": "Dave, Tamara, Akshit",
+  "totalSpend": 3721,
+  "cpa": 310.0833333
+ },
+ "EVTOCHRISTMAS20": {
+  "name": "Toronto Seasons Christmas Show",
+  "province": "ON",
+  "date": "Nov 14-16",
+  "team": null,
+  "totalSpend": 3061.45,
+  "cpa": 98.75645161
+ },
+ "EVTOCOTTAGE20": {
+  "name": "Toronto Fall Cottage Show",
+  "province": "ON",
+  "date": "Nov 14-16",
+  "team": null,
+  "totalSpend": 3782.1,
+  "cpa": 157.5875
+ },
+ "BDTOWEWORK10": {
+  "name": "We Work",
+  "province": "ON",
+  "date": "45981",
+  "team": "Kathryn, Micheal",
+  "totalSpend": 479.01,
+  "cpa": 39.9175
+ },
+ "EVTOWOMEN20": {
+  "name": "Toronto Womens Show",
+  "province": "ON",
+  "date": "Nov 21-23",
+  "team": "Tracey, John, Katherine, Sara",
+  "totalSpend": 6817.75,
+  "cpa": 64.31839623
+ },
+ "EVTOSTACKT20": {
+  "name": "Toronto Stackt Market",
+  "province": "ON",
+  "date": "Nov 22-23",
+  "team": "Pujan, Alireza, Sofiia",
+  "totalSpend": 1461,
+  "cpa": 112.3846154
+ },
+ "EVOTTAWAWEDDING2025": {
+  "name": "Ottawa Wedding Show",
+  "province": "ON",
+  "date": "Nov 1-2",
+  "team": "Dave, Nerusha, Hanwei",
+  "totalSpend": 1659.4,
+  "cpa": 87.33684211
+ },
+ "EVOTTCRAVEFOOD2025": {
+  "name": "Crave Food and Wine Ottawa",
+  "province": "ON",
+  "date": "Nov 14-15",
+  "team": "Dave, Nerusha, Tamara",
+  "totalSpend": 1383.25,
+  "cpa": 53.20192308
+ },
+ "EVOTTMOMMARKET2025": {
+  "name": "Place D'Orleans Mom Market",
+  "province": "ON",
+  "date": "Nov 28,29,30",
+  "team": "Dave, Nerusha, Brandon, Hanwei",
+  "totalSpend": 1668.25,
+  "cpa": 119.1607143
+ },
+ "EVTOLESLIEVILLE15": {
+  "name": "Leslieville Christmas Pop up Market",
+  "province": "ON",
+  "date": "Dec 5-7",
+  "team": "Kathryn, Pujan, Alireza",
+  "totalSpend": 2497.25,
+  "cpa": 31.61075949
+ },
+ "EVTOSTACKT15": {
+  "name": "Toronto Stackt Market",
+  "province": "ON",
+  "date": "45998",
+  "team": "John",
+  "totalSpend": 404,
+  "cpa": 33.66666667
+ },
+ "EVTOARTCRAWL15": {
+  "name": "Toronto Art Crawl",
+  "province": "ON",
+  "date": "45998",
+  "team": "Kathryn, Pujan",
+  "totalSpend": 1392.28,
+  "cpa": 116.0233333
+ },
+ "EVTOHERHOLIDAY15": {
+  "name": "Stackt Market - Toronto",
+  "province": "ON",
+  "date": "Dec 13-14",
+  "team": "Kathryn, John",
+  "totalSpend": 1299.09,
+  "cpa": 35.11054054
+ },
+ "EVTOBRIDAL50": {
+  "name": "Canadas Bridal Show",
+  "province": "ON",
+  "date": "Jan 16-18",
+  "team": null,
+  "totalSpend": 4742.75,
+  "cpa": 215.5795455
+ },
+ "EVTOBACKYARDSHOW50": {
+  "name": "Home and Backyard Show",
+  "province": "ON",
+  "date": "Jan 30-Feb 1",
+  "team": "John, Alireza",
+  "totalSpend": 2965,
+  "cpa": 228.0769231
+ },
+ "EVTOGOLFSHOW50": {
+  "name": "Toronto Golf and Travel Show",
+  "province": "ON",
+  "date": "Jan 30-Feb 1",
+  "team": "Pujan, Tania,",
+  "totalSpend": 4054.25,
+  "cpa": 162.17
+ },
+ "EVTOBEERFEST50": {
+  "name": "Toronto Beer Festival",
+  "province": "ON",
+  "date": "46053",
+  "team": "Katherine, Sofii",
+  "totalSpend": 1274.5,
+  "cpa": 70.80555556
+ },
+ "EVOTTCAPITALWEDDING2026": {
+  "name": "Capital wedding show",
+  "province": "ON",
+  "date": "Jan 24-25",
+  "team": "Dave, Nerusha, Hanwei",
+  "totalSpend": 2140,
+  "cpa": 133.75
+ },
+ "EVOTTHOMEANDREMODELING2026": {
+  "name": "Ottawa Home and Remodelling Show",
+  "province": "ON",
+  "date": "jan 29 -feb 1",
+  "team": "dave, nerusha, hanwei",
+  "totalSpend": 4409,
+  "cpa": 84.78846154
+ },
+ "EVOTTTURFGRASS": {
+  "name": "Ottawa Valley Turf Grass Association",
+  "province": "ON",
+  "date": "Jan 13-14",
+  "team": "Dave",
+  "totalSpend": 1124.35,
+  "cpa": 1124.35
+ },
+ "EVTOAUTOSHOW50": {
+  "name": "Toronot Auto Show",
+  "province": "ON",
+  "date": "Feb 13-20",
+  "team": null,
+  "totalSpend": 12452.5,
+  "cpa": 68.79834254
+ },
+ "EVTOADVENTURE": {
+  "name": "Toronto Outdoor Show",
+  "province": "ON",
+  "date": "Feb 19-20",
+  "team": null,
+  "totalSpend": 2610.75,
+  "cpa": 130.5375
+ },
+ "EVTORVSHOW50": {
+  "name": "Toronto RV & Camping Show",
+  "province": "ON",
+  "date": "Feb 26-Mar 1",
+  "team": null,
+  "totalSpend": 2787.75,
+  "cpa": 132.75
+ },
+ "EVOTTWINTERMARKET": {
+  "name": "EASTERN ONTARIO CRAFT & GIFT MARKET",
+  "province": "ON",
+  "date": "46067",
+  "team": null,
+  "totalSpend": 113,
+  "cpa": 22.6
+ },
+ "EVOTTBOATSHOW2026": {
+  "name": "Ottawa Boat & Outdoors Show",
+  "province": "ON",
+  "date": "Feb 19-22",
+  "team": null,
+  "totalSpend": 2725.95,
+  "cpa": 181.73
+ },
+ "EVOTTRVSHOW2026": {
+  "name": "Ottawa RV Expo & Sale",
+  "province": "ON",
+  "date": "Feb 27 - March 1",
+  "team": null,
+  "totalSpend": 2392.92,
+  "cpa": 265.88
+ },
+ "EVOTTIHEARTBEER2026": {
+  "name": "Ottawa I Heart Beer Festival",
+  "province": "ON",
+  "date": "46081",
+  "team": null,
+  "totalSpend": 1264.5,
+  "cpa": 74.38235294
+ },
+ "EVTOBIKESHOW50": {
+  "name": "Toronto Bike Show",
+  "province": "ON",
+  "date": "March 6-8",
+  "team": null,
+  "totalSpend": 3101.25,
+  "cpa": 193.828125
+ },
+ "EVTOSTACKT50": {
+  "name": "Women's Month · / STACKT Market",
+  "province": "ON",
+  "date": "March 7-8",
+  "team": null,
+  "totalSpend": 930,
+  "cpa": 62
+ },
+ "EVTOHOMESHOW50": {
+  "name": "Toronto National Home Show",
+  "province": "ON",
+  "date": "March 6 -15",
+  "team": null,
+  "totalSpend": 7930,
+  "cpa": 68.95652174
+ },
+ "EVTOCOTTAGE50": {
+  "name": "Cottage Spring Show",
+  "province": "ON",
+  "date": "March 26-29",
+  "team": null,
+  "totalSpend": 4700.26,
+  "cpa": 151.6212903
+ },
+ "EVOTTGOLFEXPO2026": {
+  "name": "Ottawa Golf Show",
+  "province": "ON",
+  "date": "March 6-7",
+  "team": null,
+  "totalSpend": 3377,
+  "cpa": 140.7083333
+ },
+ "EVOTTSPRINGHOMEANDGARDEN2026": {
+  "name": "Ottawa Home and garden",
+  "province": "ON",
+  "date": "March 19-22",
+  "team": null,
+  "totalSpend": 5301,
+  "cpa": 120.4772727
+ },
+ "EVOTTSPRINGWEDDINGSHOW2026": {
+  "name": "Ottawa Wedding Show",
+  "province": "ON",
+  "date": "March28-29",
+  "team": null,
+  "totalSpend": 1380,
+  "cpa": 92
+ },
+ "EVTOEATWELL": {
+  "name": "Eat Well Live Well",
+  "province": "ON",
+  "date": "April 18-19",
+  "team": null,
+  "totalSpend": 3282.85,
+  "cpa": 93.79571429
+ },
+ "EVTOFOODANDDRINK": {
+  "name": "TO Food and Drink Fest",
+  "province": "ON",
+  "date": "April 17-19",
+  "team": null,
+  "totalSpend": 3652,
+  "cpa": 91.3
+ },
+ "EVTOSPRINGBABY50": {
+  "name": "Toronto Spring Baby Show",
+  "province": "ON",
+  "date": "April 11-12",
+  "team": null,
+  "totalSpend": 3754.5,
+  "cpa": 50.06
+ },
+ "EVMTLHABITATION50": {
+  "name": "Brossard Home Show",
+  "province": "ON",
+  "date": "April 10-12",
+  "team": null,
+  "totalSpend": 7961.95,
+  "cpa": 134.9483051
+ },
+ "EVQCMANGERSANTE50": {
+  "name": "Quebec City Sante Manger",
+  "province": "ON",
+  "date": "April 25 -26",
+  "team": null,
+  "totalSpend": 5439,
+  "cpa": 135.975
+ },
+ "EVOTTNEPEANEASTERMARKET2026": {
+  "name": "EASTERN ONTARIO CRAFT & GIFT MARKET",
+  "province": "ON",
+  "date": "46116",
+  "team": null,
+  "totalSpend": 120,
+  "cpa": 120
+ },
+ "EVOTTCOTTAGELIFE2026": {
+  "name": "Ottawa Cottage Life & Backyard Show",
+  "province": "ON",
+  "date": "April 10-12",
+  "team": null,
+  "totalSpend": 3328.5,
+  "cpa": 166.425
+ },
+ "EVOTTPARENTANDCHILD2026": {
+  "name": "Ottawa Parent & Child Expo",
+  "province": "ON",
+  "date": "April 18-19",
+  "team": null,
+  "totalSpend": 1756.27,
+  "cpa": 30.28051724
+ },
+ "EVOTTOUTDOORADVENTURE2026": {
+  "name": "Outdoor Adventure and Travel Show",
+  "province": "ON",
+  "date": "April 25-26",
+  "team": null,
+  "totalSpend": 2302.25,
+  "cpa": 65.77857143
+ },
+ "EVOTTTULIPFEST2026": {
+  "name": "Tulipfest",
+  "province": "ON",
+  "date": "May 8-18",
+  "team": null,
+  "totalSpend": 6886.76,
+  "cpa": 62.60690909
+ },
+ "EVTOSTACKTMAY50": {
+  "name": "Stackt Mothers Day Market",
+  "province": "ON",
+  "date": "46151",
+  "team": null,
+  "totalSpend": 570,
+  "cpa": 95
+ },
+ "EVTOHALALBITES50": {
+  "name": "Toronto Halal Festival",
+  "province": "ON",
+  "date": "May 15-17",
+  "team": null,
+  "totalSpend": 2491.8,
+  "cpa": 191.6769231
+ },
+ "EVTOEGLINTON50": {
+  "name": "Younge And Eglinton Square - Kreate market",
+  "province": "ON",
+  "date": "46179",
+  "team": null,
+  "totalSpend": 187.5,
+  "cpa": 23.4375
+ },
+ "EVCFQC6": {
+  "name": "Carribean Festival",
+  "province": "QC",
+  "date": "July 12-14",
+  "team": null,
+  "totalSpend": 2705.9,
+  "cpa": 169.11875
+ },
+ "EVCFPOCHA6": {
+  "name": "Pocha Festival",
+  "province": "QC",
+  "date": "Aug 8 - 12",
+  "team": null,
+  "totalSpend": 2796,
+  "cpa": 121.5652174
+ },
+ "BDCFQC6": {
+  "name": "Montreal street food festival",
+  "province": "QC",
+  "date": "Aug 15 - 18",
+  "team": null,
+  "totalSpend": 6269.5,
+  "cpa": 179.1285714
+ },
+ "BDCFQ6": {
+  "name": "Wework PVM",
+  "province": "QC",
+  "date": "Oct 24\noct 24-26 flyer",
+  "team": null,
+  "totalSpend": 255,
+  "cpa": 25.5
+ },
+ "BDCFWWA": {
+  "name": "WeWork Avenue",
+  "province": "QC",
+  "date": null,
+  "team": null,
+  "totalSpend": 23,
+  "cpa": 2.875
+ },
+ "EVCFTOURISM": {
+  "name": "Tourism Fest - Montreal",
+  "province": "QC",
+  "date": "Nov 1 - 3 \nFlyer 1-5",
+  "team": null,
+  "totalSpend": 3727.82,
+  "cpa": 70.33622642
+ },
+ "EVCFVEGAN": {
+  "name": "Vegan Fest - Montreal",
+  "province": "QC",
+  "date": "Nov 9 - 10\nFlyer 9-13",
+  "team": null,
+  "totalSpend": 3871.98,
+  "cpa": 67.92947368
+ },
+ "EVCFWOMEN": {
+  "name": "Women Show - Toronto",
+  "province": "QC",
+  "date": "Nov 8 - 10\nFlyer coincides with Vegan Fest",
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCFCRAVE": {
+  "name": "Wine & Food Fest - Ottawa",
+  "province": "QC",
+  "date": "Nov 16\nFlyer Nov 16 - 23",
+  "team": null,
+  "totalSpend": 1935.06,
+  "cpa": 48.3765
+ },
+ "EVCFHOLIDAYTO": {
+  "name": "Xmas Market - Toronto",
+  "province": "QC",
+  "date": "Nov 15 - 17\nCoincides with Crave",
+  "team": null,
+  "totalSpend": 4912.7,
+  "cpa": 272.9277778
+ },
+ "EVCFWOMENQC": {
+  "name": "National Women's Show - Quebec",
+  "province": "QC",
+  "date": "Nov 23 - 24\nFlyer Coincides with Crave",
+  "team": null,
+  "totalSpend": 3847.18,
+  "cpa": 32.88188034
+ },
+ "EVCFCARMWD": {
+  "name": "National Auto Show - Montreal",
+  "province": "QC",
+  "date": "Jan 17 - 26\nFlyers 17 - 29",
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCFOTTAWA10": {
+  "name": "National Home Show - Ottawa",
+  "province": "QC",
+  "date": "Jan 29 - Feb 1",
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCFOTTBOAT": {
+  "name": "Boat Show Ottawa",
+  "province": "QC",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCFMTLBOAT": {
+  "name": "Boat Show Montreal",
+  "province": "QC",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCFAFG": {
+  "name": "Anytime Fitness Griffintown Pop up",
+  "province": "QC",
+  "date": "45724",
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVCFMTLHOME": {
+  "name": "Montreal Home Show",
+  "province": "QC",
+  "date": "March 13-16",
+  "team": null,
+  "totalSpend": 3444,
+  "cpa": null
+ }
+}

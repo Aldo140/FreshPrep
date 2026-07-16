@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Database, GitCompare, ArrowRight, ArrowLeft } from "lucide-react";
+import { BUILTIN_DB_RANGE_LABEL } from "../../config/builtinDb";
 
 interface BdFlowPickerProps {
   onConfirm: (flow: "all" | "compare", codes: string[], codesB?: string[]) => void;
@@ -52,7 +53,7 @@ export function BdFlowPicker({ onConfirm, onBack }: BdFlowPickerProps): React.Re
 
         <div className="mb-6">
           <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#a1a1a1]">
-            Built-in BD Events DB · Jul 1, 2024 – Jul 15, 2026
+            Built-in BD Events DB · {BUILTIN_DB_RANGE_LABEL}
           </p>
           <h2 className="text-xl font-semibold text-[#1a1a1a] mt-1">How do you want to explore?</h2>
           <p className="text-xs text-[#666] mt-1">Choose a mode — you can change this anytime via "Edit analysis".</p>

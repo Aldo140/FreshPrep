@@ -28,12 +28,21 @@ export interface EventStats {
   homeProvince: string;   // majority province
   totalSignups: number;
   signupsByProvince: Record<string, number>;
+  payingSignups: number;        // rows that reached "Paying Customer"
+  conversionRate: number;       // payingSignups / totalSignups (0..1)
+  medianDaysToPay: number | null;
+  statusCounts: { active: number; paused: number; closed: number };
+  preExistingAccounts: number;  // accounts created >90 days before the event month
 }
+
+/** All-channel vs BD signup counts per province (organic baseline). */
+export type ProvinceTotals = Record<string, { all: number; bd: number }>;
 
 export interface CustomerDataResult {
   monthStats: MonthStats[];
   provinces: string[];
   eventStats: EventStats[];
+  provinceTotals: ProvinceTotals;
   hasData: boolean;
 }
 
@@ -69,6 +78,30 @@ function isBdRow(r: CustomerRecord): boolean {
   // Also capture non-EV codes that came through the BusinessDevelopment channel
   const ch = r.channel?.replace(/[\s_-]/g, "").toLowerCase() ?? "";
   return ch === "businessdevelopment" && r.discount_code !== null;
+}
+
+function isPayingRow(r: CustomerRecord): boolean {
+  if (r.last_step?.trim().toLowerCase() === "paying customer") return true;
+  const pay = r.first_paying_date?.trim().toLowerCase();
+  return !!pay && pay !== "null";
+}
+
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function deriveProvinceTotals(rows: CustomerRecord[]): ProvinceTotals {
+  const totals: ProvinceTotals = {};
+  for (const r of rows) {
+    const p = r.province || "??";
+    if (!totals[p]) totals[p] = { all: 0, bd: 0 };
+    totals[p].all++;
+    if (isBdRow(r)) totals[p].bd++;
+  }
+  return totals;
 }
 
 function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
@@ -118,10 +151,39 @@ function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
       ? d.toLocaleDateString("en-CA", { month: "short", day: "numeric" })
       : "";
 
+    const statusCounts = { active: 0, paused: 0, closed: 0 };
+    const daysToPay: number[] = [];
+    let payingSignups = 0;
+    for (const r of codeRows) {
+      const st = r.current_status.trim().toLowerCase();
+      if (st === "active") statusCounts.active++;
+      else if (st === "paused") statusCounts.paused++;
+      else if (st === "closed") statusCounts.closed++;
+      if (isPayingRow(r)) {
+        payingSignups++;
+        if (typeof r.days_till_paying === "number") daysToPay.push(r.days_till_paying);
+      }
+    }
+
+    // Accounts created well before the event: existing customers who redeemed
+    // the code, not new signups driven by the event.
+    let preExistingAccounts = 0;
+    if (peakMonth) {
+      const cutoff = new Date(`${peakMonth}-01T12:00:00`);
+      cutoff.setDate(cutoff.getDate() - 90);
+      const cutoffIso = cutoff.toISOString().slice(0, 10);
+      preExistingAccounts = allSignupDates.filter(iso => iso < cutoffIso).length;
+    }
+
     events.push({
       code, channel: dominantChannel, eventDate, eventMonth, eventDateLabel,
       firstSignupDate, lastSignupDate, homeProvince,
       totalSignups: codeRows.length, signupsByProvince: provinces,
+      payingSignups,
+      conversionRate: codeRows.length > 0 ? payingSignups / codeRows.length : 0,
+      medianDaysToPay: median(daysToPay),
+      statusCounts,
+      preExistingAccounts,
     });
   }
 
@@ -135,21 +197,22 @@ export function useCustomerData(
 ): CustomerDataResult {
   return useMemo((): CustomerDataResult => {
     const evStats = deriveEventStats(customerRows);
+    const provinceTotals = deriveProvinceTotals(customerRows);
     const hasEvData = evStats.length > 0;
 
     if (customerRows.length === 0) {
-      return { monthStats: [], provinces: [], eventStats: evStats, hasData: hasEvData };
+      return { monthStats: [], provinces: [], eventStats: evStats, provinceTotals, hasData: hasEvData };
     }
 
     if (rawPastedCodes.length === 0) {
-      return { monthStats: [], provinces: [], eventStats: evStats, hasData: hasEvData };
+      return { monthStats: [], provinces: [], eventStats: evStats, provinceTotals, hasData: hasEvData };
     }
 
     const codeSet = new Set(rawPastedCodes.map(c => c.toUpperCase()));
     const relevant = customerRows.filter(r => r.discount_code !== null && codeSet.has(r.discount_code));
 
     if (relevant.length === 0) {
-      return { monthStats: [], provinces: [], eventStats: evStats, hasData: hasEvData };
+      return { monthStats: [], provinces: [], eventStats: evStats, provinceTotals, hasData: hasEvData };
     }
 
     const monthMap: Record<string, Record<string, { signups: number; active: number; paused: number; province: Record<string, number> }>> = {};
@@ -203,6 +266,6 @@ export function useCustomerData(
       return { monthKey: key, label: monthLabel(key), totalSignups, signupsByProvince, yoyDelta, codeBreakdown };
     });
 
-    return { monthStats: stats.slice(0, 24), provinces: allProvinces, eventStats: evStats, hasData: true };
+    return { monthStats: stats.slice(0, 24), provinces: allProvinces, eventStats: evStats, provinceTotals, hasData: true };
   }, [customerRows, rawPastedCodes]);
 }

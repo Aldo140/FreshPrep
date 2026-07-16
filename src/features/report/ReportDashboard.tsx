@@ -774,6 +774,7 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
             selectedFlow={selectedFlow}
             userPersona={userPersona}
             eventStats={scopedCustomerData.eventStats}
+            provinceTotals={scopedCustomerData.provinceTotals}
             onUploadLooker={foundReports.length === 0 ? (onResetToLookerUpload ?? onReset) : undefined}
             activeProvince={activeProvince}
             onNavigate={setReportPage}

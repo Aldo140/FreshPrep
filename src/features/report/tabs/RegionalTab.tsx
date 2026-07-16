@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronDown, Database, MapPin, Search, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Database, MapPin, Search, TrendingUp, Upload, Users, X } from "lucide-react";
 import { AnalyzedCodeReport, AnalysisFlow, DiscountCodeData, UserPersona, ReportPage } from "../../../types";
-import { EventStats } from "../../../hooks/useCustomerData";
+import { EventStats, ProvinceTotals } from "../../../hooks/useCustomerData";
+import { useEventSchedule } from "../../../hooks/useEventSchedule";
 import ProvinceIntelligence from "../components/ProvinceIntelligence";
 import { TAB_RELEVANCE } from "../../../config/flowRelevance";
 
@@ -32,7 +33,7 @@ function TopEventsList({ events, color }: { events: EventStats[]; color: string 
   return (
     <div className="border-t border-[#f0f0ee] px-4 py-3 bg-[#fcfcfb]">
       <p className="text-[8.5px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-2">
-        Top {events.length} event{events.length !== 1 ? "s" : ""} · by signups
+        Top {events.length} event{events.length !== 1 ? "s" : ""} · by signups · % = paying conversion
       </p>
       <div className="flex flex-col gap-1.5">
         {events.map((e, i) => (
@@ -42,6 +43,7 @@ function TopEventsList({ events, color }: { events: EventStats[]; color: string 
               <span className="flex-1 min-w-0 truncate font-black text-[#1a1a1a]">{e.code}</span>
               <span className="shrink-0 text-[#a1a1a1]">{formatMonthKey(e.eventMonth)}</span>
               <span className="w-12 shrink-0 text-right font-black text-[#2b5346]">{e.totalSignups.toLocaleString()}</span>
+              <span className="w-9 shrink-0 text-right text-[#4d8970]">{(e.conversionRate * 100).toFixed(0)}%</span>
             </div>
             <div className="ml-6 mt-0.5 h-[3px] bg-[#f0f0f0] rounded-full overflow-hidden">
               <div
@@ -69,18 +71,20 @@ interface RegionalTabProps {
   selectedFlow: AnalysisFlow;
   userPersona: UserPersona;
   eventStats?: EventStats[];
+  provinceTotals?: ProvinceTotals;
   onUploadLooker?: () => void;
   activeProvince?: string | null;
   onNavigate?: (page: ReportPage) => void;
   channelScope?: string;
 }
 
-export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], onUploadLooker, activeProvince, onNavigate, channelScope }: RegionalTabProps): React.ReactElement {
+export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, eventStats = [], provinceTotals = {}, onUploadLooker, activeProvince, onNavigate, channelScope }: RegionalTabProps): React.ReactElement {
   const relevance = TAB_RELEVANCE.regional[selectedFlow];
   const bdOnly = dbRows.length === 0 && foundReports.length === 0;
   const [codeLookupQuery, setCodeLookupQuery] = useState("");
   const [selectedLookupCode, setSelectedLookupCode] = useState<string | null>(null);
   const [expandedProvince, setExpandedProvince] = useState<string | null>(null);
+  const eventSchedule = useEventSchedule();
 
   // Top 10 events per home province, ranked by signups (BD-only drill-down)
   const topEventsByProvince = useMemo(() => {
@@ -160,16 +164,30 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
   // Province list for BD-only mode (sorted by total signups desc)
   const bdProvinceStats = useMemo(() => {
     if (!bdOnly || eventStats.length === 0) return [];
-    const map = new Map<string, { events: number; signups: number }>();
+    const map = new Map<string, { events: number; signups: number; paying: number }>();
     for (const e of eventStats) {
       const prov = e.homeProvince || "??";
-      const ex = map.get(prov) ?? { events: 0, signups: 0 };
-      map.set(prov, { events: ex.events + 1, signups: ex.signups + e.totalSignups });
+      const ex = map.get(prov) ?? { events: 0, signups: 0, paying: 0 };
+      map.set(prov, { events: ex.events + 1, signups: ex.signups + e.totalSignups, paying: ex.paying + e.payingSignups });
     }
     return Array.from(map.entries())
       .map(([province, d]) => ({ province, ...d }))
       .sort((a, b) => b.signups - a.signups);
   }, [bdOnly, eventStats]);
+
+  // Related codes: same alpha stem, different year/number suffix (e.g. EVSTAMPEDE10 ↔ EVSTAMPEDE26)
+  const codeFamily = (code: string) => code.toUpperCase().replace(/\d+$/, "");
+  const relatedCodes = useMemo(() => {
+    const sel = selectedLookupCode
+      ? eventStats.find(e => e.code === selectedLookupCode)
+      : eventStats.find(e => e.code.toUpperCase() === codeLookupQuery.trim().toUpperCase());
+    if (!sel) return [];
+    const fam = codeFamily(sel.code);
+    if (fam.length < 5) return []; // too short a stem → coincidental matches
+    return eventStats
+      .filter(e => e.code !== sel.code && codeFamily(e.code) === fam)
+      .sort((a, b) => a.eventMonth.localeCompare(b.eventMonth));
+  }, [selectedLookupCode, codeLookupQuery, eventStats]);
 
   // Province field can be compound: "AB + BC + ON" — split into individual codes
   const allProvinces = useMemo(() =>
@@ -326,7 +344,7 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
               style={{ minHeight: "44px" }}
             >
               <Upload className="w-3 h-3 shrink-0" />
-              Upload Looker file for LTV &amp; conversion
+              Upload Looker file for LTV
             </button>
           )}
         </div>
@@ -386,8 +404,8 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                       >
                         <div className="min-w-0">
                           <p className="text-xs font-black font-mono text-[#0f0f0f] truncate">{event.code}</p>
-                          <p className="text-[9px] font-mono text-[#a1a1a1] mt-0.5">
-                            {event.code.startsWith("EV") ? "EV-prefix event" : "BD partnership"} · {event.eventMonth || "date unavailable"}
+                          <p className="text-[9px] font-mono text-[#a1a1a1] mt-0.5 truncate">
+                            {eventSchedule[event.code]?.name ?? (event.code.startsWith("EV") ? "EV-prefix event" : "BD partnership")} · {event.eventMonth || "date unavailable"}
                           </p>
                         </div>
                         <div className="text-right shrink-0">
@@ -426,35 +444,95 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#f0f0ee]">
-                  <div className="p-4 flex items-center gap-3">
+                {/* BD wrap-up spreadsheet metadata: real event name, team, costs */}
+                {(() => {
+                  const meta = eventSchedule[selectedLookupEvent.code];
+                  if (!meta) return null;
+                  const spend = meta.totalSpend;
+                  const perSignup = spend != null && selectedLookupEvent.totalSignups > 0 ? spend / selectedLookupEvent.totalSignups : null;
+                  const perPaying = spend != null && selectedLookupEvent.payingSignups > 0 ? spend / selectedLookupEvent.payingSignups : null;
+                  const money = (v: number, dec = 0) => `$${v.toLocaleString("en-CA", { minimumFractionDigits: dec, maximumFractionDigits: dec })}`;
+                  return (
+                    <div className="px-4 py-3 border-b border-[#f0f0ee] bg-[#fffdf5]">
+                      <p className="text-sm font-black text-[#0f0f0f]">{meta.name}</p>
+                      <p className="text-[9px] font-mono text-[#888] mt-0.5">
+                        {[meta.date, meta.team ? `Team: ${meta.team}` : null].filter(Boolean).join(" · ") || "BD event wrap-up record"}
+                      </p>
+                      {spend != null && (
+                        <div className="flex gap-2 mt-2 flex-wrap">
+                          <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-white border border-[#f5e09a] text-[#8a6f00]">{money(spend)} total spend</span>
+                          {perSignup != null && (
+                            <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-white border border-[#e8e8e8] text-[#3d3d3d]">{money(perSignup, 2)} / signup</span>
+                          )}
+                          {perPaying != null && (
+                            <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-white border border-[#d0e8e2] text-[#2b5346]">{money(perPaying, 2)} / paying customer</span>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-[8.5px] font-mono text-[#b0b0b0] mt-1.5">Name, team &amp; costs from the BD event wrap-up spreadsheet</p>
+                    </div>
+                  );
+                })()}
+
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#f0f0ee]">
+                  <div className="p-4 flex items-center gap-3 bg-white">
                     <Users className="w-4 h-4 text-[#2b5346] shrink-0" />
                     <div>
                       <p className="text-lg font-black font-mono text-[#1a1a1a]">{selectedLookupEvent.totalSignups.toLocaleString()}</p>
                       <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">total signups</p>
                     </div>
                   </div>
-                  <div className="p-4 flex items-center gap-3">
+                  <div className="p-4 flex items-center gap-3 bg-white">
+                    <TrendingUp className="w-4 h-4 text-[#4d8970] shrink-0" />
+                    <div>
+                      <p className="text-lg font-black font-mono text-[#2b5346]">
+                        {selectedLookupEvent.payingSignups.toLocaleString()}
+                        <span className="text-[11px] font-bold text-[#4d8970] ml-1.5">{(selectedLookupEvent.conversionRate * 100).toFixed(0)}%</span>
+                      </p>
+                      <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">paying · conversion</p>
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center gap-3 bg-white">
+                    <CalendarDays className="w-4 h-4 text-[#6b8e9f] shrink-0" />
+                    <div>
+                      <p className="text-lg font-black font-mono text-[#1a1a1a]">{selectedLookupEvent.medianDaysToPay !== null ? Math.round(selectedLookupEvent.medianDaysToPay) : "—"}</p>
+                      <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">median days to pay</p>
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center gap-3 bg-white">
                     <CalendarDays className="w-4 h-4 text-[#c9a000] shrink-0" />
                     <div>
                       <p className="text-sm font-black font-mono text-[#1a1a1a]">{formatIsoDate(selectedLookupEvent.firstSignupDate)}</p>
                       <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">first signup date</p>
                     </div>
                   </div>
-                  <div className="p-4 flex items-center gap-3">
+                  <div className="p-4 flex items-center gap-3 bg-white">
                     <CalendarDays className="w-4 h-4 text-[#9b4a1c] shrink-0" />
                     <div>
                       <p className="text-sm font-black font-mono text-[#1a1a1a]">{formatIsoDate(selectedLookupEvent.lastSignupDate)}</p>
                       <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">last signup date</p>
                     </div>
                   </div>
-                  <div className="p-4 flex items-center gap-3">
+                  <div className="p-4 flex items-center gap-3 bg-white">
                     <MapPin className="w-4 h-4 shrink-0" style={{ color: provColor(selectedLookupEvent.homeProvince) }} />
                     <div>
                       <p className="text-sm font-black font-mono text-[#1a1a1a]">{lookupProvinceRows.length}</p>
                       <p className="text-[8.5px] font-mono uppercase tracking-wide text-[#a1a1a1]">signup provinces</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Status split + pre-existing accounts */}
+                <div className="px-4 py-3 border-t border-[#f0f0ee] flex items-center gap-2 flex-wrap">
+                  <span className="text-[8.5px] font-mono uppercase tracking-widest text-[#a1a1a1] mr-1">Status today</span>
+                  <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-[#eef4f1] text-[#2b5346]">{selectedLookupEvent.statusCounts.active} active</span>
+                  <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-[#fffbeb] text-[#8a6f00]">{selectedLookupEvent.statusCounts.paused} paused</span>
+                  <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-[#f5f5f4] text-[#5a5a5a]">{selectedLookupEvent.statusCounts.closed} closed</span>
+                  {selectedLookupEvent.preExistingAccounts > 0 && (
+                    <span className="text-[9px] font-mono text-[#9b4a1c] ml-auto">
+                      {selectedLookupEvent.preExistingAccounts} of {selectedLookupEvent.totalSignups} were existing accounts (created 90+ days pre-event)
+                    </span>
+                  )}
                 </div>
 
                 <div className="px-4 py-4 border-t border-[#f0f0ee]">
@@ -478,9 +556,38 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                     })}
                   </div>
                   <p className="text-[8.5px] font-mono text-[#b0b0b0] mt-3">
-                    Peak signup month: {selectedLookupEvent.eventMonth || "unknown"}. Upload Looker LTV data to add conversion and customer value metrics.
+                    Peak signup month: {selectedLookupEvent.eventMonth || "unknown"}. Upload Looker data to add LTV / customer value metrics.
                   </p>
                 </div>
+
+                {relatedCodes.length > 0 && (
+                  <div className="px-4 py-4 border-t border-[#f0f0ee]">
+                    <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-2">
+                      Event history · {relatedCodes.length} related code{relatedCodes.length !== 1 ? "s" : ""}
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      {relatedCodes.map(rc => (
+                        <button
+                          key={rc.code}
+                          type="button"
+                          onClick={() => {
+                            setSelectedLookupCode(rc.code);
+                            setCodeLookupQuery(rc.code);
+                          }}
+                          className="flex items-center gap-2 px-2 py-1.5 -mx-2 rounded-lg text-[10px] font-mono text-left hover:bg-[#f7faf8] cursor-pointer tap-scale"
+                        >
+                          <span className="flex-1 min-w-0 truncate font-black text-[#2b5346] underline decoration-[#2b5346]/25 underline-offset-2">{rc.code}</span>
+                          <span className="shrink-0 text-[#a1a1a1]">{formatMonthKey(rc.eventMonth)}</span>
+                          <span className="w-14 shrink-0 text-right font-black text-[#1a1a1a]">{rc.totalSignups.toLocaleString()}</span>
+                          <span className="w-10 shrink-0 text-right text-[#4d8970]">{(rc.conversionRate * 100).toFixed(0)}%</span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[8.5px] font-mono text-[#b0b0b0] mt-2">
+                      Codes sharing the stem “{codeFamily(selectedLookupEvent.code)}” — likely the same recurring event across years.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -570,7 +677,7 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                         className="text-[#a1a1a1] mt-0.5"
                         style={{ fontFamily: "DM Mono, monospace", fontSize: "10px" }}
                       >
-                        {row.events} event{row.events !== 1 ? "s" : ""}
+                        {row.events} event{row.events !== 1 ? "s" : ""} · {row.signups > 0 ? ((row.paying / row.signups) * 100).toFixed(0) : 0}% paying
                       </p>
                     </div>
 
@@ -645,6 +752,12 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                   </div>
                   <p className="text-2xl font-black font-mono text-[#1a1a1a] leading-none">{row.signups.toLocaleString()}</p>
                   <p className="text-[9px] font-mono text-[#a1a1a1] mt-1">signups · {shareW.toFixed(0)}% of total</p>
+                  <p className="text-[9px] font-mono text-[#4d8970] mt-0.5">
+                    {row.signups > 0 ? ((row.paying / row.signups) * 100).toFixed(0) : 0}% became paying
+                    {provinceTotals[row.province]?.all
+                      ? ` · BD = ${((provinceTotals[row.province].bd / provinceTotals[row.province].all) * 100).toFixed(1)}% of all ${row.province} signups`
+                      : ""}
+                  </p>
                   <div className="mt-2 h-1 bg-[#eee] rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }} />
                   </div>
