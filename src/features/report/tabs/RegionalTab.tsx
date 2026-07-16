@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Database, MapPin, Search, Upload, Users, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Database, MapPin, Search, Upload, Users, X } from "lucide-react";
 import { AnalyzedCodeReport, AnalysisFlow, DiscountCodeData, UserPersona, ReportPage } from "../../../types";
 import { EventStats } from "../../../hooks/useCustomerData";
 import ProvinceIntelligence from "../components/ProvinceIntelligence";
@@ -21,6 +21,41 @@ function fyRange(fy: string): string {
   const end = Number(fy.slice(2));
   return `Jul ${end - 1} – Jun ${end}`;
 }
+const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function formatMonthKey(mk: string): string {
+  if (!mk || mk.length < 7) return "—";
+  return `${MONTH_ABBR[Number(mk.slice(5, 7)) - 1]} ${mk.slice(0, 4)}`;
+}
+
+function TopEventsList({ events, color }: { events: EventStats[]; color: string }): React.ReactElement {
+  const maxSignups = events[0]?.totalSignups ?? 1;
+  return (
+    <div className="border-t border-[#f0f0ee] px-4 py-3 bg-[#fcfcfb]">
+      <p className="text-[8.5px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-2">
+        Top {events.length} event{events.length !== 1 ? "s" : ""} · by signups
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {events.map((e, i) => (
+          <div key={e.code}>
+            <div className="flex items-center gap-2 text-[10px] font-mono">
+              <span className="w-4 shrink-0 text-right font-black" style={{ color }}>{i + 1}</span>
+              <span className="flex-1 min-w-0 truncate font-black text-[#1a1a1a]">{e.code}</span>
+              <span className="shrink-0 text-[#a1a1a1]">{formatMonthKey(e.eventMonth)}</span>
+              <span className="w-12 shrink-0 text-right font-black text-[#2b5346]">{e.totalSignups.toLocaleString()}</span>
+            </div>
+            <div className="ml-6 mt-0.5 h-[3px] bg-[#f0f0f0] rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${(e.totalSignups / maxSignups) * 100}%`, backgroundColor: color }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function formatIsoDate(date: string): string {
   if (!date) return "Unknown";
   const parsed = new Date(`${date}T12:00:00`);
@@ -45,6 +80,26 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
   const bdOnly = dbRows.length === 0 && foundReports.length === 0;
   const [codeLookupQuery, setCodeLookupQuery] = useState("");
   const [selectedLookupCode, setSelectedLookupCode] = useState<string | null>(null);
+  const [expandedProvince, setExpandedProvince] = useState<string | null>(null);
+
+  // Top 10 events per home province, ranked by signups (BD-only drill-down)
+  const topEventsByProvince = useMemo(() => {
+    const map = new Map<string, EventStats[]>();
+    for (const e of eventStats) {
+      const prov = e.homeProvince || "??";
+      const list = map.get(prov);
+      list ? list.push(e) : map.set(prov, [e]);
+    }
+    for (const [prov, list] of map) {
+      map.set(
+        prov,
+        list
+          .sort((a, b) => b.totalSignups - a.totalSignups || a.code.localeCompare(b.code))
+          .slice(0, 10),
+      );
+    }
+    return map;
+  }, [eventStats]);
 
   // Dynamic date range from eventStats
   const dbDateRange = useMemo(() => {
@@ -483,7 +538,12 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                   style={{ borderRadius: "14px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", minHeight: "72px" }}
                 >
                   {/* Tile body */}
-                  <div className="flex items-center gap-3 px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedProvince(prev => prev === row.province ? null : row.province)}
+                    aria-expanded={expandedProvince === row.province}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer tap-scale"
+                  >
                     {/* Left: colored square + province abbr */}
                     <div className="flex flex-col items-center gap-1.5 shrink-0">
                       <div
@@ -529,7 +589,12 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                         signups
                       </p>
                     </div>
-                  </div>
+
+                    <ChevronDown
+                      className="w-4 h-4 shrink-0 text-[#a1a1a1] transition-transform"
+                      style={{ transform: expandedProvince === row.province ? "rotate(180deg)" : "none" }}
+                    />
+                  </button>
 
                   {/* Full-width progress bar */}
                   <div className="h-[3px] bg-[#f0f0f0] w-full">
@@ -538,6 +603,13 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
                       style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }}
                     />
                   </div>
+
+                  {expandedProvince === row.province && (
+                    <TopEventsList
+                      events={topEventsByProvince.get(row.province) ?? []}
+                      color={provColor(row.province)}
+                    />
+                  )}
                 </div>
               );
             })
@@ -549,21 +621,40 @@ export function RegionalTab({ dbRows, foundReports, selectedFlow, userPersona, e
           {filteredProvs.map(row => {
             const shareW = grandTotal > 0 ? (row.signups / grandTotal) * 100 : 0;
             return (
-              <div key={row.province} className="bg-white rounded-xl border border-[#e8e8e8] px-5 py-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <span
-                    className="font-black text-[13px] font-mono px-2 py-0.5 rounded border"
-                    style={{ color: provColor(row.province), borderColor: provColor(row.province) + "40", backgroundColor: provColor(row.province) + "12" }}
-                  >
-                    {row.province}
-                  </span>
-                  <span className="text-[9px] font-mono text-[#a1a1a1]">{row.events} event{row.events !== 1 ? "s" : ""}</span>
-                </div>
-                <p className="text-2xl font-black font-mono text-[#1a1a1a] leading-none">{row.signups.toLocaleString()}</p>
-                <p className="text-[9px] font-mono text-[#a1a1a1] mt-1">signups · {shareW.toFixed(0)}% of total</p>
-                <div className="mt-2 h-1 bg-[#eee] rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }} />
-                </div>
+              <div key={row.province} className="bg-white rounded-xl border border-[#e8e8e8] shadow-sm overflow-hidden self-start">
+                <button
+                  type="button"
+                  onClick={() => setExpandedProvince(prev => prev === row.province ? null : row.province)}
+                  aria-expanded={expandedProvince === row.province}
+                  className="w-full px-5 py-4 text-left cursor-pointer hover:bg-[#fafaf9] transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span
+                      className="font-black text-[13px] font-mono px-2 py-0.5 rounded border"
+                      style={{ color: provColor(row.province), borderColor: provColor(row.province) + "40", backgroundColor: provColor(row.province) + "12" }}
+                    >
+                      {row.province}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[9px] font-mono text-[#a1a1a1]">
+                      {row.events} event{row.events !== 1 ? "s" : ""}
+                      <ChevronDown
+                        className="w-3.5 h-3.5 transition-transform"
+                        style={{ transform: expandedProvince === row.province ? "rotate(180deg)" : "none" }}
+                      />
+                    </span>
+                  </div>
+                  <p className="text-2xl font-black font-mono text-[#1a1a1a] leading-none">{row.signups.toLocaleString()}</p>
+                  <p className="text-[9px] font-mono text-[#a1a1a1] mt-1">signups · {shareW.toFixed(0)}% of total</p>
+                  <div className="mt-2 h-1 bg-[#eee] rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${shareW}%`, backgroundColor: provColor(row.province) }} />
+                  </div>
+                </button>
+                {expandedProvince === row.province && (
+                  <TopEventsList
+                    events={topEventsByProvince.get(row.province) ?? []}
+                    color={provColor(row.province)}
+                  />
+                )}
               </div>
             );
           })}
