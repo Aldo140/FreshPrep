@@ -403,13 +403,14 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       ? visibleReports.reduce((sum, report) => sum + report.calculatedConversion, 0) / visibleReports.length
       : 0;
 
+    const hasLtv = visibleReports.some(r => r["Sum LTV 12"] > 0 || r["Avg LTV 12"] > 0);
     const hasCost = visibleReports.some(r => (r["Total Spend"] ?? 0) > 0);
     const totalSpend    = visibleReports.reduce((s, r) => s + (r["Total Spend"]  ?? 0), 0);
     const eventSpend    = visibleReports.reduce((s, r) => s + (r["Event Spend"]  ?? 0), 0);
     const staffSpend    = visibleReports.reduce((s, r) => s + (r["Staff Spend"]  ?? 0), 0);
     const cpaSignup     = hasCost && totalSignups  > 0 ? totalSpend / totalSignups  : null;
     const cpaPaying     = hasCost && totalPaying   > 0 ? totalSpend / totalPaying   : null;
-    const revToSpend    = hasCost && totalSpend    > 0 ? totalLTV12  / totalSpend   : null;
+    const revToSpend    = hasLtv && hasCost && totalSpend > 0 ? totalLTV12  / totalSpend   : null;
 
     // Top performers — BD codes only (EV prefix or BusinessDevelopment channel)
     const bdReports = visibleReports.filter(r => {
@@ -438,7 +439,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
 
     return {
       totalSignups, totalPaying, blendedConv, totalLTV12, avgLTV12, avgConv,
-      hasCost, totalSpend, eventSpend, staffSpend,
+      hasLtv, hasCost, totalSpend, eventSpend, staffSpend,
       cpaSignup, cpaPaying, revToSpend,
       topConv: byConv.slice(0, 3),
       topSignups: bySignups.slice(0, 3),
@@ -597,7 +598,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
             </div>
           )}
         </div>
-        {financials && (
+        {financials?.hasLtv && (
           <div className="flex items-center gap-4 pt-3 border-t border-white/10">
             <div className="flex-1">
               <p className="text-[8px] font-mono text-white/40 uppercase tracking-wider">12-mo Revenue</p>
@@ -776,7 +777,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
       {/* ── Section 2: Financial KPIs ────────────────────────────── */}
       {financials && (
         <Section title="Financial Performance" sub={`${financials.totalSignups.toLocaleString()} signups tracked in Looker`}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 ${financials.hasLtv ? "lg:grid-cols-5" : "lg:grid-cols-3"}`}>
             <KpiCard
               label="Paying Customers"
               value={fmtBig(financials.totalPaying)}
@@ -793,21 +794,25 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               icon={<Target className="w-4 h-4" />}
               large
             />
-            <KpiCard
-              label={<span className="flex items-center gap-1">12-mo Revenue (LTV) <MetricInfo text="Total estimated 12-month revenue from all paying customers acquired this fiscal year. LTV = Lifetime Value — how much a customer is worth over time." side="bottom" /></span>}
-              value={currency(financials.totalLTV12)}
-              sub="estimated 12-month value"
-              accent="#2b5346"
-              icon={<DollarSign className="w-4 h-4" />}
-              large
-            />
-            <KpiCard
-              label={<span className="flex items-center gap-1">Avg LTV / Customer <MetricInfo text="Average estimated 12-month revenue per paying customer. Tells you the quality of subscribers your events bring in — higher means more valuable customers." side="bottom" /></span>}
-              value={currency(financials.avgLTV12)}
-              sub="12-month avg"
-              accent="#4d8970"
-              icon={<DollarSign className="w-4 h-4" />}
-            />
+            {financials.hasLtv && (
+              <KpiCard
+                label={<span className="flex items-center gap-1">12-mo Revenue (LTV) <MetricInfo text="Total estimated 12-month revenue from all paying customers acquired this fiscal year. LTV = Lifetime Value — how much a customer is worth over time." side="bottom" /></span>}
+                value={currency(financials.totalLTV12)}
+                sub="estimated 12-month value"
+                accent="#2b5346"
+                icon={<DollarSign className="w-4 h-4" />}
+                large
+              />
+            )}
+            {financials.hasLtv && (
+              <KpiCard
+                label={<span className="flex items-center gap-1">Avg LTV / Customer <MetricInfo text="Average estimated 12-month revenue per paying customer. Tells you the quality of subscribers your events bring in — higher means more valuable customers." side="bottom" /></span>}
+                value={currency(financials.avgLTV12)}
+                sub="12-month avg"
+                accent="#4d8970"
+                icon={<DollarSign className="w-4 h-4" />}
+              />
+            )}
             <KpiCard
               label="Looker Codes"
               value={financials.totalSignups > 0 ? String(visibleReports.length) : "—"}
@@ -819,6 +824,11 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
               icon={<Award className="w-4 h-4" />}
             />
           </div>
+          {!financials.hasLtv && (
+            <p className="text-[9px] font-mono text-[#b0b0b0] mt-1">
+              LTV data isn't available from this upload — Financial Performance shows conversion and volume only.
+            </p>
+          )}
         </Section>
       )}
 
@@ -1072,10 +1082,12 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                           <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Paying</p>
                           <p className="text-[12px] font-bold font-mono text-[#3d3d3d]">{fin.paying.toLocaleString()}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Avg LTV</p>
-                          <p className="text-[12px] font-bold font-mono" style={{ color }}>{currency(fin.ltv12 / fin.paying)}</p>
-                        </div>
+                        {financials?.hasLtv && (
+                          <div className="text-right">
+                            <p className="text-[8px] font-mono text-[#c0c0c0] uppercase tracking-wider">Avg LTV</p>
+                            <p className="text-[12px] font-bold font-mono" style={{ color }}>{currency(fin.ltv12 / fin.paying)}</p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1111,7 +1123,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                       <span className="ml-1 text-[8px] font-normal text-[#a1a1a1]">thru {nowMk.slice(0,4)}-{nowMk.slice(5)}</span>
                     </th>
                   )}
-                  {financials && <th colSpan={3} className="text-center px-2 py-2 text-[9px] font-mono font-bold border-l border-[#f0f0ee] text-[#888]">Looker</th>}
+                  {financials && <th colSpan={financials.hasLtv ? 3 : 2} className="text-center px-2 py-2 text-[9px] font-mono font-bold border-l border-[#f0f0ee] text-[#888]">Looker</th>}
                   {financials?.hasCost && <th className="text-center px-2 py-2 text-[9px] font-mono text-[#a1a1a1] border-l border-[#f0f0ee]">Spend</th>}
                 </tr>
                 <tr className="border-b border-[#f0f0ee] bg-[#fafafa]">
@@ -1131,7 +1143,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                     <React.Fragment>
                       <th className="text-right px-3 py-1.5 text-[8px] font-mono text-[#a1a1a1] border-l border-[#f0f0ee]">Pay</th>
                       <th className="text-right px-3 py-1.5 text-[8px] font-mono text-[#a1a1a1]">Conv</th>
-                      <th className="text-right px-3 py-1.5 text-[8px] font-mono text-[#a1a1a1]">Rev</th>
+                      {financials.hasLtv && <th className="text-right px-3 py-1.5 text-[8px] font-mono text-[#a1a1a1]">Rev</th>}
                     </React.Fragment>
                   )}
                   {financials?.hasCost && (
@@ -1196,7 +1208,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                               </span>
                             ) : <span className="text-[#d0d0d0] font-mono text-[10px]">—</span>}
                           </td>
-                          <td className="text-right px-3 py-2.5 font-mono text-[10px] text-[#2b5346] font-bold">{fin ? currency(fin.ltv12) : "—"}</td>
+                          {financials.hasLtv && <td className="text-right px-3 py-2.5 font-mono text-[10px] text-[#2b5346] font-bold">{fin ? currency(fin.ltv12) : "—"}</td>}
                         </React.Fragment>
                       )}
                       {financials?.hasCost && (
@@ -1248,7 +1260,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
                           {financials.blendedConv.toFixed(1)}%
                         </span>
                       </td>
-                      <td className="text-right px-3 py-3 font-mono text-[12px] font-black text-[#2b5346]">{currency(financials.totalLTV12)}</td>
+                      {financials.hasLtv && <td className="text-right px-3 py-3 font-mono text-[12px] font-black text-[#2b5346]">{currency(financials.totalLTV12)}</td>}
                     </React.Fragment>
                   )}
                   {financials?.hasCost && <td className="text-right px-3 py-3 font-mono text-[12px] font-black text-[#c9a000] border-l border-[#e8e8e8]">{currency(financials.totalSpend)}</td>}
@@ -1313,7 +1325,7 @@ export function FiscalTab({ foundReports, summary, customerData, selectedFlow, a
             {([
               { id: "volume"     as const, label: "Volume",     icon: <Users className="w-3 h-3" /> },
               { id: "conversion" as const, label: "Conversion", icon: <Target className="w-3 h-3" /> },
-              { id: "ltv"        as const, label: "LTV 12-mo",  icon: <DollarSign className="w-3 h-3" /> },
+              ...(financials.hasLtv ? [{ id: "ltv" as const, label: "LTV 12-mo", icon: <DollarSign className="w-3 h-3" /> }] : []),
             ]).map(v => (
               <button
                 key={v.id}

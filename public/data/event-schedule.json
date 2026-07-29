@@ -4086,5 +4086,61 @@
   "team": null,
   "totalSpend": 3444,
   "cpa": null
+ },
+ "BDSLCS140": {
+  "name": "St Leonards Community Service London - Marshall",
+  "province": "ON",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "BDCFBRUNSWICK": {
+  "name": "Groupe Sante Brunswick",
+  "province": "ON",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "BDQUEBECOR200": {
+  "name": "Quebecor",
+  "province": "ON",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "BDFORUM10": {
+  "name": "The Forum",
+  "province": "ON",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "BDUBIWEB10": {
+  "name": "Ubiweb",
+  "province": "ON",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "BDBCI140": {
+  "name": "Location BCI",
+  "province": "ON",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
+ },
+ "EVENTS": {
+  "name": "Anytime Fitness Griffintown",
+  "province": "ON",
+  "date": null,
+  "team": null,
+  "totalSpend": null,
+  "cpa": null
  }
 }

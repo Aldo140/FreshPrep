@@ -52,6 +52,7 @@ export interface KPIReportSummary {
   topPerformingCodeVal: number;  // top conversion rate
   bestOverallScoreCode: string;  // code with best overall score
   bestOverallScoreVal: number;   // best overall score rate
+  hasLtvData: boolean;           // false when the upload carries no LTV anywhere (e.g. the 2026 Code Level Report format) — UI should hide LTV figures rather than show $0
 }
 
 export interface ChannelSummary {

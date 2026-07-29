@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * Next-move briefing (rendered inside the Channel Intelligence tab).
+ *
+ * Sorts every matched code into one of four decisions using two data-derived
+ * dividers — the portfolio's blended conversion and the median event size — then
+ * says plainly what to do with each group. No LTV, no revenue, no invented
+ * benchmarks: every number on screen comes from the codes in the upload.
+ */
+
 import React, { useMemo, useState } from "react";
 import { KPIReportSummary, AnalyzedCodeReport, ChannelSummary } from "../../../types";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Award, 
-  DollarSign, 
-  ClipboardCheck, 
-  Activity, 
-  CheckCircle2, 
-  AlertCircle 
-} from "lucide-react";
+import { ArrowUpRight, ClipboardList, Droplets, Scissors, Ticket } from "lucide-react";
 
 interface PortfolioSummaryWidgetProps {
   summary: KPIReportSummary;
@@ -22,233 +22,300 @@ interface PortfolioSummaryWidgetProps {
   channels: ChannelSummary[];
 }
 
-export default function PortfolioSummaryWidget({ summary, reports, channels }: PortfolioSummaryWidgetProps) {
-  const [selectedTopic, setSelectedTopic] = useState<"summary" | "top" | "highest-conv" | "highest-ltv" | "lowest">("summary");
+type SegmentId = "scale" | "leaky" | "underbooked" | "review";
 
-  const computedMetrics = useMemo(() => {
+const SEGMENT_STYLE: Record<SegmentId, { ink: string; wash: string; edge: string }> = {
+  scale:       { ink: "#2b5346", wash: "#eef4f1", edge: "rgba(43,83,70,0.22)" },
+  leaky:       { ink: "#c87a3c", wash: "#fbf3ec", edge: "rgba(200,122,60,0.24)" },
+  underbooked: { ink: "#8a6f00", wash: "#fdf8e1", edge: "rgba(231,189,39,0.34)" },
+  review:      { ink: "#7a7a7a", wash: "#f5f5f3", edge: "rgba(122,122,122,0.20)" },
+};
+
+function prettyChannel(name: string): string {
+  return (name || "Direct / Unknown").replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/_/g, " ").trim();
+}
+
+function median(nums: number[]): number {
+  if (nums.length === 0) return 0;
+  const s = [...nums].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+export default function PortfolioSummaryWidget({ summary, reports, channels }: PortfolioSummaryWidgetProps) {
+  const [selected, setSelected] = useState<"portfolio" | SegmentId>("portfolio");
+
+  const model = useMemo(() => {
     if (reports.length === 0) return null;
 
-    // 1. Portfolio Summary Insights
-    const totalMatchedCodes = reports.length;
-    const avgConversion = reports.reduce((acc, r) => acc + r.calculatedConversion, 0) / totalMatchedCodes;
+    const convLine = summary.blendedConversionRate;
+    const volLine  = median(reports.map(r => r.Signups));
 
-    // 2. Highest Conversion
-    const highestConvCode = [...reports].sort((a, b) => b.calculatedConversion - a.calculatedConversion)[0];
+    const buckets: Record<SegmentId, AnalyzedCodeReport[]> = { scale: [], leaky: [], underbooked: [], review: [] };
+    for (const r of reports) {
+      const hiConv = r.calculatedConversion >= convLine;
+      const hiVol  = r.Signups >= volLine;
+      if (hiConv && hiVol) buckets.scale.push(r);
+      else if (!hiConv && hiVol) buckets.leaky.push(r);
+      else if (hiConv && !hiVol) buckets.underbooked.push(r);
+      else buckets.review.push(r);
+    }
+    buckets.scale.sort((a, b) => b["Paying cx"] - a["Paying cx"]);
+    buckets.leaky.sort((a, b) => b.Signups - a.Signups);
+    buckets.underbooked.sort((a, b) => b.calculatedConversion - a.calculatedConversion);
+    buckets.review.sort((a, b) => a.calculatedConversion - b.calculatedConversion);
 
-    // 3. Highest LTV
-    const highestLtvCode = [...reports].sort((a, b) => b["Avg LTV 12"] - a["Avg LTV 12"])[0];
+    // Channel spread: how far apart the best and worst closers are, ignoring tiny channels.
+    const totalSignups = channels.reduce((s, c) => s + c.totalSignups, 0) || summary.totalSignups;
+    const ranked = channels
+      .filter(c => c.totalSignups >= Math.max(20, totalSignups * 0.05))
+      .map(c => ({ channel: c.channel, yield: c.totalSignups > 0 ? (c.totalPayingCustomers / c.totalSignups) * 100 : 0, signups: c.totalSignups }))
+      .sort((a, b) => b.yield - a.yield);
 
-    // 4. Lowest Performer
-    const lowestPerformerCode = [...reports].sort((a, b) => a.calculatedConversion - b.calculatedConversion)[0];
+    // Concentration: how much of the result rides on the three biggest codes.
+    const byPaying = [...reports].sort((a, b) => b["Paying cx"] - a["Paying cx"]);
+    const top3 = byPaying.slice(0, 3).reduce((s, r) => s + r["Paying cx"], 0);
+    const top3Share = summary.totalPayingCustomers > 0 ? (top3 / summary.totalPayingCustomers) * 100 : 0;
 
-    // 5. Top Performer (Best Overall Score of Rank)
-    const topPerformerCode = [...reports].sort((a, b) => b.overallScore - a.overallScore)[0];
+    // Signups sitting in codes that convert below blended — the recoverable pool.
+    const leakySignups = [...buckets.leaky, ...buckets.review].reduce((s, r) => s + r.Signups, 0);
+    const recoverable = Math.round(leakySignups * (convLine / 100)
+      - [...buckets.leaky, ...buckets.review].reduce((s, r) => s + r["Paying cx"], 0));
 
     return {
-      totalMatchedCodes,
-      avgConversion,
-      highestConvCode,
-      highestLtvCode,
-      lowestPerformerCode,
-      topPerformerCode
+      convLine, volLine, buckets, ranked,
+      best: ranked[0] ?? null,
+      worst: ranked.length > 1 ? ranked[ranked.length - 1] : null,
+      top3Share,
+      recoverable: Math.max(recoverable, 0),
     };
-  }, [reports]);
+  }, [reports, channels, summary]);
 
-  if (!computedMetrics) {
+  if (!model) {
     return (
-      <div
-        id="portfolio-summary-blank"
-        className="p-6 rounded-xl border border-dashed border-[#2b5346]/20 bg-white shadow-xs text-center flex flex-col items-center justify-center min-h-[160px]"
-      >
-        <Activity className="w-8 h-8 text-[#2b5346] animate-pulse mb-2.5" />
-        <h4 className="text-sm font-semibold text-slate-800">Awaiting matched campaign data...</h4>
-        <p className="text-xs text-slate-500 mt-1 max-w-[280px]">
-          Please submit valid promo codes matching the active database to view real-time portfolio summaries.
+      <div className="p-6 rounded-xl md:rounded-2xl border border-dashed border-[#d8ddda] bg-white text-center">
+        <p className="text-sm font-semibold text-[#1a1a1a]">Nothing to brief yet</p>
+        <p className="text-[12px] text-[#a1a1a1] mt-1.5 max-w-[320px] mx-auto leading-relaxed">
+          Match at least one promo code against the active database to see which events to rebook and which to fix.
         </p>
       </div>
     );
   }
 
-  const {
-    totalMatchedCodes,
-    avgConversion,
-    highestConvCode,
-    highestLtvCode,
-    lowestPerformerCode,
-    topPerformerCode
-  } = computedMetrics;
+  const { convLine, volLine, buckets, best, worst, top3Share, recoverable } = model;
 
-  const topics = [
-    { id: "summary", label: "Portfolio Summary", icon: ClipboardCheck },
-    { id: "top", label: "Top Performer", icon: Award },
-    { id: "highest-conv", label: "Highest Conversion", icon: TrendingUp },
-    { id: "highest-ltv", label: "Highest LTV", icon: DollarSign },
-    { id: "lowest", label: "Lowest Performer", icon: TrendingDown },
-  ] as const;
+  const tabs = [
+    { id: "portfolio"   as const, label: "Portfolio",  icon: ClipboardList, count: reports.length },
+    { id: "scale"       as const, label: "Scale",      icon: ArrowUpRight,  count: buckets.scale.length },
+    { id: "leaky"       as const, label: "Fix funnel", icon: Droplets,      count: buckets.leaky.length },
+    { id: "underbooked" as const, label: "Under-booked", icon: Ticket,      count: buckets.underbooked.length },
+    { id: "review"      as const, label: "Review",     icon: Scissors,      count: buckets.review.length },
+  ];
+
+  const COPY: Record<SegmentId, { headline: string; rule: string; action: string }> = {
+    scale: {
+      headline: "Proven at real volume",
+      rule: `Converts at or above ${convLine.toFixed(1)}% and drew at least ${Math.round(volLine)} signups.`,
+      action: "Rebook these first. They are the only group where a bigger booth pays for itself twice over.",
+    },
+    leaky: {
+      headline: "Reach is fine, the close isn't",
+      rule: `Drew at least ${Math.round(volLine)} signups but converts below ${convLine.toFixed(1)}%.`,
+      action: "The venue is working, the follow-up isn't. Audit the offer and the first-week nudge before dropping the event.",
+    },
+    underbooked: {
+      headline: "Closes well, too small a room",
+      rule: `Converts at or above ${convLine.toFixed(1)}% on fewer than ${Math.round(volLine)} signups.`,
+      action: "Cheapest upside on the board. Take a bigger footprint or add a second date at the same venue.",
+    },
+    review: {
+      headline: "Below the line on both counts",
+      rule: `Under ${Math.round(volLine)} signups and under ${convLine.toFixed(1)}% conversion.`,
+      action: "Lowest return per hour staffed. Redesign the pitch or hand the slot to a waitlisted event.",
+    },
+  };
 
   return (
-    <div 
-      id="portfolio-summary-widget" 
-      className="bg-white border border-slate-200/85 p-4 sm:p-5 rounded-2xl shadow-xs flex flex-col gap-4 font-sans animate-fade-in"
-    >
-      {/* Header section with Fresh Prep green accents */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3 gap-2">
-        <div>
-          <h3 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-1.5 uppercase">
-            <span className="w-2.5 h-2.5 bg-[#2b5346] rounded-full shrink-0" />
-            Executive Segment Performance
-          </h3>
-          <p className="text-[11px] text-slate-500 font-medium">
-            Internal Fresh Prep Business Intelligence Insights
-          </p>
+    <div className="bg-white border border-[#e8e8e8] rounded-xl md:rounded-2xl shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="px-4 md:px-5 pt-4 pb-3 border-b border-[#f0f0f0]">
+        <h3 className="text-[13px] font-bold text-[#1a1a1a] flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#2b5346] shrink-0" />
+          Next-move briefing
+        </h3>
+        <p className="text-[10px] text-[#a1a1a1] font-mono mt-1">
+          Split at blended {convLine.toFixed(1)}% conversion · median {Math.round(volLine)} signups
+        </p>
+      </div>
+
+      {/* Tab rail */}
+      <div className="px-2 md:px-3 pt-2.5 pb-2.5 border-b border-[#f0f0f0] overflow-x-auto">
+        <div className="flex gap-1 min-w-max">
+          {tabs.map(t => {
+            const Icon = t.icon;
+            const active = selected === t.id;
+            const ink = t.id === "portfolio" ? "#2b5346" : SEGMENT_STYLE[t.id].ink;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setSelected(t.id)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2b5346]/30"
+                style={{
+                  backgroundColor: active ? ink + "14" : "transparent",
+                  color: active ? ink : "#9a9a9a",
+                  border: `1px solid ${active ? ink + "33" : "transparent"}`,
+                }}
+              >
+                <Icon className="w-3 h-3" style={{ color: active ? ink : "#c0c0c0" }} />
+                {t.label}
+                <span className="font-mono text-[9.5px] opacity-60">{t.count}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Modern tabbed controls in a neat, light sub-rail */}
-      <div className="flex flex-wrap gap-1 p-1 bg-slate-50 border border-slate-100 rounded-lg" id="portfolio-tabs-rail">
-        {topics.map((t) => {
-          const Icon = t.icon;
-          const isActive = selectedTopic === t.id;
+      {/* Panels */}
+      <div className="p-4 md:p-5">
+        {selected === "portfolio" && (
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {[
+                { label: "Codes",     val: reports.length.toLocaleString() },
+                { label: "Signups",   val: summary.totalSignups.toLocaleString() },
+                { label: "Paying cx", val: summary.totalPayingCustomers.toLocaleString() },
+                { label: "Blended",   val: `${summary.blendedConversionRate.toFixed(1)}%` },
+              ].map(m => (
+                <div key={m.label} className="rounded-lg border border-[#eeeeec] bg-[#fcfcfb] px-3 py-2.5">
+                  <p className="text-[8.5px] font-mono uppercase tracking-widest text-[#b0b0b0] mb-1">{m.label}</p>
+                  <p className="text-[15px] font-black font-mono text-[#1a1a1a] leading-none">{m.val}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-2.5 text-[12px] text-[#4a4a4a] leading-relaxed">
+              {best && (
+                <p>
+                  <strong className="font-semibold text-[#1a1a1a]">{prettyChannel(best.channel)}</strong> is the strongest closer at
+                  {" "}<strong className="font-mono text-[#2b5346]">{best.yield.toFixed(1)}%</strong> across {best.signups.toLocaleString()} signups
+                  {worst && worst.channel !== best.channel && (
+                    <> — {(best.yield - worst.yield).toFixed(1)} points ahead of {prettyChannel(worst.channel)} at <span className="font-mono">{worst.yield.toFixed(1)}%</span>.</>
+                  )}
+                  {(!worst || worst.channel === best.channel) && <> across the channels with enough volume to compare.</>}
+                </p>
+              )}
+              <p>
+                The three biggest codes carry <strong className="font-mono text-[#1a1a1a]">{top3Share.toFixed(0)}%</strong> of all paying customers
+                {top3Share >= 60 ? " — the portfolio is leaning hard on a few events." : " — the result is spread across the calendar."}
+              </p>
+              {recoverable > 0 && (
+                <p>
+                  Lifting every below-average code up to the blended rate would add about
+                  {" "}<strong className="font-mono text-[#2b5346]">{recoverable.toLocaleString()}</strong> more paying customers from signups already collected.
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-1.5 h-2 rounded-full overflow-hidden">
+              {(["scale", "leaky", "underbooked", "review"] as SegmentId[]).map(id => {
+                const pct = (buckets[id].length / reports.length) * 100;
+                if (pct === 0) return null;
+                return <div key={id} style={{ width: `${pct}%`, backgroundColor: SEGMENT_STYLE[id].ink }} className="rounded-full" />;
+              })}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 -mt-2">
+              {(["scale", "leaky", "underbooked", "review"] as SegmentId[]).map(id => (
+                <button
+                  key={id}
+                  onClick={() => setSelected(id)}
+                  className="flex items-center gap-1.5 text-[10px] font-mono cursor-pointer hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2b5346]/30 rounded"
+                  style={{ color: SEGMENT_STYLE[id].ink }}
+                >
+                  <span className="w-2 h-2 rounded-[2px]" style={{ backgroundColor: SEGMENT_STYLE[id].ink }} />
+                  {tabs.find(t => t.id === id)?.label} {buckets[id].length}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selected !== "portfolio" && (() => {
+          const id = selected;
+          const style = SEGMENT_STYLE[id];
+          const copy = COPY[id];
+          const list = buckets[id];
+          const groupSignups = list.reduce((s, r) => s + r.Signups, 0);
+          const groupPaying  = list.reduce((s, r) => s + r["Paying cx"], 0);
+          const groupYield   = groupSignups > 0 ? (groupPaying / groupSignups) * 100 : 0;
+          const maxSignups   = Math.max(...list.map(r => r.Signups), 1);
+
+          if (list.length === 0) {
+            return (
+              <div className="rounded-lg border border-dashed border-[#e2e2e0] px-4 py-6 text-center">
+                <p className="text-[12px] text-[#8a8a8a]">No codes landed in this group.</p>
+                <p className="text-[11px] text-[#b8b8b8] mt-1">{copy.rule}</p>
+              </div>
+            );
+          }
+
           return (
-            <button
-              key={t.id}
-              onClick={() => setSelectedTopic(t.id)}
-              className={`flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-colors cursor-pointer ${
-                isActive
-                  ? "bg-white border border-slate-205/55 text-[#2b5346] shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/50"
-              }`}
-            >
-              <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? "text-[#2b5346]" : "text-slate-400"}`} />
-              {t.label}
-            </button>
+            <div className="flex flex-col gap-3.5">
+              <div className="rounded-xl px-4 py-3.5" style={{ backgroundColor: style.wash, border: `1px solid ${style.edge}` }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold" style={{ color: style.ink }}>{copy.headline}</p>
+                    <p className="text-[10.5px] font-mono mt-1" style={{ color: style.ink, opacity: 0.65 }}>{copy.rule}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[19px] font-black font-mono leading-none" style={{ color: style.ink }}>{list.length}</p>
+                    <p className="text-[8.5px] font-mono uppercase tracking-widest mt-1" style={{ color: style.ink, opacity: 0.55 }}>codes</p>
+                  </div>
+                </div>
+                <div className="flex gap-5 mt-3 pt-3" style={{ borderTop: `1px solid ${style.edge}` }}>
+                  {[
+                    { label: "Signups", val: groupSignups.toLocaleString() },
+                    { label: "Paying",  val: groupPaying.toLocaleString() },
+                    { label: "Yield",   val: `${groupYield.toFixed(1)}%` },
+                  ].map(m => (
+                    <div key={m.label}>
+                      <p className="text-[8px] font-mono uppercase tracking-widest mb-0.5" style={{ color: style.ink, opacity: 0.5 }}>{m.label}</p>
+                      <p className="text-[13px] font-bold font-mono leading-none" style={{ color: style.ink }}>{m.val}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                {list.slice(0, 6).map((r, i) => (
+                  <div key={`${r.discount_code}-${r.Province ?? ""}-${i}`} className="flex items-center gap-3 py-2 border-b border-[#f6f6f4] last:border-0">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-mono font-bold text-[12px] text-[#1a1a1a] truncate">{r.discount_code}</p>
+                      <p className="text-[9.5px] text-[#a8a8a8] truncate">
+                        {prettyChannel(r.channel)}{r.Province ? ` · ${r.Province}` : ""}
+                      </p>
+                    </div>
+                    <div className="hidden sm:block w-24 shrink-0">
+                      <div className="h-2 rounded-[2px] bg-[#f3f3f1] overflow-hidden" style={{ width: `${Math.max((r.Signups / maxSignups) * 100, 6)}%` }}>
+                        <div className="h-full" style={{ width: `${Math.min(r.calculatedConversion, 100)}%`, backgroundColor: style.ink }} />
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 w-[92px]">
+                      <p className="text-[12px] font-bold font-mono leading-none" style={{ color: style.ink }}>{r.calculatedConversion.toFixed(1)}%</p>
+                      <p className="text-[9px] font-mono text-[#a8a8a8] mt-1">{r["Paying cx"].toLocaleString()} of {r.Signups.toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))}
+                {list.length > 6 && (
+                  <p className="text-[10px] font-mono text-[#b8b8b8] pt-2">+{list.length - 6} more in this group</p>
+                )}
+              </div>
+
+              <p className="text-[11.5px] leading-relaxed pt-3 border-t border-[#f0f0f0]" style={{ color: "#4a4a4a" }}>
+                <span className="font-semibold" style={{ color: style.ink }}>Do next: </span>{copy.action}
+              </p>
+            </div>
           );
-        })}
-      </div>
-
-      {/* Content panel */}
-      <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-xl text-xs leading-relaxed text-slate-700 space-y-3 font-sans">
-        
-        {/* TAB 1: PORTFOLIO SUMMARY */}
-        {selectedTopic === "summary" && (
-          <div className="space-y-3 animate-fade-in" id="topic-summary-panel">
-            <div className="flex justify-between items-center bg-white border border-slate-200/50 p-2.5 rounded-lg">
-              <div>
-                <p className="text-[10px] text-slate-450 uppercase font-bold tracking-wider font-mono">Portfolio Average Conversion</p>
-                <p className="text-base font-extrabold text-slate-850 font-sans mt-0.5">{avgConversion.toFixed(1)}%</p>
-              </div>
-              <span className="px-2 py-0.5 bg-[#eef4f1] text-[#2b5346] border border-[#2b5346]/20 rounded text-[9px] font-bold uppercase tracking-wider font-mono">
-                Stable Benchmark
-              </span>
-            </div>
-            
-            <p className="text-slate-600">
-              The audited portfolio currently encompasses <strong className="text-slate-800">{totalMatchedCodes} active event codes</strong>. Blended performance returns are yielding a conversion baseline of <strong className="font-mono text-slate-800">{summary.blendedConversionRate.toFixed(1)}%</strong> across all associated marketing channels. This output represents a total customer cohort contribution value of <strong className="text-[#2b5346] font-bold">${summary.totalLTV12.toLocaleString()}</strong> over a 12-month timeline.
-            </p>
-            
-            <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1.5 font-sans">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#2b5346] flex-shrink-0" />
-              <span>Channels matched: {channels.length}. Main subscription conversion is tracing in line with corporate benchmarks.</span>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: TOP PERFORMER */}
-        {selectedTopic === "top" && topPerformerCode && (
-          <div className="space-y-3 animate-fade-in" id="topic-top-panel">
-            <div className="flex justify-between items-center bg-white border border-slate-200/50 p-2.5 rounded-lg">
-              <div>
-                <p className="text-[10px] text-slate-450 uppercase font-bold tracking-wider font-mono">Top Combined Score Performer</p>
-                <p className="text-base font-extrabold text-indigo-750 font-sans mt-0.5">{topPerformerCode.discount_code}</p>
-              </div>
-              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-800 border border-indigo-100 rounded text-[9px] font-bold uppercase tracking-wider font-mono">
-                Overall Index: {topPerformerCode.overallScore}/100
-              </span>
-            </div>
-
-            <p className="text-slate-600">
-              Promo code <strong className="text-slate-950 font-mono">{topPerformerCode.discount_code}</strong> represents the highest overall operational efficiency. It yielded <strong className="text-slate-900 font-mono">{topPerformerCode.Signups}</strong> venue signups, maintaining a highly healthy subscription conversion index of <strong className="text-[#2b5346] font-bold font-mono">{topPerformerCode.calculatedConversion.toFixed(1)}%</strong> and generating <strong className="text-[#2b5346] font-bold">${topPerformerCode["Sum LTV 12"].toLocaleString()}</strong> in actual customer lifetime volume.
-            </p>
-
-            <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1.5 font-sans">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#2b5346] flex-shrink-0" />
-              <span>Recommended Action: Expand budget allocations on this program immediately to leverage stronger LTV returns.</span>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: HIGHEST CONVERSION */}
-        {selectedTopic === "highest-conv" && highestConvCode && (
-          <div className="space-y-3 animate-fade-in" id="topic-highest-conv-panel">
-            <div className="flex justify-between items-center bg-white border border-slate-200/50 p-2.5 rounded-lg">
-              <div>
-                <p className="text-[10px] text-slate-450 uppercase font-bold tracking-wider font-mono">Highest Conversion Rate</p>
-                <p className="text-base font-extrabold text-[#2b5346] font-sans mt-0.5">{highestConvCode.discount_code}</p>
-              </div>
-              <span className="px-2 py-0.5 bg-[#eef4f1] text-[#2b5346] border border-[#2b5346]/20 rounded text-[9px] font-bold uppercase tracking-wider font-mono">
-                {highestConvCode.calculatedConversion.toFixed(1)}% Rate
-              </span>
-            </div>
-
-            <p className="text-slate-600">
-              Campaign checkout records verify <strong className="text-slate-950 font-mono">{highestConvCode.discount_code}</strong> achieved the maximum Conversion profile of <strong className="text-[#2b5346] font-bold font-mono">{highestConvCode.calculatedConversion.toFixed(1)}%</strong>. This code registered <strong className="text-slate-800 font-mono">{highestConvCode["Paying cx"]}</strong> subscription conversions out of <strong className="text-slate-800 font-mono">{highestConvCode.Signups}</strong> total signups, and returned <strong className="text-slate-800">${highestConvCode["Avg LTV 12"].toFixed(0)}</strong> in average customer value.
-            </p>
-
-            <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1.5 font-sans">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#2b5346] flex-shrink-0" />
-              <span>Conversion Quality: Grade {highestConvCode.performanceGrade} performance. Outstanding audience response.</span>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: HIGHEST LTV */}
-        {selectedTopic === "highest-ltv" && highestLtvCode && (
-          <div className="space-y-3 animate-fade-in" id="topic-highest-ltv-panel">
-            <div className="flex justify-between items-center bg-white border border-slate-200/50 p-2.5 rounded-lg">
-              <div>
-                <p className="text-[10px] text-slate-450 uppercase font-bold tracking-wider font-mono">Highest Avg Customer Value</p>
-                <p className="text-base font-extrabold text-[#8a6f00] font-sans mt-0.5">{highestLtvCode.discount_code}</p>
-              </div>
-              <span className="px-2 py-0.5 bg-[#fdf8e1] text-[#8a6f00] border border-[#e7bd27]/30 rounded text-[9px] font-bold uppercase tracking-wider font-mono">
-                ${highestLtvCode["Avg LTV 12"].toFixed(0)} Avg LTV
-              </span>
-            </div>
-
-            <p className="text-slate-600">
-              Segment analysis isolated <strong className="text-slate-950 font-mono">{highestLtvCode.discount_code}</strong> as the frontrunner for high-value client acquisitions. Subscribers sign up with an Average 12-Month LTV valuation of <strong className="text-slate-900 font-mono font-bold">${highestLtvCode["Avg LTV 12"].toFixed(0)}</strong>, which is substantially above the portfolio mean of <strong className="text-slate-800 font-sans">${summary.averageLTV12.toFixed(0)}</strong>.
-            </p>
-
-            <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1.5 font-sans">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#2b5346] flex-shrink-0" />
-              <span>Customer Longevity: Strong financial retention indicators. Leverage this audience cohort across newsletter updates.</span>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: LOWEST PERFORMER */}
-        {selectedTopic === "lowest" && lowestPerformerCode && (
-          <div className="space-y-3 animate-fade-in" id="topic-lowest-panel">
-            <div className="flex justify-between items-center bg-white border border-slate-200/50 p-2.5 rounded-lg">
-              <div>
-                <p className="text-[10px] text-slate-450 uppercase font-bold tracking-wider font-mono">Lowest Conversion segment</p>
-                <p className="text-base font-extrabold text-[#850b0b] font-sans mt-0.5">{lowestPerformerCode.discount_code}</p>
-              </div>
-              <span className="px-2 py-0.5 bg-[#ffd0d0] text-[#850b0b] border border-[#850b0b]/20 rounded text-[9px] font-bold uppercase tracking-wider font-mono">
-                {lowestPerformerCode.calculatedConversion.toFixed(1)}% Conversion
-              </span>
-            </div>
-
-            <p className="text-slate-600">
-              Promo code <strong className="text-slate-900 font-mono">{lowestPerformerCode.discount_code}</strong> currently ranks as the lowest converting segment at <strong className="text-[#850b0b] font-bold font-mono">{lowestPerformerCode.calculatedConversion.toFixed(1)}%</strong>. Active signups stands at <strong className="font-mono text-slate-800">{lowestPerformerCode.Signups}</strong> resulting in <strong className="font-mono text-slate-800">{lowestPerformerCode["Paying cx"]}</strong> subscription buyers.
-            </p>
-
-            <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1.5 font-sans">
-              <AlertCircle className="w-3.5 h-3.5 text-[#850b0b] flex-shrink-0" />
-              <span>Mitigation Direction: Suspend further ad placement or optimize coupon alignment steps in this specific regional campaign.</span>
-            </div>
-          </div>
-        )}
-
+        })()}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { CustomerRecord, AnalysisFlow } from "../types";
+import { MonthlyCodeStat } from "../utils/fileParser";
 
 export interface CodeMonthBreakdown {
   code: string;
@@ -33,6 +34,10 @@ export interface EventStats {
   medianDaysToPay: number | null;
   statusCounts: { active: number; paused: number; closed: number };
   preExistingAccounts: number;  // accounts created >90 days before the event month
+  // True for codes reconstructed from the 2026 Code Level Report upload rather than
+  // the built-in per-signup DB — only month-level date, no status/median-days-to-pay/
+  // pre-existing-account detail exists for these (all zeroed/null above, not real).
+  isSynthetic?: boolean;
 }
 
 /** All-channel vs BD signup counts per province (organic baseline). */
@@ -104,16 +109,7 @@ function deriveProvinceTotals(rows: CustomerRecord[]): ProvinceTotals {
   return totals;
 }
 
-function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
-  const evRows = rows.filter(isBdRow);
-
-  const byCode = new Map<string, CustomerRecord[]>();
-  for (const row of evRows) {
-    const code = row.discount_code!;
-    if (!byCode.has(code)) byCode.set(code, []);
-    byCode.get(code)!.push(row);
-  }
-
+function buildEventStatsFromGroups(byCode: Map<string, CustomerRecord[]>): EventStats[] {
   const events: EventStats[] = [];
   for (const [code, codeRows] of byCode) {
     const provinces: Record<string, number> = {};
@@ -184,6 +180,122 @@ function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
       medianDaysToPay: median(daysToPay),
       statusCounts,
       preExistingAccounts,
+    });
+  }
+
+  return events.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+}
+
+function deriveEventStats(rows: CustomerRecord[]): EventStats[] {
+  const byCode = new Map<string, CustomerRecord[]>();
+  for (const row of rows.filter(isBdRow)) {
+    const code = row.discount_code!;
+    if (!byCode.has(code)) byCode.set(code, []);
+    byCode.get(code)!.push(row);
+  }
+  return buildEventStatsFromGroups(byCode);
+}
+
+/**
+ * Same computation as deriveEventStats, but filters by an explicit code set
+ * instead of the isBdRow channel/prefix heuristic — for callers (like Code
+ * Finder) that already know a code is a real BD code from another source
+ * (the event wrap-up schedule) and want its real per-signup stats regardless
+ * of how — or whether — the built-in DB happened to tag its channel.
+ */
+export function deriveEventStatsForCodes(rows: CustomerRecord[], codes: Set<string>): EventStats[] {
+  const byCode = new Map<string, CustomerRecord[]>();
+  for (const row of rows) {
+    const code = row.discount_code;
+    if (!code || !codes.has(code.toUpperCase())) continue;
+    if (!byCode.has(code)) byCode.set(code, []);
+    byCode.get(code)!.push(row);
+  }
+  return buildEventStatsFromGroups(byCode);
+}
+
+/**
+ * Builds EventStats for codes uploaded via the 2026 Code Level Report format —
+ * monthly (code, province, channel) counts rather than raw per-signup rows. This
+ * is a degraded reconstruction: it has real eventMonth/province/signup/paying
+ * numbers (enough for the Calendar heatmap and Fiscal volume tables), but no
+ * exact day, no status breakdown, no median-days-to-pay, and no pre-existing-account
+ * detection — those require per-signup detail this report format doesn't carry.
+ * `excludeCodes` should be every code already covered by the real built-in/uploaded
+ * per-signup DB, so this never overrides genuine detailed data with an approximation.
+ */
+function isBdMonthlyCode(code: string, channel: string | undefined): boolean {
+  if (code.startsWith("EV") || code.startsWith("BD")) return true;
+  const ch = channel?.replace(/[\s_-]/g, "").toLowerCase() ?? "";
+  return ch === "businessdevelopment";
+}
+
+export function deriveSyntheticEventStats(
+  signupMonthly: MonthlyCodeStat[],
+  payingMonthly: MonthlyCodeStat[],
+  excludeCodes: Set<string>,
+): EventStats[] {
+  // The new Code Level Report uploads are frequently NOT pre-filtered to BD/Events —
+  // they can carry every marketing channel (Referral, SEO, PaidSocial, ...). Without
+  // this filter, every code in the file becomes a "synthetic event" — tens of
+  // thousands of unrelated retail/referral codes flooding Calendar/Fiscal and making
+  // the real handful of new BD codes impossible to find (and likely making the whole
+  // view painfully slow to render).
+  const byCode = new Map<string, MonthlyCodeStat[]>();
+  for (const m of signupMonthly) {
+    const code = m.code.trim().toUpperCase();
+    if (!code || excludeCodes.has(code)) continue;
+    if (!isBdMonthlyCode(code, m.channel)) continue;
+    if (!byCode.has(code)) byCode.set(code, []);
+    byCode.get(code)!.push(m);
+  }
+
+  const payingByCode = new Map<string, number>();
+  for (const m of payingMonthly) {
+    const code = m.code.trim().toUpperCase();
+    payingByCode.set(code, (payingByCode.get(code) ?? 0) + m.count);
+  }
+
+  const events: EventStats[] = [];
+  for (const [code, stats] of byCode) {
+    const byMonth: Record<string, number> = {};
+    const provinces: Record<string, number> = {};
+    const channelCounts: Record<string, number> = {};
+    let totalSignups = 0;
+
+    for (const s of stats) {
+      byMonth[s.month] = (byMonth[s.month] ?? 0) + s.count;
+      totalSignups += s.count;
+      if (s.province) provinces[s.province] = (provinces[s.province] ?? 0) + s.count;
+      if (s.channel) channelCounts[s.channel] = (channelCounts[s.channel] ?? 0) + s.count;
+    }
+
+    // Peak month = the event's likely actual month, same heuristic as deriveEventStats.
+    const peakMonth = Object.entries(byMonth).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+    const months = Object.keys(byMonth).sort();
+    const firstMonth = months[0] ?? "";
+    const lastMonth = months[months.length - 1] ?? "";
+    const homeProvince = Object.entries(provinces).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "??";
+    const dominantChannel = Object.entries(channelCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Unknown";
+    const payingSignups = payingByCode.get(code) ?? 0;
+
+    events.push({
+      code,
+      channel: dominantChannel,
+      eventDate: peakMonth ? `${peakMonth}-01` : "",
+      eventMonth: peakMonth,
+      eventDateLabel: peakMonth ? monthLabel(peakMonth) : "",
+      firstSignupDate: firstMonth ? `${firstMonth}-01` : "",
+      lastSignupDate: lastMonth ? `${lastMonth}-01` : "",
+      homeProvince,
+      totalSignups,
+      signupsByProvince: provinces,
+      payingSignups,
+      conversionRate: totalSignups > 0 ? payingSignups / totalSignups : 0,
+      medianDaysToPay: null,
+      statusCounts: { active: 0, paused: 0, closed: 0 },
+      preExistingAccounts: 0,
+      isSynthetic: true,
     });
   }
 

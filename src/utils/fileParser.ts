@@ -18,8 +18,10 @@ type SheetRow = Record<string, unknown>;
 // Helper to normalize the column headings to identify key fields
 const headerMappings: Record<string, string[]> = {
   // "Promo Code Used" = BC / ON wrap-up sheet naming
-  discount_code: ["discount_code", "discount code", "code", "coupon", "promo code", "promo code used", "promocode", "promo_code", "discount_codes", "discountcodes"],
-  channel: ["channel", "source", "marketing channel", "medium", "mkt_channel", "marketing_channel", "traffic source", "trafficsource"],
+  // "signup_code" / "code_used" = new (2026) Looker Studio "Code Level Report" tables
+  discount_code: ["discount_code", "discount code", "code", "coupon", "promo code", "promo code used", "promocode", "promo_code", "discount_codes", "discountcodes", "signup_code", "signup code", "code_used", "code used"],
+  // "channel_updated" = new (2026) Looker Studio naming
+  channel: ["channel", "source", "marketing channel", "medium", "mkt_channel", "marketing_channel", "traffic source", "trafficsource", "channel_updated", "channel updated"],
   Province: ["province", "prov", "state", "region", "territory", "loc", "location"],
   // "Sign ups" (two words) = all province wrap-up sheets
   Signups: ["signups", "signup", "sign ups", "registrations", "signup count", "total signups", "signup_count", "total_signups"],
@@ -156,6 +158,208 @@ export function normalizeSheetRawData(rows: SheetRow[]): DiscountCodeData[] {
   }).filter(item => item.discount_code.length > 0);
 }
 
+/**
+ * As of 2026, FreshPrep's Looker Studio "Signup Flow Evaluation Dashboard" no longer
+ * exposes the old row-per-signup "Client LTV" table. In its place are two separate
+ * "Code Level Report" tables, each pre-aggregated to one row per (code, month, ...):
+ *   - Signup-side:  signup_code, channel_updated, province, new_signup (count)
+ *   - Paying-side:  code_used, channel_updated, client_id (count — despite the name)
+ * Neither carries LTV data or a client-level identity, so a code's Signups/Paying cx
+ * has to be reconstructed by summing the count column per code across all rows.
+ */
+export type CodeLevelReportKind = "signup" | "paying";
+
+interface CodeLevelDetection {
+  kind: CodeLevelReportKind;
+  codeKey: string;
+  countKey: string;
+  channelKey?: string;
+  provinceKey?: string;
+  dateKey?: string; // "signup_date (Year Month)" / "paying_customer_date (Year Month)" — e.g. "Jul 2026"
+}
+
+function normalizeRawHeaderKey(h: string): string {
+  return h.trim().toLowerCase().replace(/\(.*?\)/g, "").replace(/[\s\-]+/g, "_").replace(/_+$/g, "").trim();
+}
+
+function findHeader(rawHeaders: string[], ...candidates: string[]): string | undefined {
+  return rawHeaders.find(h => candidates.includes(normalizeRawHeaderKey(h)));
+}
+
+const MONTH_ABBR_TO_NUM: Record<string, string> = {
+  jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+  jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
+};
+
+/**
+ * Parses a "Jul 2026"-style month cell into "2026-07". SheetJS's CSV reader
+ * inconsistently auto-detects these text values as dates row-by-row — some cells
+ * arrive as the literal string, others as a raw Excel serial date number (e.g.
+ * 46203.99...) for the exact same column. Both forms must be handled, or rows
+ * silently vanish from the monthly breakdown depending on which way SheetJS guessed.
+ */
+function parseCodeLevelMonth(raw: unknown): string | null {
+  if (typeof raw === "number" && isFinite(raw)) {
+    // Excel/SheetJS serial date: day 0 = 1899-12-30 in JS Date terms (1900 leap-year
+    // bug already baked into the standard 25569-day offset to the Unix epoch).
+    const utcDays = Math.floor(raw) - 25569;
+    const d = new Date(utcDays * 86400 * 1000);
+    if (isNaN(d.getTime())) return null;
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  }
+  return parseMonthLabel(String(raw ?? ""));
+}
+
+function parseMonthLabel(raw: string): string | null {
+  const m = raw.trim().match(/^([A-Za-z]{3,})\.?\s+(\d{4})$/);
+  if (!m) return null;
+  const mm = MONTH_ABBR_TO_NUM[m[1].slice(0, 3).toLowerCase()];
+  return mm ? `${m[2]}-${mm}` : null;
+}
+
+/**
+ * Detects whether a file is one of the new 2026 Looker "Code Level Report" exports
+ * (signup-side or paying-side) rather than the old one-row-per-code Client LTV format.
+ * Returns null for anything else (Client LTV export, province wrap-up sheets, etc.).
+ */
+function detectCodeLevelReport(rawHeaders: string[]): CodeLevelDetection | null {
+  const signupCode = findHeader(rawHeaders, "signup_code");
+  const newSignup = findHeader(rawHeaders, "new_signup", "new_signups");
+  const channelUpdated = findHeader(rawHeaders, "channel_updated");
+  const province = findHeader(rawHeaders, "province");
+  const signupDate = findHeader(rawHeaders, "signup_date");
+
+  if (signupCode && newSignup) {
+    return { kind: "signup", codeKey: signupCode, countKey: newSignup, channelKey: channelUpdated, provinceKey: province, dateKey: signupDate };
+  }
+
+  const codeUsed = findHeader(rawHeaders, "code_used");
+  const clientIdCount = findHeader(rawHeaders, "client_id");
+  const payingDate = findHeader(rawHeaders, "paying_customer_date");
+  if (codeUsed && clientIdCount) {
+    return { kind: "paying", codeKey: codeUsed, countKey: clientIdCount, channelKey: channelUpdated, dateKey: payingDate };
+  }
+
+  return null;
+}
+
+/**
+ * One (code, month) slice of a Code Level Report, preserved separately from the
+ * code-level totals in DiscountCodeData so Calendar/Fiscal can place newly-uploaded
+ * codes on the correct month cell — something the flattened per-code totals can't do.
+ */
+export interface MonthlyCodeStat {
+  code: string;
+  month: string; // "YYYY-MM"
+  province?: string;
+  channel?: string;
+  count: number;
+}
+
+// Matches DATA_INTEGRITY_TRUTHS.md §5's channel normalization exactly, so "BD
+// codes only" here means the same thing it means everywhere else in the app.
+function normalizeChannelName(ch: string): string {
+  return ch.replace(/[\s_-]/g, "").toLowerCase();
+}
+function isBdEventsChannel(ch: string): boolean {
+  const n = normalizeChannelName(ch);
+  return n === "businessdevelopment" || n === "events";
+}
+
+export type ChannelScope = "bdEventsOnly" | "mixed";
+
+interface CodeLevelAggregateResult {
+  rows: DiscountCodeData[];
+  // "bdEventsOnly" = every row's channel_updated was already Events/BusinessDevelopment
+  // (the Looker page-level filter was applied before export) — no need to ask the user
+  // whether to filter, since there's nothing else in the file to filter out.
+  // "mixed" = other channels are present too, so a "BD codes only" toggle is meaningful.
+  channelScope: ChannelScope;
+  // (code, month) granularity — dropped from `rows` above since DiscountCodeData is
+  // one-row-per-code, but needed to place a newly-uploaded code on the right Calendar cell.
+  monthly: MonthlyCodeStat[];
+}
+
+/**
+ * Groups a new-format Code Level Report by discount code, summing the count column
+ * (new_signup or client_id) across every month/row for that code. Produces partial
+ * DiscountCodeData rows — only Signups (signup-side) or Paying cx (paying-side) is
+ * populated; every other numeric field defaults to 0 since this report carries no
+ * LTV, spend, or per-client detail.
+ */
+function aggregateCodeLevelReport(rows: SheetRow[], detection: CodeLevelDetection): CodeLevelAggregateResult {
+  const byCode = new Map<string, { count: number; channelVotes: Map<string, number>; provinceVotes: Map<string, number> }>();
+  const byMonth = new Map<string, MonthlyCodeStat>(); // key: code|month|province
+  let sawNonBdEventsChannel = false;
+  let sawAnyChannel = false;
+
+  for (const row of rows) {
+    const code = String(row[detection.codeKey] ?? "").trim().toUpperCase();
+    if (!code || code === "NULL") continue;
+
+    const n = parseNumericValue(row[detection.countKey]);
+    const entry = byCode.get(code) ?? { count: 0, channelVotes: new Map(), provinceVotes: new Map() };
+    entry.count += n;
+
+    let channel: string | undefined;
+    if (detection.channelKey) {
+      const ch = String(row[detection.channelKey] ?? "").trim() || "Direct / Unknown";
+      channel = ch;
+      entry.channelVotes.set(ch, (entry.channelVotes.get(ch) ?? 0) + n);
+      sawAnyChannel = true;
+      if (!isBdEventsChannel(ch)) sawNonBdEventsChannel = true;
+    }
+    let province: string | undefined;
+    if (detection.provinceKey) {
+      const pv = String(row[detection.provinceKey] ?? "").trim().toUpperCase();
+      if (pv) {
+        province = pv;
+        entry.provinceVotes.set(pv, (entry.provinceVotes.get(pv) ?? 0) + n);
+      }
+    }
+
+    if (detection.dateKey) {
+      const month = parseCodeLevelMonth(row[detection.dateKey]);
+      if (month) {
+        const key = `${code}|${month}|${province ?? ""}`;
+        const existing = byMonth.get(key);
+        if (existing) existing.count += n;
+        else byMonth.set(key, { code, month, province, channel, count: n });
+      }
+    }
+
+    byCode.set(code, entry);
+  }
+
+  const dominant = (votes: Map<string, number>): string | undefined => {
+    let best: string | undefined, bestN = -1;
+    votes.forEach((v, k) => { if (v > bestN) { bestN = v; best = k; } });
+    return best;
+  };
+
+  const aggregatedRows = Array.from(byCode.entries()).map(([code, entry]) => ({
+    discount_code: code,
+    channel: dominant(entry.channelVotes) ?? "Direct / Unknown",
+    Province: dominant(entry.provinceVotes),
+    Signups: detection.kind === "signup" ? entry.count : 0,
+    "Paying cx": detection.kind === "paying" ? entry.count : 0,
+    total_discount_used: 0,
+    "Sum LTV 3": 0,
+    "Sum LTV 6": 0,
+    "Sum LTV 12": 0,
+    "Avg LTV 3": 0,
+    "Avg LTV 6": 0,
+    "Avg LTV 12": 0,
+  }));
+
+  // No channel column at all → can't attest to scope either way; treat as mixed
+  // so the existing "BD codes only" toggle stays available rather than silently
+  // assuming a clean export.
+  const channelScope: ChannelScope = sawAnyChannel && !sawNonBdEventsChannel ? "bdEventsOnly" : "mixed";
+
+  return { rows: aggregatedRows, channelScope, monthly: Array.from(byMonth.values()) };
+}
+
 export interface FileValidationResult {
   isValid: boolean;
   rowsLoaded: number;
@@ -164,11 +368,22 @@ export interface FileValidationResult {
   requiredMissing: string[];
   optionalFound: string[];
   optionalMissing: string[];
+  // "signup" / "paying" = a new-format Code Level Report (partial data, needs its
+  // counterpart uploaded too for a full picture); "full" = old-style one-row-per-code
+  // sheet (Client LTV export or a province wrap-up sheet) with everything in one file.
+  reportKind: CodeLevelReportKind | "full";
+  // Only meaningful for reportKind "signup"/"paying" — see ChannelScope above.
+  // Undefined for "full" uploads (Client LTV / province sheets), which have never
+  // carried a trustworthy channel column, so scope can't be attested there.
+  channelScope?: ChannelScope;
 }
 
 export interface ParsedSpreadsheetResult {
   dbRows: DiscountCodeData[];
   validation: FileValidationResult;
+  // (code, month) breakdown — only populated for the new-format Code Level Report
+  // uploads (reportKind "signup"/"paying"); undefined for legacy "full" uploads.
+  monthly?: MonthlyCodeStat[];
 }
 
 /**
@@ -207,10 +422,45 @@ export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheetResul
 
         // Parse data starting from the detected header row
         const rawJsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "", range: headerRowIndex }) as SheetRow[];
-        const normalizedData = normalizeSheetRawData(rawJsonData);
 
         // Use the detected header row for column validation
         const rawHeaders = (allRows[headerRowIndex] as unknown[] || []).map(h => String(h ?? "").trim()).filter(h => h.length > 0);
+        const columnsDetected = rawHeaders.length > 0 ? rawHeaders : (rawJsonData.length > 0 ? Object.keys(rawJsonData[0]) : []);
+
+        // New (2026) Looker "Code Level Report" exports are pre-aggregated counts,
+        // one row per (code, month, ...) rather than one row per code — they need
+        // grouping/summing instead of a straight column-mapped normalize pass.
+        const codeLevelDetection = detectCodeLevelReport(rawHeaders.length > 0 ? rawHeaders : columnsDetected);
+
+        if (codeLevelDetection) {
+          const { rows: dbRows, channelScope, monthly } = aggregateCodeLevelReport(rawJsonData, codeLevelDetection);
+          // Standardized keys (matching the "full" path below) so downstream UI —
+          // e.g. WizardFlow's column checklist — can check requiredFound.includes("Signups")
+          // the same way regardless of which report shape produced the data.
+          const countStdKey = codeLevelDetection.kind === "signup" ? "Signups" : "Paying cx";
+          const optionalFound: string[] = [];
+          if (codeLevelDetection.channelKey) optionalFound.push("channel");
+          if (codeLevelDetection.provinceKey) optionalFound.push("Province");
+          const optionalMissing = ["channel", "Province"].filter(f => !optionalFound.includes(f));
+
+          const validation: FileValidationResult = {
+            isValid: dbRows.length > 0,
+            rowsLoaded: dbRows.length,
+            columnsDetected,
+            requiredFound: dbRows.length > 0 ? ["discount_code", countStdKey] : [],
+            requiredMissing: dbRows.length > 0
+              ? ["Signups", "Paying cx", "Conversion"].filter(f => f !== countStdKey)
+              : ["discount_code", "Signups", "Paying cx", "Conversion"],
+            optionalFound,
+            optionalMissing,
+            reportKind: codeLevelDetection.kind,
+            channelScope,
+          };
+          resolve({ dbRows, validation, monthly });
+          return;
+        }
+
+        const normalizedData = normalizeSheetRawData(rawJsonData);
 
         // Validate headers mapping keys
         const requiredFields = ["discount_code", "Signups", "Paying cx", "Conversion"];
@@ -262,11 +512,12 @@ export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheetResul
         const validation: FileValidationResult = {
           isValid: requiredMissing.length === 0,
           rowsLoaded: normalizedData.length,
-          columnsDetected: rawHeaders.length > 0 ? rawHeaders : (rawJsonData.length > 0 ? Object.keys(rawJsonData[0]) : []),
+          columnsDetected,
           requiredFound,
           requiredMissing,
           optionalFound,
-          optionalMissing
+          optionalMissing,
+          reportKind: "full",
         };
 
         resolve({
@@ -357,15 +608,21 @@ export function calculateOverallScore(
   avgLtv12: number,
   signups: number,
   efficiencyRatio: number,
-  hasDiscountData: boolean = true
+  hasDiscountData: boolean = true,
+  hasLtvData: boolean = true,
 ): { score: number; badge: string } {
   const sConv = Math.min(100, conversionRate * 2.0); // 50% = 100pts
   const sLtv = Math.min(100, (avgLtv12 / 200) * 100);  // $200 = 100pts
   const sSign = Math.min(100, (signups / 250) * 100);  // 250 = 100pts
 
-  // When discount data isn't logged yet, redistribute efficiency weight rather than penalising
+  // Redistribute whichever inputs aren't available rather than silently scoring
+  // them as 0 — a code with no LTV data isn't a bad code, the data just isn't there.
   let score: number;
-  if (hasDiscountData) {
+  if (!hasLtvData) {
+    // No LTV source at all (e.g. the 2026 Code Level Report uploads): score purely
+    // on conversion + volume, normalized from conv/LTV/signups' combined 90% weight.
+    score = Math.round((0.65 * sConv) + (0.35 * sSign));
+  } else if (hasDiscountData) {
     const sEff = Math.min(100, (efficiencyRatio / 8.0) * 100); // 8x = 100pts
     score = Math.round((0.40 * sConv) + (0.30 * sLtv) + (0.20 * sSign) + (0.10 * sEff));
   } else {
@@ -429,6 +686,12 @@ export function generateAnalysisReport(
   const foundReports: AnalyzedCodeReport[] = [];
   const missingCodes: string[] = [];
 
+  // Portfolio-wide, not per-code: true only if the upload actually carries LTV
+  // anywhere. The 2026 Code Level Report uploads (fileParser.ts's aggregateCodeLevelReport)
+  // never populate LTV, so this comes back false for those — driving overallScore's
+  // conv+volume-only formula and letting the UI skip rendering $0 LTV as if it were real.
+  const hasLtvData = uploadedData.some(row => row["Sum LTV 12"] > 0 || row["Avg LTV 12"] > 0);
+
   // Collect all rows per exact code key, then auto-merge duplicates upfront.
   // Same code in BC + AB → one combined row. No user choice needed.
   const multiIndex = new Map<string, DiscountCodeData[]>();
@@ -490,7 +753,8 @@ export function generateAnalysisReport(
         matched["Avg LTV 12"],
         signups,
         efficiencyRatio,
-        hasDiscountData
+        hasDiscountData,
+        hasLtvData
       );
 
       foundReports.push({
@@ -562,7 +826,8 @@ export function generateAnalysisReport(
     topPerformingCodeCode,
     topPerformingCodeVal,
     bestOverallScoreCode,
-    bestOverallScoreVal
+    bestOverallScoreVal,
+    hasLtvData,
   };
 
   // Group found codes by channel for leaderboard and breakdown

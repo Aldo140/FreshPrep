@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
 
+/**
+ * Descriptive metadata for one promo code, from the BD event wrap-up workbook.
+ *
+ * Deliberately carries no signup / paying / conversion / LTV numbers: that workbook's
+ * versions of those are hand-maintained, unevenly filled across provinces, and
+ * disagree with the system-of-record exports. Volume comes from the built-in
+ * per-signup DB, paying customers from the Looker export, and LTV from a
+ * user-supplied Client LTV file.
+ */
 export interface EventScheduleEntry {
   name: string;
   province: string;

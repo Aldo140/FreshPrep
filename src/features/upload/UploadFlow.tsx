@@ -475,9 +475,23 @@ function UploadView({
             <div>
               <h2 className="text-xl font-semibold text-[#1a1a1a]">Upload Your Looker Export</h2>
               <p className="text-xs text-[#888] mt-0.5 leading-relaxed">
-                Export the <strong className="text-[#555]">Client LTV table</strong> from Looker Studio, then drop it below. Accepted: CSV, XLSX, XLS, TSV.
+                Export both <strong className="text-[#555]">Code Level Report</strong> tables from Looker
+                Studio, then drop them both below together. Accepted: CSV, XLSX, XLS, TSV.
               </p>
             </div>
+          </div>
+
+          {/* LTV notice */}
+          <div className="flex items-start gap-2 rounded-xl border border-[#e0c46a]/40 bg-[#fdf8ea] px-3.5 py-2.5">
+            <AlertCircle className="w-3.5 h-3.5 text-[#b08000] shrink-0 mt-0.5" />
+            <p className="text-[10.5px] text-[#7a5c00] leading-relaxed">
+              FreshPrep's dashboard replaced the old <strong>Client LTV</strong> table with two
+              separate count tables in 2026. They don't carry LTV or revenue data, so
+              conversion rate and grades still work, but <strong>LTV and efficiency ratio
+              will show as $0</strong> until Finance restores an LTV source. If your org
+              still has the old Client LTV table available, you can upload that single
+              file instead — it works the same way it always did.
+            </p>
           </div>
 
           {/* How-to card */}
@@ -499,7 +513,7 @@ function UploadView({
                 </a>
               </div>
 
-              {/* 3-step summary */}
+              {/* 4-step summary */}
               <ol className="space-y-3 list-none">
                 {(
                   [
@@ -522,9 +536,16 @@ function UploadView({
                     [
                       "3",
                       <>
-                        Scroll to the <strong>Client LTV</strong> table (not
-                        the Exportable Client List), hover it, then click{" "}
-                        <strong>⋮ → Export → CSV</strong>
+                        Find the two tables named <strong>Code Level Report</strong> — one
+                        under "Signup by Channel" (has <code>signup_code</code>), one under
+                        "Paying Customer By Channel" (has <code>code_used</code>)
+                      </>,
+                    ],
+                    [
+                      "4",
+                      <>
+                        Hover each one, click <strong>⋮ → Export → CSV</strong>, then drop
+                        both downloaded files into the box below <strong>at the same time</strong>
                       </>,
                     ],
                   ] as [string, React.ReactNode][]
@@ -562,9 +583,8 @@ function UploadView({
                           link above and sign in with your Fresh Prep Google account
                         </>,
                       ],
-                      ["b.", <>Go to the section labelled <strong>Signup to Paying Customer Conversion</strong></>],
                       [
-                        "c.",
+                        "b.",
                         <>
                           Set the date filter. Start before the event began and extend the end
                           date far enough to include later conversions — customers often pay
@@ -572,31 +592,53 @@ function UploadView({
                         </>,
                       ],
                       [
+                        "c.",
+                        <>
+                          Scroll to the <strong>Signup by Channel</strong> section and find its
+                          <strong> Code Level Report</strong> table (columns include{" "}
+                          <code>signup_code</code>, <code>channel_updated</code>,{" "}
+                          <code>province</code>, <code>new_signup</code>)
+                        </>,
+                      ],
+                      [
                         "d.",
                         <>
-                          Scroll to the table labelled <strong>Client LTV</strong>. Do{" "}
-                          <em>not</em> use the Exportable Client List — the Client LTV table
-                          has the aggregated metrics this analysis needs
+                          Hover it, click the <strong>three-dot menu (⋮)</strong>, then{" "}
+                          <strong>Export → CSV</strong> — this is your signup-side file
                         </>,
                       ],
                       [
                         "e.",
                         <>
-                          Hover over the <strong>Client LTV</strong> table. In the top-right
-                          corner, click the <strong>three-dot menu (⋮)</strong>
+                          Scroll to the <strong>Paying Customer By Channel</strong> section and
+                          find its own <strong>Code Level Report</strong> table (columns include{" "}
+                          <code>code_used</code>, <code>channel_updated</code>,{" "}
+                          <code>client_id</code>)
                         </>,
                       ],
-                      ["f.", <>Select <strong>Export → CSV</strong>. Export the table itself, not the entire dashboard or a PDF</>],
+                      [
+                        "f.",
+                        <>
+                          Export that one the same way — this is your paying-side file. Export
+                          the tables themselves, not the whole dashboard or a PDF
+                        </>,
+                      ],
                       [
                         "g.",
                         <>
-                          Wait for the download to finish. The file will appear in your{" "}
-                          <strong>Downloads</strong> folder
+                          Both files land in your <strong>Downloads</strong> folder. Return
+                          here and drag <strong>both</strong> into the upload box below at
+                          once (or click to browse and select both) — the app matches them up
+                          by discount code automatically
                         </>,
                       ],
                       [
                         "h.",
-                        "Return here and drag the downloaded file into the upload box below, or click to select it",
+                        <>
+                          Have the old <strong>Client LTV</strong> table instead? Drop that
+                          single file in on its own — it's still supported and includes LTV
+                          data the new tables don't have
+                        </>,
                       ],
                     ] as [string, React.ReactNode][]
                   ).map(([label, text]) => (
@@ -619,6 +661,7 @@ function UploadView({
               ref={fileInputRef}
               onChange={handleFileChange}
               accept=".xlsx,.xls,.csv,.tsv"
+              multiple
               className="hidden"
             />
             <div
@@ -636,13 +679,38 @@ function UploadView({
                 className="w-9 h-9 mb-3"
                 style={{ color: isDragOver ? "#2b5346" : "#c0c0c0" }}
               />
-              <p className="text-sm font-semibold text-[#1a1a1a]">Drop your data file here</p>
-              <p className="text-xs mt-1 font-medium text-[#2b5346]">or click to browse</p>
+              <p className="text-sm font-semibold text-[#1a1a1a]">Drop your data file(s) here</p>
+              <p className="text-xs mt-1 font-medium text-[#2b5346]">or click to browse — select both files together</p>
               <p className="text-[10px] text-[#b5b5b5] mt-2 font-mono">CSV · XLSX · XLS · TSV</p>
             </div>
             <p className="text-[9px] text-[#b5b5b5] font-mono mt-2 text-center leading-relaxed">
               Column headers are auto-detected · your file never leaves the browser
             </p>
+            {(state.loadedParts.signup || state.loadedParts.paying) && (
+              <div className="mt-3 flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 text-[10px] font-mono">
+                  {state.loadedParts.signup
+                    ? <CheckCircle2 className="w-3 h-3 text-[#2b5346] shrink-0" />
+                    : <XCircle className="w-3 h-3 text-[#cacaca] shrink-0" />}
+                  <span className={state.loadedParts.signup ? "text-[#2b5346]" : "text-[#999]"}>
+                    Signup-side Code Level Report{state.loadedParts.signup ? ` — ${state.loadedParts.signup}` : " — not loaded yet"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-mono">
+                  {state.loadedParts.paying
+                    ? <CheckCircle2 className="w-3 h-3 text-[#2b5346] shrink-0" />
+                    : <XCircle className="w-3 h-3 text-[#cacaca] shrink-0" />}
+                  <span className={state.loadedParts.paying ? "text-[#2b5346]" : "text-[#999]"}>
+                    Paying-side Code Level Report{state.loadedParts.paying ? ` — ${state.loadedParts.paying}` : " — not loaded yet"}
+                  </span>
+                </div>
+                {!(state.loadedParts.signup && state.loadedParts.paying) && (
+                  <p className="text-[9.5px] text-[#b08000] font-mono mt-0.5">
+                    Drop the other file too — conversion needs both sides to be accurate.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Footer */}

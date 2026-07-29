@@ -10,7 +10,7 @@ import { useAnalysis } from "./hooks/useAnalysis";
 import { useReport } from "./hooks/useReport";
 import { useCodeFormatting } from "./hooks/useCodeFormatting";
 import { useCustomerFile } from "./hooks/useCustomerFile";
-import { useCustomerData } from "./hooks/useCustomerData";
+import { useCustomerData, deriveSyntheticEventStats } from "./hooks/useCustomerData";
 import { useStaticSignups } from "./hooks/useStaticSignups";
 import { UploadFlow } from "./features/upload/UploadFlow";
 
@@ -159,7 +159,28 @@ export default function App(): React.ReactElement {
     return [...uploaded, ...missingBdRows];
   }, [customerFile.state.customerRows, staticSignups.rows, verifiedStaticBdCodeSet, effectiveSelectedFlow]);
 
-  const customerData = useCustomerData(effectiveCustomerRows, effectiveRawPastedCodes);
+  const baseCustomerData = useCustomerData(effectiveCustomerRows, effectiveRawPastedCodes);
+
+  // Codes uploaded via the 2026 Code Level Report format (monthly signup/paying counts,
+  // no per-signup detail) don't exist in the built-in DB and so are invisible to Calendar/
+  // Fiscal by default. Reconstruct degraded EventStats for those codes only — never for
+  // codes the built-in/uploaded DB already covers in full detail — and merge them in.
+  const customerData = useMemo(() => {
+    const excludeCodes = new Set(baseCustomerData.eventStats.map(e => e.code.toUpperCase()));
+    const synthetic = deriveSyntheticEventStats(
+      fileUpload.state.monthlySignupStats,
+      fileUpload.state.monthlyPayingStats,
+      excludeCodes,
+    );
+    if (synthetic.length === 0) return baseCustomerData;
+
+    const eventStats = [...baseCustomerData.eventStats, ...synthetic].sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+    const provinces = Array.from(new Set([
+      ...baseCustomerData.provinces,
+      ...synthetic.flatMap(e => Object.keys(e.signupsByProvince)),
+    ])).sort();
+    return { ...baseCustomerData, eventStats, provinces, hasData: true };
+  }, [baseCustomerData, fileUpload.state.monthlySignupStats, fileUpload.state.monthlyPayingStats]);
 
   const allStaticBdCodes = useMemo((): string[] =>
     Array.from(new Set(fallbackBusinessDevelopmentRows.map(row => row.discount_code))),
@@ -252,6 +273,7 @@ export default function App(): React.ReactElement {
       topPerformingCodeVal: topConvVal,
       bestOverallScoreCode: topScoreCode,
       bestOverallScoreVal: topScoreVal,
+      hasLtvData: reps.some(r => (r["Sum LTV 12"] ?? 0) > 0 || (r["Avg LTV 12"] ?? 0) > 0),
     };
   }, [bdFilteredReports, missingCodes.length, summary, userUploadedMode]);
 

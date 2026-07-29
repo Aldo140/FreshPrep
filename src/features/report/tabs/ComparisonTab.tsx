@@ -29,18 +29,25 @@ interface Verdict {
   recommendation: string;
 }
 
-function computeVerdict(editions: Edition[]): Verdict {
+function computeVerdict(editions: Edition[], hasLtv: boolean): Verdict {
   if (editions.length < 2) {
     return { direction: "insufficient", recommendation: "Add more editions to see trend direction." };
   }
   const last = editions[editions.length - 1];
   const prev = editions[editions.length - 2];
   const convUp = last.report.calculatedConversion > prev.report.calculatedConversion;
-  const ltvUp = last.report["Avg LTV 12"] >= prev.report["Avg LTV 12"];
+  // Without LTV data both sides are 0, which would make ltvUp trivially true and
+  // silently override signupsUp below — only weigh LTV when it's actually present.
+  const ltvUp = hasLtv && last.report["Avg LTV 12"] >= prev.report["Avg LTV 12"];
   const signupsUp = last.report.Signups >= prev.report.Signups;
 
   if (convUp && (ltvUp || signupsUp)) {
-    return { direction: "up", recommendation: "Conversion and LTV are improving — strong case to return." };
+    return {
+      direction: "up",
+      recommendation: hasLtv
+        ? "Conversion and LTV are improving — strong case to return."
+        : "Conversion and signup volume are improving — strong case to return.",
+    };
   }
   if (!convUp) {
     return { direction: "down", recommendation: "Performance declining — reassess offer or venue before committing." };
@@ -191,7 +198,8 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
     );
   }
 
-  const verdict = computeVerdict(editions);
+  const hasLtv = editions.some(e => e.report["Sum LTV 12"] > 0 || e.report["Avg LTV 12"] > 0);
+  const verdict = computeVerdict(editions, hasLtv);
 
   // ── Conversion trend ──────────────────────────────────────────────────────
   const convValues = editions.map(e => e.report.calculatedConversion);
@@ -373,37 +381,39 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
         </div>
       </div>
 
-      {/* LTV trajectory */}
-      <div>
-        <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-3">Avg LTV 12-Month Trajectory</p>
-        <div className="bg-white rounded-2xl border border-[#e5e5e5] p-4 overflow-x-auto">
-          <svg width={TW} height={TH} viewBox={`0 0 ${TW} ${TH}`} style={{ maxWidth: "100%", display: "block" }}>
-            {ltvTicks.map(v => (
-              <g key={v}>
-                <line x1={TPAD.l} y1={ltvY(v)} x2={TW - TPAD.r} y2={ltvY(v)}
-                  stroke={v === 0 ? "#e5e5e5" : "#f0f0ee"} strokeWidth="1" />
-                <text x={TPAD.l - 6} y={ltvY(v) + 4} textAnchor="end" fontSize="9" fill="#c0c0c0" fontFamily="monospace">${v}</text>
-              </g>
-            ))}
-            <path d={ltvPath} fill="none" stroke="#c9a000" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-            {editions.map((e, i) => (
-              <g key={e.code}>
-                <circle cx={xPos(i)} cy={ltvY(e.report["Avg LTV 12"])} r="5" fill="#c9a000" />
-                <text x={xPos(i)} y={ltvY(e.report["Avg LTV 12"]) - 11} textAnchor="middle"
-                  fontSize="10" fontWeight="700" fill="#c9a000" fontFamily="monospace">
-                  ${e.report["Avg LTV 12"].toFixed(0)}
-                </text>
-                <text x={xPos(i)} y={TH - 18} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
-                {dateByCode.has(e.code) && (
-                  <text x={xPos(i)} y={TH - 6} textAnchor="middle" fontSize="8" fill="#b8b8b8" fontFamily="monospace">
-                    {fmtMonth(dateByCode.get(e.code)!.month)}
+      {/* LTV trajectory — only when the upload actually carries LTV data */}
+      {hasLtv && (
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-widest text-[#a1a1a1] mb-3">Avg LTV 12-Month Trajectory</p>
+          <div className="bg-white rounded-2xl border border-[#e5e5e5] p-4 overflow-x-auto">
+            <svg width={TW} height={TH} viewBox={`0 0 ${TW} ${TH}`} style={{ maxWidth: "100%", display: "block" }}>
+              {ltvTicks.map(v => (
+                <g key={v}>
+                  <line x1={TPAD.l} y1={ltvY(v)} x2={TW - TPAD.r} y2={ltvY(v)}
+                    stroke={v === 0 ? "#e5e5e5" : "#f0f0ee"} strokeWidth="1" />
+                  <text x={TPAD.l - 6} y={ltvY(v) + 4} textAnchor="end" fontSize="9" fill="#c0c0c0" fontFamily="monospace">${v}</text>
+                </g>
+              ))}
+              <path d={ltvPath} fill="none" stroke="#c9a000" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+              {editions.map((e, i) => (
+                <g key={e.code}>
+                  <circle cx={xPos(i)} cy={ltvY(e.report["Avg LTV 12"])} r="5" fill="#c9a000" />
+                  <text x={xPos(i)} y={ltvY(e.report["Avg LTV 12"]) - 11} textAnchor="middle"
+                    fontSize="10" fontWeight="700" fill="#c9a000" fontFamily="monospace">
+                    ${e.report["Avg LTV 12"].toFixed(0)}
                   </text>
-                )}
-              </g>
-            ))}
-          </svg>
+                  <text x={xPos(i)} y={TH - 18} textAnchor="middle" fontSize="9" fill="#888" fontFamily="monospace">{e.label}</text>
+                  {dateByCode.has(e.code) && (
+                    <text x={xPos(i)} y={TH - 6} textAnchor="middle" fontSize="8" fill="#b8b8b8" fontFamily="monospace">
+                      {fmtMonth(dateByCode.get(e.code)!.month)}
+                    </text>
+                  )}
+                </g>
+              ))}
+            </svg>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Detail table */}
       <div>
@@ -412,8 +422,8 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-[#f0f0ee] bg-[#fafafa]">
-                {["Edition", "Code", "Event Date", "Signups", "Paying", "Conversion", "Avg LTV 12", "Grade"].map((h, i) => (
-                  <th key={h} className={`px-4 py-2.5 font-semibold text-[#a1a1a1] font-mono uppercase tracking-wide text-[9px]${i >= 3 && i <= 6 ? " text-right" : i === 7 ? " text-center" : ""}`}>{h}</th>
+                {(["Edition", "Code", "Event Date", "Signups", "Paying", "Conversion", ...(hasLtv ? ["Avg LTV 12"] : []), "Grade"]).map((h, i, arr) => (
+                  <th key={h} className={`px-4 py-2.5 font-semibold text-[#a1a1a1] font-mono uppercase tracking-wide text-[9px]${i >= 3 && i <= arr.length - 2 ? " text-right" : i === arr.length - 1 ? " text-center" : ""}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -438,7 +448,9 @@ export function ComparisonTab({ foundReports, editionLabels, rawPastedCodes, eve
                   <td className="px-4 py-3 font-mono text-right font-semibold" style={{ color: e.report.calculatedConversion >= 40 ? "#2b5346" : "#850b0b" }}>
                     {e.report.calculatedConversion.toFixed(1)}%
                   </td>
-                  <td className="px-4 py-3 font-mono text-right text-[#1a1a1a]">${e.report["Avg LTV 12"].toFixed(0)}</td>
+                  {hasLtv && (
+                    <td className="px-4 py-3 font-mono text-right text-[#1a1a1a]">${e.report["Avg LTV 12"].toFixed(0)}</td>
+                  )}
                   <td className="px-4 py-3 text-center">
                     <span className="font-mono font-black text-[11px]" style={{ color: e.report.calculatedConversion >= 40 ? "#2b5346" : "#850b0b" }}>
                       {e.report.performanceGrade}

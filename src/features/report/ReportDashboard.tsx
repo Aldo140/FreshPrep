@@ -86,6 +86,7 @@ function summarizeReports(reports: AnalyzedCodeReport[], numCodesMissing = 0): K
     topPerformingCodeVal: topByConversion?.calculatedConversion ?? 0,
     bestOverallScoreCode: topByScore?.discount_code ?? "",
     bestOverallScoreVal: topByScore?.overallScore ?? 0,
+    hasLtvData: reports.some(r => r["Sum LTV 12"] > 0 || r["Avg LTV 12"] > 0),
   };
 }
 
@@ -299,6 +300,14 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
     if (!months.length) return null;
     return months.reduce((a, b) => a > b ? a : b);
   }, [scopedCustomerData.eventStats]);
+
+  // Diagnostic: how many of the currently-visible events were reconstructed from a
+  // Code Level Report upload (not the built-in DB). Surfaced in the UI so upload
+  // issues are visible as a number instead of a silent "nothing showed up."
+  const syntheticEventCount = useMemo(
+    () => scopedCustomerData.eventStats.filter(e => e.isSynthetic).length,
+    [scopedCustomerData.eventStats],
+  );
 
   const dataAgeMonths = useMemo(() => {
     if (!dataThrough) return 0;
@@ -654,7 +663,15 @@ export function ReportDashboard(props: ReportDashboardProps): React.ReactElement
               )}
               {["calendar", "fiscal"].includes(reportPage) && (
                 <span className="text-[9px] font-mono text-[#888]">
-                  Calendar and Fiscal use the Exportable Client List—a separate file from Client LTV.
+                  Calendar and Fiscal use the Exportable Client List or your Code Level Report upload—separate from Client LTV.
+                </span>
+              )}
+              {syntheticEventCount > 0 && (
+                <span
+                  className="text-[8.5px] font-mono px-2 py-0.5 rounded-full shrink-0 border text-[#2b5346] bg-[#eef4f1] border-[#2b5346]/20"
+                  title="Codes reconstructed from your Code Level Report upload — month-level detail only, no exact day/status."
+                >
+                  +{syntheticEventCount} code{syntheticEventCount === 1 ? "" : "s"} from your upload
                 </span>
               )}
               <button onClick={() => setShowCustomerModal(true)} className="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold cursor-pointer border transition-all bg-white text-[#2b5346] border-[#d0e8e2] hover:bg-[#eef4f1]">

@@ -106,6 +106,12 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdC
 
   const bdDisplayCount = state.bdFilter ? bdCodes.length : fileState.uniqueDbCodes.length;
 
+  // True when the uploaded Code Level Report(s) had channel_updated === Events /
+  // BusinessDevelopment on every single row — i.e. the Looker export was already
+  // scoped to BD/Events before download, so asking "BD codes only?" has no real
+  // second answer.
+  const channelScopeConfirmedBd = fileState.fileValidation?.channelScope === "bdEventsOnly";
+
   return (
     <div
       className="flex-1 overflow-y-auto px-4 py-8 sm:px-6 bg-[#f8f7f5] flex flex-col items-center gap-5"
@@ -400,7 +406,7 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdC
                 <p className="text-sm text-[#3d3d3d] text-center max-w-sm leading-relaxed">
                   Analyze{" "}
                   <strong className="text-[#1a1a1a]">
-                    {bdDisplayCount.toLocaleString()} {state.bdFilter ? "BD event" : ""} codes
+                    {bdDisplayCount.toLocaleString()} {state.bdFilter || channelScopeConfirmedBd ? "BD event" : ""} codes
                   </strong>
                   {state.bdFilter && staticOnlyBdCodes.length > 0 && (
                     <> + <strong className="text-[#1a1a1a]">{staticOnlyBdCodes.length.toLocaleString()} built-in BD codes</strong></>
@@ -408,27 +414,42 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdC
                   in your dataset.
                 </p>
 
-                {/* BD filter toggle */}
-                <label className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[#e5e5e5] bg-[#f8f7f5] cursor-pointer select-none">
-                  <div
-                    onClick={() => actions.setBdFilter(!state.bdFilter)}
-                    className={`relative w-9 h-5 rounded-full transition-colors duration-150 ${
-                      state.bdFilter ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-150 ${
-                        state.bdFilter ? "translate-x-4" : "translate-x-0"
-                      }`}
-                    />
-                  </div>
-                  <span className="text-xs text-[#3d3d3d] font-medium">
-                    BD codes only
-                    <span className="block text-[10px] text-[#a1a1a1] font-normal mt-0.5">
-                      EV-prefix + BusinessDevelopment channel ({bdCodes.length.toLocaleString()} codes)
+                {/* BD filter toggle — only asked when the file could contain non-BD/Events
+                    codes. If the Code Level Report export was already channel-filtered in
+                    Looker (channelScope === "bdEventsOnly"), there's nothing to filter, so
+                    show a confirmation instead of asking a question with only one real answer. */}
+                {channelScopeConfirmedBd ? (
+                  <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[#2b5346]/20 bg-[#eef4f1]">
+                    <CheckCircle2 className="w-4 h-4 text-[#2b5346] shrink-0" />
+                    <span className="text-xs text-[#2b5346] font-medium">
+                      Detected: BD/Events codes only
+                      <span className="block text-[10px] text-[#2b5346]/70 font-normal mt-0.5">
+                        Your export's channel_updated column was already Events / BusinessDevelopment on every row — nothing else to exclude
+                      </span>
                     </span>
-                  </span>
-                </label>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[#e5e5e5] bg-[#f8f7f5] cursor-pointer select-none">
+                    <div
+                      onClick={() => actions.setBdFilter(!state.bdFilter)}
+                      className={`relative w-9 h-5 rounded-full transition-colors duration-150 ${
+                        state.bdFilter ? "bg-[#2b5346]" : "bg-[#d4d4d4]"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-150 ${
+                          state.bdFilter ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </div>
+                    <span className="text-xs text-[#3d3d3d] font-medium">
+                      BD codes only
+                      <span className="block text-[10px] text-[#a1a1a1] font-normal mt-0.5">
+                        EV-prefix + BusinessDevelopment channel ({bdCodes.length.toLocaleString()} codes)
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 <button
                   onClick={() => actions.compilePortfolio(
