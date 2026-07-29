@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { FileUploadState } from "../../hooks/useFileUpload";
 import { AnalysisState, AnalysisActions } from "../../hooks/useAnalysis";
@@ -112,6 +113,15 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdC
   // second answer.
   const channelScopeConfirmedBd = fileState.fileValidation?.channelScope === "bdEventsOnly";
 
+  // Code Finder is only worth offering once there's data behind it: either both
+  // Code Level Reports, or a legacy single-file upload.
+  const hasFullUpload =
+    Boolean(fileState.loadedParts.signup && fileState.loadedParts.paying) ||
+    fileState.fileValidation?.reportKind === "full";
+  // Opened in a new tab on purpose — it's a separate route, and navigating there
+  // in-place would discard the upload the user just made.
+  const codeFinderHref = `${import.meta.env.BASE_URL}codefinder`;
+
   return (
     <div
       className="flex-1 overflow-y-auto px-4 py-8 sm:px-6 bg-[#f8f7f5] flex flex-col items-center gap-5"
@@ -146,6 +156,19 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdC
               </button>
             </div>
           </div>
+          {hasFullUpload && (
+            <a
+              href={codeFinderHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 flex items-center gap-1.5 text-[11px] text-[#2b5346] hover:bg-[#eef4f1] cursor-pointer font-semibold px-2.5 py-1.5 rounded-lg border border-[#d0e8e2]"
+              style={{ transition: "background-color 150ms var(--ease-out)" }}
+              title="Find discount codes by event name — opens in a new tab"
+            >
+              <Search className="w-3 h-3" />
+              Code Finder
+            </a>
+          )}
           <button
             onClick={onReset}
             className="shrink-0 flex items-center gap-1.5 text-[11px] text-[#a1a1a1] hover:text-[#1a1a1a] cursor-pointer font-medium px-2.5 py-1.5 rounded-lg hover:bg-[#f8f7f5]"
@@ -326,6 +349,25 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdC
             {/* PASTE flow */}
             {state.selectedFlow === "paste" && (
               <div className="space-y-4" id="panel-paste-flow">
+                {hasFullUpload && (
+                  <a
+                    href={codeFinderHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[#d0e8e2] bg-[#eef4f1] hover:bg-[#e3efea] transition-colors cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white border border-[#d0e8e2] flex items-center justify-center shrink-0">
+                      <Search className="w-4 h-4 text-[#2b5346]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12.5px] font-bold text-[#2b5346]">Don&apos;t know the codes? Use Code Finder</p>
+                      <p className="text-[10px] font-mono text-[#2b5346]/70 mt-0.5">
+                        Type event names instead — it matches them to every year&apos;s code, then you paste the result back here
+                      </p>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#2b5346]/50 group-hover:text-[#2b5346] shrink-0" />
+                  </a>
+                )}
                 <div className="relative">
                   <textarea
                     value={state.inputText}
