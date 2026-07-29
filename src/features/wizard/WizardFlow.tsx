@@ -120,7 +120,7 @@ export function WizardFlow({ fileState, analysis, formatting, onReset, staticBdC
     fileState.fileValidation?.reportKind === "full";
   // Opened in a new tab on purpose — it's a separate route, and navigating there
   // in-place would discard the upload the user just made.
-  const codeFinderHref = `${import.meta.env.BASE_URL}codefinder`;
+  const codeFinderHref = `${import.meta.env.BASE_URL}codefinder/`;
 
   return (
     <div
